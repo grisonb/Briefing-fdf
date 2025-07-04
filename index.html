@@ -79,10 +79,9 @@
             text-shadow: none;
         }
 
-        /* --- MODIFICATION LARGEUR --- */
         .session-management {
             width: 100%;
-            max-width: 980px; /* Largeur réduite pour iPad */
+            max-width: 980px;
             margin: 0 auto 40px auto;
             position: relative;
             z-index: 2;
@@ -98,10 +97,9 @@
         .session-management button { margin: 5px 10px; font-size: 1em; padding: 10px 20px; }
         #session-status { font-style: italic; color: white; opacity: 0.9; margin-top: 15px; font-weight: bold; }
         
-        /* --- MODIFICATION LARGEUR --- */
         .map-section, .pdf-section, .notam-section {
             width: 100%;
-            max-width: 980px; /* Largeur réduite pour iPad */
+            max-width: 980px;
             margin-bottom: 40px;
             padding: 25px;
             border-radius: 12px;
@@ -249,16 +247,42 @@
         .metar-taf-container pre { white-space: pre-wrap; word-wrap: break-word; font-family: monospace; background-color: #e9ecef; padding: 10px; border-radius: 4px; margin: 0; font-size: 1.1em; }
         .metar-taf-container .error-msg { color: var(--sc-red); font-style: italic; }
         
-        #gaar-map { height: 70vh; border-radius: 8px; border: 1px solid var(--border-color); cursor: crosshair; }
-        #gaar-map-controls { display: flex; justify-content: center; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
-        #gaar-city-search { width: 300px; }
-        .gaar-pdf-area { margin-top: 30px; border-top: 2px solid var(--sc-blue); padding-top: 20px; }
-
         #manual-metar-section { margin-top: 40px; padding-top: 20px; border-top: 2px solid var(--sc-blue); }
         #manual-icao-input { width: 70%; max-width: 500px; text-transform: uppercase; }
         .hidden-by-filter { display: none; }
 
         footer { margin-top: 20px; font-size: 0.9em; color: #666; }
+
+        /* --- STYLES SPÉCIFIQUES À LA CARTE GAAR --- */
+        #gaar-map-container {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        #gaar-drop-zone { 
+            border: 3px dashed #ccc; 
+            border-radius: 10px; 
+            width: 100%; 
+            padding: 50px; 
+            text-align: center; 
+            color: #666; 
+            font-size: 1.2em; 
+            margin-bottom: 20px; 
+            cursor: pointer;
+            transition: background-color 0.2s;
+            box-sizing: border-box;
+        }
+        #gaar-drop-zone:hover {
+            background-color: #f0f8ff;
+        }
+        #gaar-map-display { width: 100%; height: 500px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        #gaar-status { margin-top: 15px; font-weight: bold; color: #555; min-height: 20px; text-align: center; }
+        .gaar-city-label { background-color: rgba(255, 255, 255, 0.8); border: 1px solid #999; border-radius: 3px; font-size: 10px; font-weight: bold; padding: 2px 5px; box-shadow: none; }
+        .gaar-popup-form { display: flex; flex-direction: column; gap: 5px; }
+        .gaar-popup-form input { border: 1px solid #ccc; padding: 5px; border-radius: 3px; }
+        .gaar-popup-form button { background-color: #007bff; color: white; border: none; padding: 5px 8px; border-radius: 3px; cursor: pointer; }
+
     </style>
 </head>
 <body>
@@ -291,19 +315,26 @@
         </div>
     </div>
 
-    <div id="gaar-dropzone" class="pdf-section dropzone"><h2>Diagramme GAAR</h2><div class="pdf-controls"><button id="pdf-load-gaar-btn" class="link-button" style="background-color: #16a085;">Charger le Diagramme GAAR</button><input type="file" id="pdf-input-gaar" accept="application/pdf"></div><div id="pdf-interactive-container-gaar" class="interactive-pdf-viewer" style="display: none;"><div class="interactive-pdf-controls"><button class="pdf-nav-btn" data-action="prev">Page Préc.</button><span>Page <span class="page-num">1</span> / <span class="page-count">1</span></span><button class="pdf-nav-btn" data-action="next">Page Suiv.</button><div class="zoom-controls"><button class="pdf-nav-btn" data-action="zoom-out">-</button><span>Zoom</span><button class="pdf-nav-btn" data-action="zoom-in">+</button></div></div><div class="pdf-canvas-wrapper"><canvas id="pdf-canvas-gaar" class="pdf-canvas"></canvas></div></div><p id="pdf-info-gaar" class="pdf-info"></p></div>
+    <div id="gaar-dropzone" class="pdf-section dropzone">
+        <h2>Diagramme GAAR</h2>
+        <div class="pdf-controls">
+            <button id="pdf-load-gaar-btn" class="link-button" style="background-color: #16a085;">Charger le Diagramme GAAR</button>
+            <input type="file" id="pdf-input-gaar" accept="application/pdf">
+        </div>
+        <div id="pdf-interactive-container-gaar" class="interactive-pdf-viewer" style="display: none;">
+            <div class="interactive-pdf-controls"><button class="pdf-nav-btn" data-action="prev">Page Préc.</button><span>Page <span class="page-num">1</span> / <span class="page-count">1</span></span><button class="pdf-nav-btn" data-action="next">Page Suiv.</button><div class="zoom-controls"><button class="pdf-nav-btn" data-action="zoom-out">-</button><span>Zoom</span><button class="pdf-nav-btn" data-action="zoom-in">+</button></div></div>
+            <div class="pdf-canvas-wrapper"><canvas id="pdf-canvas-gaar" class="pdf-canvas"></canvas></div>
+        </div>
+        <p id="pdf-info-gaar" class="pdf-info"></p>
+    </div>
     
+    <!-- NOUVELLE SECTION POUR LA CARTE GAAR AUTOMATIQUE -->
     <div class="map-section" id="gaar-map-section" style="display: none;">
         <h2>Carte des Circuits GAAR</h2>
-        <p style="text-align:center; margin-bottom: 20px;">Cliquez sur la carte ou cherchez une ville pour définir les sommets de vos circuits.</p>
-        <div id="gaar-map-controls">
-            <input type="text" id="gaar-city-search" placeholder="Chercher une ville...">
-            <button id="gaar-search-btn" class="link-button" style="padding:10px 15px; background-color: #27ae60;">Chercher</button>
-            <button id="gaar-undo-point" class="link-button" style="padding:10px 15px; background-color: #f39c12; display: none;">Annuler point</button>
-            <button id="gaar-clear-last" class="link-button" style="padding:10px 15px; background-color: #e67e22; display: none;">Effacer circuit</button>
-            <button id="gaar-clear-all" class="link-button" style="padding:10px 15px; background-color: #c0392b; display: none;">Tout effacer</button>
+        <div id="gaar-map-container">
+            <div id="gaar-map-display"></div>
+            <div id="gaar-status">En attente du chargement du diagramme GAAR...</div>
         </div>
-        <div id="gaar-map"></div>
     </div>
     
     <div class="map-section"><h2>Carte SIGWX France (TEMSI)</h2><div class="controles"><label for="temsi-select">Choisir une échéance :</label><select id="temsi-select"></select></div><p class="info-carte" id="temsi-info-carte">Chargement...</p><div class="carte-container"><iframe id="temsi-frame" title="Carte SIGWX France"></iframe></div></div>
@@ -391,7 +422,10 @@
         let gaarFileObject = null;
         let supAipFileObjects = [];
         let openedWindows = {}; 
+        
+        // --- GAAR MAP SPECIFIC VARIABLES ---
         let gaarMap = null;
+        let gaarDrawnCircuits = [];
 
         // --- CORE INITIALIZATION ---
         window.onload = function() {
@@ -402,7 +436,6 @@
         function initializePage() {
             initializePageTitle();
             initializeTemsi();
-            initializeGaarMap();
             initializeInteractivePdfViewers();
             initializeSupAipLoader();
             initializeNotamParser(); 
@@ -410,6 +443,7 @@
             initializeForeFlightButton();
             initializeSessionManagement();
             initializeManagedTabs();
+            // N'initialise la carte GAAR qu'au moment du chargement du PDF
         }
 
         // --- NOTAM/MTO HELPER FUNCTIONS (GLOBAL SCOPE) ---
@@ -649,7 +683,7 @@
             populateTemsi();
         }
 
-        function createInteractivePdfHandler(viewerContainer, file) { 
+        function createInteractivePdfHandler(viewerContainer, file, callback) { 
             const canvas = viewerContainer.querySelector('.pdf-canvas');
             const controls = viewerContainer.querySelector('.interactive-pdf-controls');
             const wrapper = viewerContainer.querySelector('.pdf-canvas-wrapper');
@@ -698,122 +732,178 @@
                     pageNum = 1;
                     renderPage(pageNum);
                     viewerContainer.style.display = 'block';
+                    if (callback) callback(file); // Appel du callback une fois le PDF chargé
                 });
             };
             fileReader.readAsArrayBuffer(file);
         }
 
-        function initializeGaarMap() {
-            gaarMap = L.map('gaar-map').setView([46.2, 2.2], 5);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            }).addTo(gaarMap);
+        // --- NOUVELLE LOGIQUE D'INITIALISATION POUR LA CARTE GAAR ---
+        function initializeGaarMapFromFile(gaarPdfFile) {
+            const statusDiv = document.getElementById('gaar-status');
 
-            const gaarColors = ['#e60012', '#3498db', '#27ae60', '#8e44ad', '#f39c12', '#0a2c5a'];
-            let currentCircuitPoints = [];
-            let allGaarCircuits = [];
-
-            const undoBtn = document.getElementById('gaar-undo-point');
-            const clearLastBtn = document.getElementById('gaar-clear-last');
-            const clearAllBtn = document.getElementById('gaar-clear-all');
-            const searchInput = document.getElementById('gaar-city-search');
-            const searchBtn = document.getElementById('gaar-search-btn');
-
-            function updateButtonVisibility() {
-                undoBtn.style.display = currentCircuitPoints.length > 0 ? 'inline-block' : 'none';
-                clearLastBtn.style.display = allGaarCircuits.length > 0 ? 'inline-block' : 'none';
-                clearAllBtn.style.display = (allGaarCircuits.length > 0 || currentCircuitPoints.length > 0) ? 'inline-block' : 'none';
+            // Initialise la carte si elle n'existe pas encore
+            if (!gaarMap) {
+                gaarMap = L.map('gaar-map-display').setView([46.2276, 2.2137], 6);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(gaarMap);
             }
 
-            function addPoint(latlng) {
-                 if (currentCircuitPoints.length < 3) {
-                    const marker = L.marker(latlng).addTo(gaarMap);
-                    currentCircuitPoints.push({
-                        latlng: latlng,
-                        marker: marker
-                    });
-
-                    if (currentCircuitPoints.length === 3) {
-                        const latlngs = currentCircuitPoints.map(p => p.latlng);
-                        
-                        const circuitIndex = allGaarCircuits.length;
-                        const circuitColor = gaarColors[circuitIndex % gaarColors.length];
-                        
-                        const polygon = L.polygon(latlngs, { color: circuitColor, fillOpacity: 0.3 }).addTo(gaarMap);
-                        
-                        allGaarCircuits.push({
-                            points: [...currentCircuitPoints],
-                            polygon: polygon
-                        });
-
-                        currentCircuitPoints = [];
-                    }
-                    updateButtonVisibility();
+            // Gère l'analyse et l'affichage des circuits
+            async function handlePdfFile(file) {
+                if (!file || file.type !== 'application/pdf') {
+                    statusDiv.textContent = "Erreur : Le fichier doit être au format PDF.";
+                    return;
                 }
-            }
+                statusDiv.textContent = 'Analyse du PDF...';
+                
+                // Nettoie les anciens circuits de la carte
+                gaarDrawnCircuits.forEach(({ polygon, markers }) => {
+                    gaarMap.removeLayer(polygon);
+                    markers.forEach(m => gaarMap.removeLayer(m));
+                });
+                gaarDrawnCircuits = [];
 
-            gaarMap.on('click', (e) => addPoint(e.latlng));
-
-            async function handleCitySearch() {
-                const query = searchInput.value.trim();
-                if (!query) return;
-
-                const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1&countrycodes=fr`;
                 try {
-                    const response = await fetch(url);
-                    const data = await response.json();
-                    if (data && data.length > 0) {
-                        const result = data[0];
-                        const latlng = L.latLng(result.lat, result.lon);
-                        gaarMap.setView(latlng, 10);
-                        addPoint(latlng);
-                        searchInput.value = '';
+                    const arrayBuffer = await file.arrayBuffer();
+                    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                    const page = await pdf.getPage(1);
+                    const textContent = await page.getTextContent();
+                    const allCircuits = extractAllCircuits(textContent.items.map(item => item.str).join(' '));
+
+                    if (allCircuits.length > 0) {
+                        statusDiv.textContent = `Géocodage en cours...`;
+                        await geocodeAndDrawAll(allCircuits);
                     } else {
-                        alert(`Ville "${query}" non trouvée.`);
+                        throw new Error("Aucun circuit géographique actif n'a été trouvé.");
                     }
                 } catch (error) {
-                    console.error("Erreur de géocodage:", error);
-                    alert("Erreur lors de la recherche de la ville.");
+                    statusDiv.textContent = `Erreur : ${error.message}`;
                 }
             }
             
-            searchBtn.addEventListener('click', handleCitySearch);
-            searchInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    handleCitySearch();
-                }
-            });
-
-            undoBtn.addEventListener('click', () => {
-                if (currentCircuitPoints.length > 0) {
-                    const lastPoint = currentCircuitPoints.pop();
-                    gaarMap.removeLayer(lastPoint.marker);
-                    updateButtonVisibility();
-                }
-            });
-
-            clearLastBtn.addEventListener('click', () => {
-                if (allGaarCircuits.length > 0) {
-                    const lastCircuit = allGaarCircuits.pop();
-                    gaarMap.removeLayer(lastCircuit.polygon);
-                    lastCircuit.points.forEach(p => gaarMap.removeLayer(p.marker));
-                    updateButtonVisibility();
-                }
-            });
-            
-            clearAllBtn.addEventListener('click', () => {
-                allGaarCircuits.forEach(circuit => {
-                    gaarMap.removeLayer(circuit.polygon);
-                    circuit.points.forEach(p => gaarMap.removeLayer(p.marker));
-                });
-                allGaarCircuits = [];
-
-                currentCircuitPoints.forEach(p => gaarMap.removeLayer(p.marker));
-                currentCircuitPoints = [];
+            function extractAllCircuits(text) {
+                const circuits = [];
+                const spaceRegex = /[1-9][\d,]*\s*h\s+([A-ZÀ-ÿ-]+)\s+([A-ZÀ-ÿ-]+)\s+([A-ZÀ-ÿ-]+)/ig;
+                const dashRegex = /[1-9][\d,]*\s*h\s+([A-ZÀ-ÿ -]+?)\s*–\s*([A-ZÀ-ÿ -]+?)\s*–\s*([A-ZÀ-ÿ -]+?)(?=\s+[A-Z]{4}|\s+Lever)/ig;
                 
-                updateButtonVisibility();
-            });
+                let match;
+                while ((match = spaceRegex.exec(text)) !== null) circuits.push([match[1], match[2], match[3]]);
+                while ((match = dashRegex.exec(text)) !== null) {
+                    const newCircuit = [match[1].trim(), match[2].trim(), match[3].trim()];
+                    if (!circuits.some(c => c.join('') === newCircuit.join(''))) circuits.push(newCircuit);
+                }
+                return circuits;
+            }
+
+            async function geocodeAndDrawAll(allCircuits) {
+                const colors = ['blue', 'red', 'green', 'purple', 'orange'];
+                const featureGroup = [];
+
+                for (const [index, cityNames] of allCircuits.entries()) {
+                    const { coordMap, resolvedNames } = await geocodeAndDisambiguate(cityNames);
+                    const coordinates = resolvedNames.map(city => coordMap.get(city)).filter(Boolean);
+
+                    if (coordinates.length === 3) {
+                        const polygon = L.polygon(coordinates, { color: colors[index % colors.length] }).addTo(gaarMap);
+                        const markers = coordinates.map((coord, cityIndex) => {
+                            const marker = L.marker(coord, { draggable: true }).addTo(gaarMap);
+                            marker.options.circuitIndex = gaarDrawnCircuits.length;
+                            marker.options.cityIndex = cityIndex;
+                            marker.bindTooltip(resolvedNames[cityIndex], { permanent: true, direction: 'top', className: 'gaar-city-label' }).openTooltip();
+                            marker.bindPopup(() => createPopupContent(resolvedNames[cityIndex], marker.options.circuitIndex, cityIndex));
+                            marker.on('dragend', handleMarkerDrag);
+                            return marker;
+                        });
+
+                        gaarDrawnCircuits.push({ polygon, markers, cityNames: resolvedNames });
+                        featureGroup.push(polygon);
+                    }
+                }
+
+                if (featureGroup.length > 0) {
+                    gaarMap.fitBounds(L.featureGroup(featureGroup).getBounds().pad(0.2));
+                    statusDiv.textContent = `Affichage de ${featureGroup.length} circuit(s). Tapez sur un point pour le modifier.`;
+                } else {
+                    throw new Error("Géocodage impossible pour les circuits trouvés.");
+                }
+            }
+            
+            function handleMarkerDrag(e) {
+                const marker = e.target;
+                const { circuitIndex } = marker.options;
+                updatePolygon(circuitIndex);
+            }
+
+            window.handleGaarPointUpdate = async function (circuitIndex, cityIndex) {
+                const input = document.getElementById(`gaar-input-${circuitIndex}-${cityIndex}`);
+                const newName = input.value.trim();
+                if (!newName) return;
+
+                statusDiv.textContent = `Recherche de "${newName}"...`;
+                const geocoded = await geocodeCity(newName, 1);
+                if (geocoded) {
+                    const circuit = gaarDrawnCircuits[circuitIndex];
+                    const marker = circuit.markers[cityIndex];
+                    marker.setLatLng(geocoded[0].latlon);
+                    circuit.cityNames[cityIndex] = newName;
+                    marker.setTooltipContent(newName);
+                    marker.closePopup();
+                    updatePolygon(circuitIndex);
+                    statusDiv.textContent = `Point mis à jour avec ${newName}.`;
+                } else {
+                    statusDiv.textContent = `Impossible de trouver les coordonnées pour "${newName}".`;
+                }
+            }
+
+            function createPopupContent(cityName, circuitIndex, cityIndex) {
+                const form = document.createElement('div');
+                form.className = 'gaar-popup-form';
+                form.innerHTML = `<label>Modifier le nom du point :</label><input type="text" id="gaar-input-${circuitIndex}-${cityIndex}" value="${cityName}" placeholder="Nouveau nom"><button onclick="handleGaarPointUpdate(${circuitIndex}, ${cityIndex})">Mettre à jour</button>`;
+                return form;
+            }
+
+            function updatePolygon(circuitIndex) {
+                const circuit = gaarDrawnCircuits[circuitIndex];
+                const newLatLngs = circuit.markers.map(m => m.getLatLng());
+                circuit.polygon.setLatLngs(newLatLngs);
+            }
+
+            async function geocodeAndDisambiguate(cityNames) {
+                const ambiguousNames = {'AIX': 'Aix-en-Provence'};
+                const coordMap = new Map();
+                let resolvedNames = [...cityNames];
+                const ambiguousCityIndex = cityNames.findIndex(name => Object.keys(ambiguousNames).includes(name.toUpperCase()));
+                if (ambiguousCityIndex !== -1) {
+                    const ambiguousCity = cityNames[ambiguousCityIndex];
+                    const referenceCities = cityNames.filter((_, i) => i !== ambiguousCityIndex);
+                    const referenceCoords = (await Promise.all(referenceCities.map(city => geocodeCity(city, 1)))).filter(Boolean).map(c => c[0].latlon);
+                    if (referenceCoords.length > 0) {
+                        const candidates = await geocodeCity(ambiguousCity, 5);
+                        if (candidates) {
+                            const bestCandidate = candidates.reduce((best, current) => {
+                                const currentDist = referenceCoords.reduce((sum, ref) => sum + getDistance(ref, current.latlon), 0);
+                                return currentDist < best.dist ? { cand: current, dist: currentDist } : best;
+                            }, { cand: null, dist: Infinity }).cand;
+                            if (bestCandidate) {
+                                resolvedNames[ambiguousCityIndex] = bestCandidate.name.split(',')[0];
+                                coordMap.set(resolvedNames[ambiguousCityIndex], bestCandidate.latlon);
+                            }
+                        }
+                    }
+                }
+                for (const city of resolvedNames) {
+                    if (!coordMap.has(city)) {
+                        const geocoded = await geocodeCity(city, 1);
+                        if (geocoded) coordMap.set(city, geocoded[0].latlon);
+                    }
+                }
+                return { coordMap, resolvedNames };
+            }
+            async function geocodeCity(name, limit = 1) { const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(name)}, France&limit=${limit}`; try { const response = await fetch(url); const data = await response.json(); return (data && data.length > 0) ? data.map(item => ({ name: item.display_name, latlon: [parseFloat(item.lat), parseFloat(item.lon)] })) : null; } catch (e) { return null; } }
+            function getDistance(c1, c2) { const R=6371,dLat=(c2[0]-c1[0])*Math.PI/180,dLon=(c2[1]-c1[1])*Math.PI/180,a=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(c1[0]*Math.PI/180)*Math.cos(c2[0]*Math.PI/180)*Math.sin(dLon/2)*Math.sin(dLon/2);return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a))}
+            
+            // Lancement du traitement
+            handlePdfFile(gaarPdfFile);
         }
             
         function initializeInteractivePdfViewers() {
@@ -836,11 +926,10 @@
                 if (!file || file.type !== 'application/pdf') return;
                 gaarFileObject = file;
                 document.getElementById('pdf-info-gaar').textContent = `Document chargé : ${file.name}`;
-                createInteractivePdfHandler(document.getElementById('pdf-interactive-container-gaar'), file);
+                
+                // On passe le fichier à la fois au viewer PDF et à la carte
+                createInteractivePdfHandler(document.getElementById('pdf-interactive-container-gaar'), file, initializeGaarMapFromFile);
                 document.getElementById('gaar-map-section').style.display = 'block';
-                if (gaarMap) {
-                    setTimeout(() => gaarMap.invalidateSize(), 10);
-                }
             };
             gaarInput.addEventListener('change', (e) => gaarFileHandler(e.target.files));
             setupDropzone('gaar-dropzone', gaarFileHandler);
@@ -904,7 +993,6 @@
         function initializeForeFlightButton() {
             const ffButton = document.getElementById('foreflight-btn');
             if (!ffButton) return;
-            // Toujours pointer vers le schéma URL de l'application
             ffButton.href = 'foreflight://';
         }
         
@@ -998,11 +1086,8 @@
                             if (data.gaar) { 
                                 gaarFileObject = data.gaar; 
                                 document.getElementById('pdf-info-gaar').textContent = `Document chargé : ${data.gaar.name}`; 
-                                createInteractivePdfHandler(document.getElementById('pdf-interactive-container-gaar'), data.gaar); 
+                                createInteractivePdfHandler(document.getElementById('pdf-interactive-container-gaar'), data.gaar, initializeGaarMapFromFile); 
                                 document.getElementById('gaar-map-section').style.display = 'block';
-                                if (gaarMap) {
-                                    setTimeout(() => gaarMap.invalidateSize(), 10);
-                                }
                             }
                             if (data.supAips && data.supAips.length > 0) { window.addSupAipFiles(data.supAips); }
                             
@@ -1186,7 +1271,6 @@
             }
 
             function displayParsedNotams(airportsData) {
-                // Clear only the NOTAM items, not the entire structure
                 document.querySelectorAll('#notam-display .notam-item').forEach(item => item.remove());
 
                 const isDateFilterActive = document.getElementById('notam-date-filter-cb').checked;
@@ -1199,7 +1283,6 @@
                     const icao = airportName.split(' ')[0];
                     let airportContainer = document.getElementById(`notam-container-${icao}`);
                     
-                    // If the airport from the PDF wasn't in the base list, create it on the fly
                     if (!airportContainer) {
                         airportContainer = createAirportSectionElement(icao, airportName);
                         notamDisplay.appendChild(airportContainer);
@@ -1207,7 +1290,7 @@
 
                     const rawNotams = airportsData[airportName];
                     if (rawNotams && rawNotams.length > 0 && rawNotams[0].startsWith('No information')) {
-                        return; // Do nothing for "No information" sections
+                        return;
                     }
 
                     let displayableNotams = rawNotams || [];
@@ -1252,10 +1335,8 @@
 
             // --- Main logic for this initializer ---
 
-            // 1. Create the empty airport sections on page load.
             renderInitialAirportSections();
 
-            // 2. Make the main parsing function available globally.
             window.parseAndDisplayNotams = function(savedState = null) {
                 const rawText = notamInput.value; 
                 if (!rawText.trim()) return; 
@@ -1314,7 +1395,6 @@
                 }
             }
             
-            // 3. Set up all event listeners.
             parseButton.addEventListener('click', () => window.parseAndDisplayNotams()); 
             
             filterButtons.forEach(button => button.addEventListener('click', applyNotamFilter));
@@ -1432,7 +1512,7 @@
                     const toggleBtn = airportContainer.querySelector('.metar-taf-toggle-btn');
                     metarTafContainer.style.display = 'block';
                     toggleBtn.textContent = 'Masquer METAR/TAF';
-                    fetchMetarTaf(icao, metarTafContainer);
+                    fetchMetarTaf(icao, container);
                 });
             };
 
