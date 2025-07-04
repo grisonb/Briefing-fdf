@@ -33,6 +33,20 @@
             background-color: var(--light-bg);
         }
         
+        /* NOUVEAU : Style pour le numéro de version */
+        #version-display {
+            position: fixed;
+            top: 5px;
+            left: 10px;
+            font-size: 12px;
+            font-weight: bold;
+            color: #555;
+            background-color: rgba(255, 255, 255, 0.7);
+            padding: 2px 6px;
+            border-radius: 4px;
+            z-index: 9999; /* Pour qu'il soit toujours au-dessus */
+        }
+
         .page-header {
             width: 100%;
             padding: 20px 0 50px 0;
@@ -339,6 +353,9 @@
     </style>
 </head>
 <body>
+    <!-- NOUVEAU : Numéro de version -->
+    <div id="version-display">V1.121</div>
+
     <div class="page-header">
         <div class="page-header-background"></div>
         <h1 id="main-title">Briefing Fdf</h1>
@@ -470,8 +487,8 @@
     <div id="sup-aip-dropzone" class="pdf-section dropzone">
         <h2>SUP AIP</h2>
         <div id="sup-aip-controls" class="pdf-controls">
-            <!-- LIEN MODIFIÉ ICI -->
-            <a id="foreflight-btn" href="foreflight://" class="link-button" style="background-color: #007aff;">Ouvrir ForeFlight</a>
+            <!-- LIEN CORRIGÉ ICI -->
+            <a id="foreflight-btn" href="#" class="link-button" style="background-color: #007aff;">Ouvrir ForeFlight</a>
             <button id="pdf-load-sup-aip-btn" class="link-button" style="background-color: #c0392b;">Charger SUP AIP</button>
             <button id="pdf-add-sup-aip-btn" class="link-button" style="display: none; background-color: #c0392b;">+</button>
         </div>
@@ -518,10 +535,21 @@
             initializeSupAipLoader();
             initializeNotamParser(); 
             initializeManualMetarFetch();
-            // La fonction initializeForeFlightButton() a été supprimée
+            initializeForeFlightLink(); // Fonction réintroduite
             initializeSessionManagement();
             initializeManagedTabs();
             initializeHelpTooltips(); 
+        }
+
+        // NOUVEAU : Fonction pour gérer le lien ForeFlight via JS
+        function initializeForeFlightLink() {
+            const ffButton = document.getElementById('foreflight-btn');
+            if (!ffButton) return;
+
+            ffButton.addEventListener('click', (event) => {
+                event.preventDefault(); // Empêche le navigateur de suivre le href="#"
+                window.location.href = 'foreflight://';
+            });
         }
 
         function initializeHelpTooltips() {
