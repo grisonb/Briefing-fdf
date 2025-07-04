@@ -397,7 +397,6 @@
     <div id="notam-pdf-dropzone" class="pdf-section dropzone">
         <h2>Extraire les NOTAMs d'un PDF</h2>
         <div class="pdf-controls">
-            <!-- POSITION MODIFIÉE -->
             <span id="nats-help-icon" class="help-icon" title="Comment utiliser NATS ?">?</span>
             <a href="https://nats-uk.ead-it.com/fwf-nats/restricted/user/ino/brief_aerodrome.faces?menuId=C920E9BB76441A9AE05341741DC25BDD" target="natsWindow" class="link-button managed-tab-link" style="background-color: #8e44ad;">Accéder au Briefing NATS</a>
             <button id="pdf-load-notam-btn" class="link-button" style="background-color: #2c3e50;">Charger PDF des NOTAMs</button>
@@ -471,7 +470,8 @@
     <div id="sup-aip-dropzone" class="pdf-section dropzone">
         <h2>SUP AIP</h2>
         <div id="sup-aip-controls" class="pdf-controls">
-            <a id="foreflight-btn" href="#" class="link-button" style="background-color: #007aff;">Ouvrir ForeFlight</a>
+            <!-- LIEN MODIFIÉ ICI -->
+            <a id="foreflight-btn" href="foreflight://" class="link-button" style="background-color: #007aff;">Ouvrir ForeFlight</a>
             <button id="pdf-load-sup-aip-btn" class="link-button" style="background-color: #c0392b;">Charger SUP AIP</button>
             <button id="pdf-add-sup-aip-btn" class="link-button" style="display: none; background-color: #c0392b;">+</button>
         </div>
@@ -518,7 +518,7 @@
             initializeSupAipLoader();
             initializeNotamParser(); 
             initializeManualMetarFetch();
-            initializeForeFlightButton();
+            // La fonction initializeForeFlightButton() a été supprimée
             initializeSessionManagement();
             initializeManagedTabs();
             initializeHelpTooltips(); 
@@ -1081,12 +1081,6 @@
             fileInput.addEventListener('change', (event) => addSupAipFiles(event.target.files));
             setupDropzone('sup-aip-dropzone', addSupAipFiles);
             window.addSupAipFiles = addSupAipFiles;
-        }
-
-        function initializeForeFlightButton() {
-            const ffButton = document.getElementById('foreflight-btn');
-            if (!ffButton) return;
-            ffButton.href = 'foreflight://';
         }
         
         function initializeSessionManagement() {
