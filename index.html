@@ -343,7 +343,7 @@
         <div class="page-header-background"></div>
         <h1 id="main-title">Briefing Fdf</h1>
         <p id="current-time-display"></p>
-        <p style="position: relative; z-index: 2; text-align: center; color: #333; font-size: 1em; margin-top: -25px; margin-bottom: 30px;">v1.16 beta</p>
+        <p style="position: relative; z-index: 2; text-align: center; color: #333; font-size: 1em; margin-top: -25px; margin-bottom: 30px;">v1.162 beta</p>
     </div>
 
     <div class="session-management"><h3>Gestion de la Session</h3><button id="save-session-btn" class="link-button" style="background-color: #28a745;">Sauvegarder la session</button><button id="clear-session-btn" class="link-button" style="background-color: var(--sc-red);">Effacer la sauvegarde</button><p id="session-status"></p></div>
@@ -352,7 +352,7 @@
         <h2>Feuille de Service / Dispo Avions</h2>
         <div class="pdf-controls">
             <button id="pdf-load-fds-btn" class="link-button" style="background-color: #2980b9;">Charger la Feuille de Service</button>
-            <a href="http://cncasc-app.fr/pages/ABE.php" target="dispoAvionsWindow" class="link-button managed-tab-link" style="background-color:#3498db;">Ouvrir dispo avions</a>
+            <a href="http://cncasc-app.fr/pages/ABE.php" target="_blank" class="link-button" style="background-color:#3498db;">Ouvrir dispo avions</a>
             <input type="file" id="pdf-input-fds" accept="application/pdf">
         </div>
         <div id="pdf-interactive-container-fds" class="interactive-pdf-viewer" style="display: none;">
@@ -365,8 +365,8 @@
     <div class="map-section">
         <h2>Cartes des Risques Météo-France</h2>
         <div class="controles" style="gap: 20px;">
-            <a href="https://pro.meteofrance.com/page/index/affiche/id/307352" target="meteoFranceProWindow" class="link-button managed-tab-link" style="background-color: #f39c12;">Carte des Risques / National</a>
-            <a href="https://pro.meteofrance.com/page/index/affiche/id/307357" target="meteoFranceProSudWindow" class="link-button managed-tab-link" style="background-color: #e67e22;">Carte des Risques / Zone Sud</a>
+            <a href="https://pro.meteofrance.com/page/index/affiche/id/307352" target="_blank" class="link-button" style="background-color: #f39c12;">Carte des Risques / National</a>
+            <a href="https://pro.meteofrance.com/page/index/affiche/id/307357" target="_blank" class="link-button" style="background-color: #e67e22;">Carte des Risques / Zone Sud</a>
         </div>
     </div>
 
@@ -401,7 +401,7 @@
         <div class="pdf-controls">
             <!-- POSITION MODIFIÉE -->
             <span id="nats-help-icon" class="help-icon" title="Comment utiliser NATS ?">?</span>
-            <a href="https://nats-uk.ead-it.com/fwf-nats/restricted/user/ino/brief_aerodrome.faces?menuId=C920E9BB76441A9AE05341741DC25BDD" target="natsWindow" class="link-button managed-tab-link" style="background-color: #8e44ad;">Accéder au Briefing NATS</a>
+            <a href="https://nats-uk.ead-it.com/fwf-nats/restricted/user/ino/brief_aerodrome.faces?menuId=C920E9BB76441A9AE05341741DC25BDD" target="_blank" class="link-button" style="background-color: #8e44ad;">Accéder au Briefing NATS</a>
             <button id="pdf-load-notam-btn" class="link-button" style="background-color: #2c3e50;">Charger PDF des NOTAMs</button>
             <input type="file" id="pdf-input-notam" accept="application/pdf">
         </div>
@@ -466,7 +466,7 @@
     <div class="map-section">
         <h2>Carte AZBA</h2>
         <div style="text-align:center;">
-            <a href="https://www.sia.aviation-civile.gouv.fr/schedules" target="azbaSiaWindow" class="link-button managed-tab-link" style="background-color: #2c3e50;">Ouvrir AZBA</a>
+            <a href="https://www.sia.aviation-civile.gouv.fr/schedules" target="_blank" class="link-button" style="background-color: #2c3e50;">Ouvrir AZBA</a>
         </div>
     </div>
     
@@ -481,13 +481,13 @@
         <input type="file" id="pdf-input-sup-aip" accept="application/pdf" multiple>
     </div>
 
-    <div class="map-section"><h2>Pélicandromes</h2><div style="text-align:center;"><a href="http://cncasc-app.fr/" target="pelicandromesWindow" class="link-button managed-tab-link" style="background-color:#3498db;">Ouvrir Pélicandromes</a></div></div>
+    <div class="map-section"><h2>Pélicandromes</h2><div style="text-align:center;"><a href="http://cncasc-app.fr/" target="_blank" class="link-button" style="background-color:#3498db;">Ouvrir Pélicandromes</a></div></div>
     
     <div class="map-section">
         <h2>SYNERGI / CNCASC</h2>
         <div class="controles">
-            <a href="https://synergi2.dgscgc.interieur.gouv.fr/evenements?forInit=false&statusEvent=PUBLIC" target="synergiWindow" class="link-button managed-tab-link" style="background-color:#16a085;">Ouvrir SYNERGI</a>
-            <a href="http://cncasc-app.fr/" target="cncascWindow" class="link-button managed-tab-link" style="background-color:#3498db;">Ouvrir CNCASC</a>
+            <a href="https://synergi2.dgscgc.interieur.gouv.fr/evenements?forInit=false&statusEvent=PUBLIC" target="_blank" class="link-button" style="background-color:#16a085;">Ouvrir SYNERGI</a>
+            <a href="http://cncasc-app.fr/" target="_blank" class="link-button" style="background-color:#3498db;">Ouvrir CNCASC</a>
         </div>
     </div>
     
@@ -501,7 +501,6 @@
         let fdsFileObject = null;
         let gaarFileObject = null;
         let supAipFileObjects = [];
-        let openedWindows = {}; 
         
         // --- GAAR MAP SPECIFIC VARIABLES ---
         let gaarMap = null;
@@ -522,7 +521,6 @@
             initializeManualMetarFetch();
             initializeForeFlightButton();
             initializeSessionManagement();
-            initializeManagedTabs();
             initializeHelpTooltips(); 
         }
 
@@ -1203,22 +1201,6 @@
                 } catch (error) { sessionStatus.textContent = `Impossible d'initialiser la base de données: ${error}`; }
             })();
         }
-
-        function initializeManagedTabs() {
-            const links = document.querySelectorAll('.managed-tab-link');
-            links.forEach(link => {
-                link.addEventListener('click', (event) => {
-                    event.preventDefault(); 
-                    const windowName = link.target;
-                    const url = link.href;
-                    if (!openedWindows[windowName] || openedWindows[windowName].closed) {
-                        openedWindows[windowName] = window.open(url, windowName);
-                    } else {
-                        openedWindows[windowName].focus();
-                    }
-                });
-            });
-        }
         
         async function extractTextFromPdf(file, pdfInfoElement) { 
             const notamInput = document.getElementById('notam-input'); 
@@ -1607,7 +1589,7 @@
                     const toggleBtn = airportContainer.querySelector('.metar-taf-toggle-btn');
                     metarTafContainer.style.display = 'block';
                     toggleBtn.textContent = 'Masquer METAR/TAF';
-                    fetchMetarTaf(icao, container);
+                    fetchMetarTaf(icao, metarTafContainer); // Correction : passer le bon container
                 });
             };
 
