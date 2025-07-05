@@ -343,7 +343,7 @@
         <div class="page-header-background"></div>
         <h1 id="main-title">Briefing Fdf</h1>
         <p id="current-time-display"></p>
-        <p style="position: relative; z-index: 2; text-align: center; color: #333; font-size: 1em; margin-top: -25px; margin-bottom: 30px;">v1.162 beta</p>
+        <p style="position: relative; z-index: 2; text-align: center; color: #333; font-size: 1em; margin-top: -25px; margin-bottom: 30px;">v1.172 beta</p>
     </div>
 
     <div class="session-management"><h3>Gestion de la Session</h3><button id="save-session-btn" class="link-button" style="background-color: #28a745;">Sauvegarder la session</button><button id="clear-session-btn" class="link-button" style="background-color: var(--sc-red);">Effacer la sauvegarde</button><p id="session-status"></p></div>
@@ -776,19 +776,38 @@
             populateTemsi();
         }
 
-        function createInteractivePdfHandler(viewerContainer, file, callback) { 
+        function createInteractivePdfHandler(viewerContainer, file, callback, initialScale = 1.5) {
             const canvas = viewerContainer.querySelector('.pdf-canvas');
             const controls = viewerContainer.querySelector('.interactive-pdf-controls');
             const wrapper = viewerContainer.querySelector('.pdf-canvas-wrapper');
             const ctx = canvas.getContext('2d');
-            let pdfDoc = null, pageNum = 1, pageRendering = false, pageNumPending = null, scale = 1.5, isPanning = false, panStart = { x: 0, y: 0 };
             
+            // Variables de gestion d'état
+            let pdfDoc = null, pageNum = 1, pageRendering = false, pageNumPending = null, scale = initialScale;
+            
+            // Variables pour le Panning (souris et tactile)
+            let isPanning = false, panStart = { x: 0, y: 0 };
+            
+            // Variables pour le Pinch-to-Zoom
+            let initialPinchDistance = null, startScale = null;
+
+            function getDistance(touch1, touch2) {
+                const dx = touch1.clientX - touch2.clientX;
+                const dy = touch1.clientY - touch2.clientY;
+                return Math.sqrt(dx * dx + dy * dy);
+            }
+
             function renderPage(num) {
                 pageRendering = true;
                 pdfDoc.getPage(num).then(page => {
-                    const viewport = page.getViewport({ scale: scale });
+                    const pixelRatio = Math.max(window.devicePixelRatio || 1, 2);
+                    const viewport = page.getViewport({ scale: scale * pixelRatio });
+                    
                     canvas.height = viewport.height;
                     canvas.width = viewport.width;
+                    canvas.style.height = `${viewport.height / pixelRatio}px`;
+                    canvas.style.width = `${viewport.width / pixelRatio}px`;
+
                     const renderTask = page.render({ canvasContext: ctx, viewport: viewport });
                     renderTask.promise.then(() => {
                         pageRendering = false;
@@ -797,7 +816,9 @@
                 });
                 controls.querySelector('.page-num').textContent = num;
             }
+
             function queueRenderPage(num) { if (pageRendering) { pageNumPending = num; } else { renderPage(num); } }
+            
             controls.addEventListener('click', e => {
                 if (!pdfDoc || !e.target.dataset.action) return;
                 const action = e.target.dataset.action;
@@ -806,6 +827,8 @@
                 else if (action === 'zoom-in' && scale < 5.0) { scale = parseFloat((scale + 0.2).toFixed(2)); queueRenderPage(pageNum); }
                 else if (action === 'zoom-out' && scale > 0.3) { scale = parseFloat((scale - 0.2).toFixed(2)); queueRenderPage(pageNum); }
             });
+
+            // GESTION DE LA SOURIS
             wrapper.addEventListener('wheel', e => {
                 if (!pdfDoc) return;
                 e.preventDefault();
@@ -817,6 +840,42 @@
             wrapper.addEventListener('mouseup', () => isPanning = false);
             wrapper.addEventListener('mouseleave', () => isPanning = false);
             wrapper.addEventListener('mousemove', e => { if (isPanning) { e.preventDefault(); wrapper.scrollLeft = panStart.x - e.clientX; wrapper.scrollTop = panStart.y - e.clientY; } });
+            
+            // GESTION DU TACTILE (PINCH-TO-ZOOM ET PANNING)
+            wrapper.addEventListener('touchstart', e => {
+                if (e.touches.length === 2) { // Pinch
+                    e.preventDefault();
+                    isPanning = false;
+                    initialPinchDistance = getDistance(e.touches[0], e.touches[1]);
+                    startScale = scale;
+                } else if (e.touches.length === 1) { // Pan
+                    isPanning = true;
+                    panStart.x = e.touches[0].clientX + wrapper.scrollLeft;
+                    panStart.y = e.touches[0].clientY + wrapper.scrollTop;
+                }
+            }, { passive: false });
+
+            wrapper.addEventListener('touchmove', e => {
+                if (e.touches.length === 2 && initialPinchDistance && startScale) { // Pinching
+                    e.preventDefault();
+                    const currentDistance = getDistance(e.touches[0], e.touches[1]);
+                    const newScale = startScale * (currentDistance / initialPinchDistance);
+                    scale = Math.max(0.3, Math.min(newScale, 5.0)); // Clamp scale
+                    queueRenderPage(pageNum);
+                } else if (e.touches.length === 1 && isPanning) { // Panning
+                    e.preventDefault();
+                    wrapper.scrollLeft = panStart.x - e.touches[0].clientX;
+                    wrapper.scrollTop = panStart.y - e.touches[0].clientY;
+                }
+            }, { passive: false });
+
+            wrapper.addEventListener('touchend', e => {
+                isPanning = false;
+                initialPinchDistance = null;
+                startScale = null;
+            });
+
+            // Chargement du PDF
             const fileReader = new FileReader();
             fileReader.onload = function() {
                 pdfjsLib.getDocument(new Uint8Array(this.result)).promise.then(pdfDoc_ => {
@@ -825,7 +884,7 @@
                     pageNum = 1;
                     renderPage(pageNum);
                     viewerContainer.style.display = 'block';
-                    if (callback) callback(file); // Appel du callback une fois le PDF chargé
+                    if (callback) callback(file);
                 });
             };
             fileReader.readAsArrayBuffer(file);
@@ -1007,7 +1066,7 @@
                 if (!file || file.type !== 'application/pdf') return;
                 fdsFileObject = file;
                 document.getElementById('pdf-info-fds').textContent = `Document chargé : ${file.name}`;
-                createInteractivePdfHandler(document.getElementById('pdf-interactive-container-fds'), file);
+                createInteractivePdfHandler(document.getElementById('pdf-interactive-container-fds'), file, null, 1.65);
             };
             fdsInput.addEventListener('change', (e) => fdsFileHandler(e.target.files));
             setupDropzone('fds-dropzone', fdsFileHandler);
@@ -1019,9 +1078,7 @@
                 if (!file || file.type !== 'application/pdf') return;
                 gaarFileObject = file;
                 document.getElementById('pdf-info-gaar').textContent = `Document chargé : ${file.name}`;
-                
-                // On passe le fichier à la fois au viewer PDF et à la carte
-                createInteractivePdfHandler(document.getElementById('pdf-interactive-container-gaar'), file, initializeGaarMapFromFile);
+                createInteractivePdfHandler(document.getElementById('pdf-interactive-container-gaar'), file, initializeGaarMapFromFile, 1.3);
                 document.getElementById('gaar-map-section').style.display = 'block';
             };
             gaarInput.addEventListener('change', (e) => gaarFileHandler(e.target.files));
@@ -1175,11 +1232,11 @@
                     request.onsuccess = () => {
                         const data = request.result;
                         if (data) {
-                            if (data.fds) { fdsFileObject = data.fds; document.getElementById('pdf-info-fds').textContent = `Document chargé : ${data.fds.name}`; createInteractivePdfHandler(document.getElementById('pdf-interactive-container-fds'), data.fds); }
+                            if (data.fds) { fdsFileObject = data.fds; document.getElementById('pdf-info-fds').textContent = `Document chargé : ${data.fds.name}`; createInteractivePdfHandler(document.getElementById('pdf-interactive-container-fds'), data.fds, null, 1.65); }
                             if (data.gaar) { 
                                 gaarFileObject = data.gaar; 
                                 document.getElementById('pdf-info-gaar').textContent = `Document chargé : ${data.gaar.name}`; 
-                                createInteractivePdfHandler(document.getElementById('pdf-interactive-container-gaar'), data.gaar, initializeGaarMapFromFile); 
+                                createInteractivePdfHandler(document.getElementById('pdf-interactive-container-gaar'), data.gaar, initializeGaarMapFromFile, 1.3); 
                                 document.getElementById('gaar-map-section').style.display = 'block';
                             }
                             if (data.supAips && data.supAips.length > 0) { window.addSupAipFiles(data.supAips); }
