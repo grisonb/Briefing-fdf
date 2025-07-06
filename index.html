@@ -349,7 +349,7 @@
         <div class="page-header-background"></div>
         <h1 id="main-title">Briefing Fdf</h1>
         <p id="current-time-display"></p>
-        <p style="position: relative; z-index: 2; text-align: center; color: #333; font-size: 1em; margin-top: -25px; margin-bottom: 30px;">v1.18 beta</p>
+        <p style="position: relative; z-index: 2; text-align: center; color: #333; font-size: 1em; margin-top: -25px; margin-bottom: 30px;">v1.182 beta</p>
     </div>
 
     <div class="session-management"><h3>Gestion de la Session</h3><button id="save-session-btn" class="link-button" style="background-color: #28a745;">Sauvegarder la session</button><button id="clear-session-btn" class="link-button" style="background-color: var(--sc-red);">Effacer la sauvegarde</button><p id="session-status"></p></div>
@@ -723,7 +723,7 @@
                     pdfUrl = `${baseUrl}lf_sup_${fullYear}_${paddedNumber}_fr.pdf`;
                 }
                 
-                return `<a href="${pdfUrl}" class="sup-aip-link" target="_blank" title="Ouvrir le PDF du SUP AIP ${match} et préparer le chargement">${match}</a>`;
+                return `<a href="${pdfUrl}" class="sup-aip-link" target="_blank" title="Ouvrir le PDF du SUP AIP ${match}">${match}</a>`;
             });
             
             const formattedTextWithLineBreaks = linkifiedText.replace(/\s+([B-G]\))/g, '<br>$1');
@@ -849,9 +849,13 @@
                 
                 const date = new Date(now);
                 const reversedEcheances = [...echeances].reverse();
-                let activeEcheance = reversedEcheances.find(e => currentHour >= e);
+                
+                // CORRECTION TEMSI: Une carte est disponible 1h avant sa validité.
+                // On cherche la dernière échéance `e` pour laquelle `currentHour >= e - 1`.
+                let activeEcheance = reversedEcheances.find(e => currentHour >= e - 1);
 
                 if (activeEcheance === undefined) {
+                    // Si on est avant 5h UTC, la dernière carte valide est celle de 21h UTC de la veille.
                     activeEcheance = 21;
                     date.setUTCDate(date.getUTCDate() - 1);
                 }
@@ -859,6 +863,7 @@
                 date.setUTCHours(activeEcheance, 0, 0, 0);
                 
                 let initialEcheance = '';
+                // On génère 8 options autour de l'échéance active pour avoir un choix large.
                 for (let i = -3; i <= 4; i++) { 
                     let echeanceDate = new Date(date);
                     let echeanceIndex = echeances.indexOf(activeEcheance) + i;
@@ -1504,10 +1509,11 @@
                 'LFMD': 'LFMD - CANNES MANDELIEU', 'LFHO': 'LFHO - AUBENAS ARDECHE MERIDIONALE', 'LFLU': 'LFLU - VALENCE CHABEUIL',
                 'LFMH': 'LFMH - ST ETIENNE BOUTHEON', 'LFMU': 'LFMU - BEZIERS VIAS', 'LFMP': 'LFMP - PERPIGNAN RIVESALTES',
                 'LFMK': 'LFMK - CARCASSONNE SALVAZA', 'LFCC': 'LFCC - CAHORS LALBENQUE', 'LFBD': 'LFBD - BORDEAUX MERIGNAC',
-                'LFBL': 'LFBL - LIMOGES BELLEGARDE', 'LFBM': 'LFBM - LE MANS ARNAY', 'LFBP': 'LFBP - PAU PYRENEES',
+                'LFBL': 'LFBL - LIMOGES BELLEGARDE', 'LFBM': 'LFBM - MONT DE MARSAN', 'LFBP': 'LFBP - PAU PYRENEES',
                 'LFKC': 'LFKC - CALVI STE CATHERINE', 'LFKB': 'LFKB - BASTIA PORETTA', 'LFKJ': 'LFKJ - AJACCIO NAPOLEON BONAPARTE',
-                'LFKF': 'LFKF - FIGARI SUD CORSE', 'LFJR': 'LFJR - ANGERS', 'LFAQ': 'LFAQ - LE TOUQUET', 'LFLX': 'LFLX - CHALONS VATRY',
-                'LFSG': 'LFSG - EPINAL MIRECOURT', 'LFRV': 'LFRV - VANNES'
+                'LFKF': 'LFKF - FIGARI SUD CORSE', 'LFJR': 'LFJR - ANGERS LOIRE', 'LFAQ': 'LFAQ - LE TOUQUET PARIS PLAGE', 
+                'LFLX': 'LFLX - CHATEAUROUX DEOLS',
+                'LFSG': 'LFSG - EPINAL MIRECOURT', 'LFRV': 'LFRV - VANNES GOLFE DU MORBIHAN'
             };
 
             function renderInitialAirportSections() {
@@ -1663,14 +1669,13 @@
 
             notamSection.addEventListener('click', async (event) => {
                 const target = event.target;
+                
                 if (target.matches('.sup-aip-link')) {
                     event.preventDefault();
                     window.open(target.href, '_blank');
-                    const dropzone = document.getElementById('sup-aip-dropzone');
-                    dropzone.classList.add('active');
-                    dropzone.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     return;
                 }
+
                 if (target.matches('.metar-taf-toggle-btn')) {
                     const button = target;
                     const icao = button.dataset.icao;
@@ -1689,43 +1694,7 @@
                     const container = button.closest('.metar-taf-container');
                     await fetchMetarTaf(icao, container);
                 }
-            });
 
-            notamSection.addEventListener('mouseup', (event) => {
-                const textContentDiv = event.target.closest('.notam-text-content');
-                if (!textContentDiv) return;
-                
-                setTimeout(() => {
-                    const selection = window.getSelection();
-                    if (!selection || selection.isCollapsed || selection.rangeCount === 0) return;
-                    const range = selection.getRangeAt(0);
-                    if (!textContentDiv.contains(range.commonAncestorContainer)) return;
-
-                    if (!event.ctrlKey) {
-                        textContentDiv.querySelectorAll('mark.highlighted-text').forEach(highlight => {
-                            const parent = highlight.parentNode;
-                            while (highlight.firstChild) parent.insertBefore(highlight.firstChild, highlight);
-                            parent.removeChild(highlight);
-                        });
-                        textContentDiv.normalize();
-                    }
-
-                    const newSelection = window.getSelection();
-                    if (newSelection.isCollapsed) return;
-                    const newRange = newSelection.getRangeAt(0);
-
-                    const mark = document.createElement('mark');
-                    mark.className = 'highlighted-text';
-                    try {
-                        newRange.surroundContents(mark);
-                    } catch (e) {
-                        console.warn("Impossible d'entourer la sélection.", e);
-                    }
-                    newSelection.removeAllRanges();
-                }, 10);
-            });
-
-            notamSection.addEventListener('click', (event) => {
                 const selection = window.getSelection();
                 if (selection && !selection.isCollapsed) {
                     return;
@@ -1740,6 +1709,50 @@
                     parent.normalize();
                 }
             });
+
+            // CORRECTION: Logique de surlignage tactile/souris
+            function handleTextHighlight(event) {
+                const textContentDiv = event.target.closest('.notam-text-content');
+                if (!textContentDiv) return;
+                
+                setTimeout(() => {
+                    const selection = window.getSelection();
+                    if (!selection || selection.isCollapsed || selection.rangeCount === 0) return;
+
+                    const range = selection.getRangeAt(0);
+                    if (!textContentDiv.contains(range.commonAncestorContainer)) return;
+                    
+                    const isTouchEvent = event.type === 'touchend';
+                    
+                    // Pour la SOURIS: on efface les surlignages précédents SEULEMENT si la touche CTRL n'est PAS enfoncée.
+                    // Pour le TACTILE: on n'efface JAMAIS les surlignages précédents pour permettre le multi-surlignage.
+                    if (!isTouchEvent && !event.ctrlKey) {
+                        textContentDiv.querySelectorAll('mark.highlighted-text').forEach(highlight => {
+                            const parent = highlight.parentNode;
+                            while (highlight.firstChild) parent.insertBefore(highlight.firstChild, highlight);
+                            parent.removeChild(highlight);
+                        });
+                        textContentDiv.normalize();
+                    }
+
+                    // On récupère la nouvelle sélection (qui peut être différente si on a tout effacé)
+                    const newSelection = window.getSelection();
+                    if (newSelection.isCollapsed) return;
+                    const newRange = newSelection.getRangeAt(0);
+
+                    const mark = document.createElement('mark');
+                    mark.className = 'highlighted-text';
+                    try {
+                        newRange.surroundContents(mark);
+                    } catch (e) {
+                        console.warn("Impossible d'entourer la sélection.", e);
+                    }
+                    newSelection.removeAllRanges();
+                }, 10);
+            }
+            
+            notamSection.addEventListener('mouseup', handleTextHighlight);
+            notamSection.addEventListener('touchend', handleTextHighlight);
         }
         
         function initializeManualMetarFetch() {
@@ -1761,7 +1774,7 @@
                     const toggleBtn = airportContainer.querySelector('.metar-taf-toggle-btn');
                     metarTafContainer.style.display = 'block';
                     toggleBtn.textContent = 'Masquer METAR/TAF';
-                    fetchMetarTaf(icao, metarTafContainer); // Correction : passer le bon container
+                    fetchMetarTaf(icao, metarTafContainer);
                 });
             };
 
