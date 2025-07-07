@@ -1,0 +1,1352 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Briefing Fdf (Test)</title>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" integrity="sha256-kLaT2GOSpHechhsozzB+flnD+zUyjE2LlfWPgU04xyI=" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js" integrity="sha256-WBkoXOwTeyKclOHuWtc+i2uENFpDZ9YPdf5Hf+D7ewM=" crossorigin=""></script>
+
+    <style>
+        :root {
+            --sc-red: #e60012;
+            --sc-blue: #0a2c5a;
+            --sc-yellow: #ffc107;
+            --light-bg: #f4f6f9;
+            --dark-text: #333;
+            --border-color: #e0e0e0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+            padding: 0 20px 20px 20px;
+            color: var(--dark-text);
+            background-color: var(--light-bg);
+        }
+        
+        .page-header {
+            width: 100%;
+            padding: 20px 0 50px 0;
+            margin-bottom: 40px;
+            position: relative;
+        }
+        
+        .page-header-background {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(155deg, 
+                var(--sc-red) 0%, 
+                var(--sc-red) 47%, 
+                white 47%, 
+                white 53%, 
+                var(--sc-yellow) 53%, 
+                var(--sc-yellow) 100%
+            );
+            clip-path: polygon(0 0, 100% 0, 100% 75%, 0% 100%);
+            z-index: 1;
+        }
+
+        #main-title {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            color: #17A2B8;
+            font-size: 3em;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+            margin: 20px 0 10px 0;
+            padding: 0 20px;
+        }
+
+        #current-time-display {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            color: #000;
+            font-size: 2em;
+            font-weight: bold;
+            margin: 0 0 30px 0;
+            text-shadow: none;
+        }
+
+        .session-management {
+            width: 100%;
+            max-width: 980px;
+            margin: 0 auto 40px auto;
+            position: relative;
+            z-index: 2;
+            padding: 20px;
+            background-color: rgba(10, 44, 90, 0.8);
+            color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .session-management h3 { margin-top: 0; color: white; margin-bottom: 20px;}
+        .session-management button { margin: 5px; font-size: 1em; padding: 10px 18px; }
+        .session-management .session-controls-group { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-bottom: 15px; width: 100%;}
+        #session-status { font-style: italic; color: white; opacity: 0.9; margin-top: 15px; font-weight: bold; text-align: center;}
+        
+        .map-section, .pdf-section, .notam-section {
+            width: 100%;
+            max-width: 980px;
+            margin-bottom: 40px;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+            background-color: #fff;
+            border: 1px solid var(--border-color);
+            border-top: 5px solid var(--sc-red);
+            transition: transform 0.2s ease-out;
+        }
+        .map-section:hover, .notam-section:hover, .pdf-section:hover {
+            transform: translateY(-3px);
+        }
+
+        h2 { 
+            text-align: center;
+            color: var(--sc-blue); 
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+            margin-top: 0;
+            margin-bottom: 25px;
+        }
+        
+        .carte-container { 
+            width: 100%; 
+            height: 90vh; 
+            border: 1px solid var(--border-color); 
+            position: relative; 
+            background-color: #e9ecef; 
+            border-radius: 8px; 
+            overflow: hidden;
+        }
+        
+        .carte-container iframe { width: 100%; height: 100%; border: none; }
+        
+        #temsi-frame {
+            transform: scale(1.25) translate(8%, 8%);
+            transform-origin: center;
+        }
+
+        .controles, .pdf-controls { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; margin-bottom: 20px; gap: 15px; }
+        select, textarea, button, input { font-size: 1em; padding: 10px; border-radius: 5px; border: 1px solid #ccc; }
+        textarea { width: 100%; min-height: 200px; box-sizing: border-box; font-family: monospace; }
+        .info-carte, .pdf-info { margin-bottom: 20px; font-size: 1.1em; font-weight: bold; text-align: center; }
+        .pdf-info { font-size: 1em; margin-top: 10px; margin-bottom: 0; }
+        #pdf-input-fds, #pdf-input-gaar, #pdf-input-notam, #pdf-input-sup-aip, #import-session-input { display: none; }
+        
+        .link-button { display: inline-block; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-size: 1.1em; transition: all 0.2s; cursor: pointer; border: none; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .link-button:hover { opacity: 0.9; transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
+        
+        .notam-controls { display: none; justify-content: center; flex-wrap: wrap; gap: 15px; margin-top: 20px; }
+        
+        #notam-controls-bottom { 
+            width: 100%; 
+            max-width: 980px; 
+            margin-top: 20px;
+            margin-bottom: 0;
+            padding: 0 20px; 
+            box-sizing: border-box; 
+        }
+
+        .confirm-action { background-color: #3498db !important; }
+        .confirm-action:hover { background-color: #2980b9 !important; }
+        .reset { background-color: #95a5a6; }
+        .save-pdf-action { background-color: #8e44ad; }
+        
+        .notam-pre-filter {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 25px;
+            margin-bottom: 25px;
+            font-size: 0.9em;
+        }
+        
+        #notam-display h3, #manual-metar-display h3 { border-bottom: 2px solid var(--sc-yellow); padding-bottom: 5px; margin-top: 30px; color: var(--sc-blue);}
+        
+        .notam-item { 
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+            border-left: 5px solid var(--sc-yellow); 
+            padding: 15px; 
+            margin-bottom: 15px; 
+            border-radius: 4px; 
+            transition: background-color 0.2s, border-left-color 0.2s, max-height 0.3s ease-out, opacity 0.3s ease-out; 
+            background-color: #f8f9fa;
+        }
+        .notam-item:has(.notam-checkbox:checked) { 
+            border-left-color: #28a745; 
+            background-color: #f0fff4; 
+        }
+        .notam-checkbox {
+             margin-top: 2px;
+             flex-shrink: 0;
+        }
+        .notam-content-wrapper {
+            flex-grow: 1;
+        }
+        .notam-validity {
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        mark.highlighted-text {
+            background-color: #ffd700;
+            font-weight: bold;
+            color: black;
+        }
+
+        .sup-aip-item { margin-bottom: 30px; border-top: 2px solid var(--sc-blue); padding-top: 20px; }
+        
+        .dropzone.drag-over { background-color: #fff8e1; border-color: var(--sc-yellow); border-style: dashed; }
+        
+        .interactive-pdf-viewer { border: 1px solid var(--border-color); border-radius: 8px; background-color: #e9ecef; overflow: hidden; }
+        .pdf-canvas-wrapper { width: 100%; height: 90vh; overflow: auto; cursor: grab; }
+
+        .interactive-pdf-controls {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            padding: 8px 10px;
+            gap: 15px;
+            background-color: #f0f0f0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .interactive-pdf-controls .pdf-nav-btn {
+            padding: 5px 12px;
+            font-size: 0.9em;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            border-radius: 4px;
+        }
+        .interactive-pdf-controls .pdf-nav-btn:hover {
+            background-color: #e9e9e9;
+        }
+        .interactive-pdf-controls > span {
+            font-size: 0.9em;
+            color: #555;
+            font-weight: bold;
+        }
+        .interactive-pdf-controls .zoom-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .interactive-pdf-controls .zoom-controls span {
+            font-size: 0.9em;
+            color: #555;
+        }
+        
+        .metar-taf-toggle-btn { background-color: var(--sc-blue); color: white; border: none; padding: 5px 10px; font-size: 0.8em; cursor: pointer; border-radius: 4px; margin-left: 10px; vertical-align: middle; }
+        .metar-taf-refresh-btn { margin-left: 10px; background: none; border: 1px solid #ccc; cursor: pointer; border-radius: 50%; width: 24px; height: 24px; font-size: 14px; line-height: 22px; vertical-align: middle; padding: 0; }
+        .metar-taf-refresh-btn:hover { background-color: #e9ecef; }
+        .metar-taf-container { border: 1px solid #e0e0e0; background-color: #fdfdfd; padding: 15px; margin-top: 10px; border-radius: 5px; font-size: 0.9em; }
+        .metar-taf-container h4 { margin: 10px 0 5px 0; color: var(--sc-blue); font-size: 1em; display: flex; align-items: center; }
+        .metar-taf-container pre { white-space: pre-wrap; word-wrap: break-word; font-family: monospace; background-color: #e9ecef; padding: 10px; border-radius: 4px; margin: 0; font-size: 1.1em; }
+        .metar-taf-container .error-msg { color: var(--sc-red); font-style: italic; }
+        
+        #manual-metar-section { margin-top: 40px; padding-top: 20px; border-top: 2px solid var(--sc-blue); }
+        #manual-icao-input { width: 70%; max-width: 500px; text-transform: uppercase; }
+        
+        .hidden-by-filter, .hidden-by-prefilter { 
+            display: none !important;
+        }
+
+        footer { margin-top: 20px; font-size: 0.9em; color: #666; }
+
+        #gaar-map-container {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        #gaar-map-display { width: 100%; height: 500px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        #gaar-status { margin-top: 15px; font-weight: bold; color: #555; min-height: 20px; text-align: center; }
+        .gaar-city-label { background-color: rgba(255, 255, 255, 0.8); border: 1px solid #999; border-radius: 3px; font-size: 10px; font-weight: bold; padding: 2px 5px; box-shadow: none; }
+        .gaar-popup-form { display: flex; flex-direction: column; gap: 5px; }
+        .gaar-popup-form input { border: 1px solid #ccc; padding: 5px; border-radius: 3px; }
+        .gaar-popup-form button { background-color: #007bff; color: white; border: none; padding: 5px 8px; border-radius: 3px; cursor: pointer; }
+
+        .help-icon {
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            width: 24px;
+            height: 24px;
+            background-color: var(--sc-blue);
+            color: white;
+            border-radius: 50%;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 14px;
+            user-select: none;
+            transition: transform 0.2s;
+        }
+        .help-icon:hover {
+            transform: scale(1.1);
+        }
+
+        .help-tooltip {
+            background-color: #fffbe6;
+            border: 1px solid #ffe58f;
+            border-radius: 8px;
+            padding: 15px 20px;
+            margin-top: 20px;
+            font-size: 0.9em;
+            text-align: left;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+        }
+        .help-tooltip h4 {
+            margin-top: 0;
+            color: var(--sc-blue);
+            border-bottom: 1px solid #ffe58f;
+            padding-bottom: 8px;
+            margin-bottom: 12px;
+        }
+        .help-tooltip ol {
+            padding-left: 20px;
+            margin-bottom: 0;
+        }
+        .help-tooltip li {
+            margin-bottom: 10px;
+        }
+        .help-tooltip code {
+            background-color: #e9ecef;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: monospace;
+            color: var(--sc-red);
+            font-weight: bold;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="page-header">
+        <div class="page-header-background"></div>
+        <h1 id="main-title">Briefing Fdf</h1>
+        <p id="current-time-display"></p>
+        <p style="position: relative; z-index: 2; text-align: center; color: #333; font-size: 1em; margin-top: -25px; margin-bottom: 30px;">v1.2 beta</p>
+    </div>
+
+    <div class="session-management">
+        <h3>Gestion de la Session</h3>
+        <div class="session-controls-group">
+            <button id="save-session-btn" class="link-button" style="background-color: #28a745;">Sauvegarder</button>
+            <button id="clear-session-btn" class="link-button" style="background-color: var(--sc-red);">Effacer</button>
+            <button id="import-session-btn" class="link-button" style="background-color: #16a085;">Charger</button>
+            <button id="export-session-btn" class="link-button" style="background-color: #3498db;">Exporter</button>
+        </div>
+        <input type="file" id="import-session-input" accept=".json,application/json">
+        <p id="session-status"></p>
+    </div>
+
+    <div id="fds-dropzone" class="pdf-section dropzone">
+        <h2>Feuille de Service / Dispo Avions</h2>
+        <div class="pdf-controls">
+            <button id="pdf-load-fds-btn" class="link-button" style="background-color: #2980b9;">Charger la Feuille de Service</button>
+            <a href="http://cncasc-app.fr/pages/ABE.php" target="_blank" class="link-button" style="background-color:#3498db;">Ouvrir dispo avions</a>
+            <input type="file" id="pdf-input-fds" accept="application/pdf">
+        </div>
+        <div id="pdf-interactive-container-fds" class="interactive-pdf-viewer" style="display: none;">
+            <div class="interactive-pdf-controls"><button class="pdf-nav-btn" data-action="prev">Page Préc.</button><span>Page <span class="page-num">1</span> / <span class="page-count">1</span></span><button class="pdf-nav-btn" data-action="next">Page Suiv.</button><div class="zoom-controls"><button class="pdf-nav-btn" data-action="zoom-out">-</button><span>Zoom</span><button class="pdf-nav-btn" data-action="zoom-in">+</button></div></div>
+            <div class="pdf-canvas-wrapper"><canvas id="pdf-canvas-fds" class="pdf-canvas"></canvas></div>
+        </div>
+        <p id="pdf-info-fds" class="pdf-info"></p>
+    </div>
+
+    <div class="map-section">
+        <h2>Cartes des Risques Météo-France</h2>
+        <div class="controles" style="gap: 20px;">
+            <a href="https://pro.meteofrance.com/page/index/affiche/id/307352" target="_blank" class="link-button" style="background-color: #f39c12;">Carte des Risques / National</a>
+            <a href="https://pro.meteofrance.com/page/index/affiche/id/307357" target="_blank" class="link-button" style="background-color: #e67e22;">Carte des Risques / Zone Sud</a>
+        </div>
+    </div>
+
+    <div id="gaar-dropzone" class="pdf-section dropzone">
+        <h2>Diagramme GAAR</h2>
+        <div class="pdf-controls">
+            <button id="pdf-load-gaar-btn" class="link-button" style="background-color: #16a085;">Charger le Diagramme GAAR</button>
+            <input type="file" id="pdf-input-gaar" accept="application/pdf">
+        </div>
+        <div id="pdf-interactive-container-gaar" class="interactive-pdf-viewer" style="display: none;">
+            <div class="interactive-pdf-controls"><button class="pdf-nav-btn" data-action="prev">Page Préc.</button><span>Page <span class="page-num">1</span> / <span class="page-count">1</span></span><button class="pdf-nav-btn" data-action="next">Page Suiv.</button><div class="zoom-controls"><button class="pdf-nav-btn" data-action="zoom-out">-</button><span>Zoom</span><button class="pdf-nav-btn" data-action="zoom-in">+</button></div></div>
+            <div class="pdf-canvas-wrapper"><canvas id="pdf-canvas-gaar" class="pdf-canvas"></canvas></div>
+        </div>
+        <p id="pdf-info-gaar" class="pdf-info"></p>
+    </div>
+    
+    <div class="map-section" id="gaar-map-section" style="display: none;">
+        <h2>Carte des Circuits GAAR</h2>
+        <div id="gaar-map-container">
+            <div id="gaar-map-display"></div>
+            <div id="gaar-status">En attente du chargement du diagramme GAAR...</div>
+        </div>
+    </div>
+    
+    <div class="map-section"><h2>Carte SIGWX France (TEMSI)</h2><div class="controles"><label for="temsi-select">Choisir une échéance :</label><select id="temsi-select"></select></div><p class="info-carte" id="temsi-info-carte">Chargement...</p><div class="carte-container"><iframe id="temsi-frame" title="Carte SIGWX France"></iframe></div></div>
+    
+    <div class="map-section"><h2>Météo Dynamique (Windy)</h2><div class="carte-container"><iframe title="Carte Windy" width="100%" height="100%" src="https://embed.windy.com/embed2.html?lat=46.756&lon=2.49&detailLat=43.530&detailLon=4.912&width=900&height=750&zoom=5&level=surface&overlay=wind&product=ecmwf&menu=&message=&marker=&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=kt&metricTemp=%C2%B0C&radarRange=-1" frameborder="0" allowfullscreen></iframe></div></div>
+
+    <div id="notam-pdf-dropzone" class="pdf-section dropzone">
+        <h2>Extraire les NOTAMs d'un PDF</h2>
+        <div class="pdf-controls">
+            <span id="nats-help-icon" class="help-icon" title="Comment utiliser NATS ?">?</span>
+            <a href="https://nats-uk.ead-it.com/fwf-nats/restricted/user/ino/brief_aerodrome.faces?menuId=C920E9BB76441A9AE05341741DC25BDD" target="_blank" class="link-button" style="background-color: #8e44ad;">Accéder au Briefing NATS</a>
+            <button id="pdf-load-notam-btn" class="link-button" style="background-color: #2c3e50;">Charger PDF des NOTAMs</button>
+            <input type="file" id="pdf-input-notam" accept="application/pdf">
+        </div>
+        
+        <div id="nats-help-tooltip" class="help-tooltip" style="display: none;">
+            <h4>Tutoriel : Récupérer les NOTAMs sur NATS</h4>
+            <ol>
+                <li>
+                    Connectez-vous sur le site NATS avec les identifiants suivants :
+                    <ul style="margin-top: 8px;">
+                        <li><strong>Login :</strong> <code>Dash8</code></li>
+                        <li><strong>Mot de Passe :</strong> <code>D@sh8secucivile</code></li>
+                    </ul>
+                </li>
+                <li>Cliquez sur <strong>Pre-Flight Briefing</strong>.</li>
+                <li>Puis sur <strong>Aerodrome PIB</strong>.</li>
+                <li>
+                    Sous "Briefing Options", trouvez les 4 petits boutons. Cliquez sur celui avec une <strong>étoile (favoris)</strong>, qui se trouve à droite du bouton <strong>+</strong>.
+                </li>
+                <li>Dans la liste qui apparaît, cliquez sur <strong>PELICANDROMES</strong>.</li>
+                <li>Tout en bas de la page, cliquez sur le bouton <strong>Generate</strong>.</li>
+                <li>Enfin, cliquez sur <strong>Print PDF</strong> pour télécharger le fichier.</li>
+                <li>Enregistrez le PDF sur votre appareil, puis chargez-le sur cette page à l'aide du bouton "Charger PDF des NOTAMs".</li>
+            </ol>
+        </div>
+        
+        <p id="pdf-info-notam" class="pdf-info"></p>
+    </div>
+    
+    <div class="notam-section">
+        <h2>Analyse des NOTAMs et Météo</h2>
+        <div id="notam-input-area" style="display: none;">
+            <p style="text-align:center; margin-bottom:15px;">Chargez un PDF de NOTAMs pour extraire automatiquement le texte, ou collez un bulletin manuellement.</p>
+            <textarea id="notam-input" placeholder="Le texte des NOTAMs apparaîtra ici..."></textarea>
+            <div style="text-align:center; padding-top: 20px;"><button id="notam-parse-btn" class="link-button" style="background-color: #d35400;">Analyser le texte</button></div>
+        </div>
+        
+        <div class="notam-pre-filter"><div><input type="checkbox" id="notam-date-filter-cb" checked><label for="notam-date-filter-cb">Afficher uniquement les NOTAMs valides aujourd'hui</label></div><div><input type="checkbox" id="notam-keyword-filter-cb" checked><label for="notam-keyword-filter-cb">Masquer NOTAMs non-pertinents (grues, RFFS...)</label></div></div>
+        
+        <div id="notam-controls-top" class="notam-controls">
+            <button class="link-button confirm-action filter-action">Garder la sélection</button>
+            <button class="link-button reset show-all-action" style="display: none;">Tout afficher</button>
+            <button class="link-button save-pdf-action" style="display: none;">Sauvegarder en PDF</button>
+        </div>
+        <div id="notam-display"></div>
+        <div id="notam-controls-bottom" class="notam-controls">
+            <button class="link-button confirm-action filter-action">Garder la sélection</button>
+            <button class="link-button reset show-all-action" style="display: none;">Tout afficher</button>
+            <button class="link-button save-pdf-action" style="display: none;">Sauvegarder en PDF</button>
+        </div>
+
+        <div id="manual-metar-section">
+            <h2>Météo Manuelle</h2>
+            <div class="controles">
+                <input type="text" id="manual-icao-input" placeholder="Entrez les OACI (ex: LFPB EGLL)...">
+                <button id="manual-metar-fetch-btn" class="link-button" style="background-color: #16a085;">Obtenir METAR/TAF</button>
+            </div>
+            <div id="manual-metar-display"></div>
+        </div>
+    </div>
+
+    <div class="map-section">
+        <h2>Carte AZBA</h2>
+        <div style="text-align:center;">
+            <a href="https://www.sia.aviation-civile.gouv.fr/schedules" target="_blank" class="link-button" style="background-color: #2c3e50;">Ouvrir AZBA</a>
+        </div>
+    </div>
+    
+    <div id="sup-aip-dropzone" class="pdf-section dropzone">
+        <h2>SUP AIP</h2>
+        <div id="sup-aip-controls" class="pdf-controls">
+            <a id="foreflight-btn" href="foreflightmobile://" class="link-button" style="background-color: #007aff;">Ouvrir ForeFlight</a>
+            <button id="pdf-load-sup-aip-btn" class="link-button" style="background-color: #c0392b;">Charger SUP AIP</button>
+            <button id="pdf-add-sup-aip-btn" class="link-button" style="display: none; background-color: #c0392b;">+</button>
+        </div>
+        <div id="sup-aip-container"></div>
+        <input type="file" id="pdf-input-sup-aip" accept="application/pdf" multiple>
+    </div>
+
+    <div class="map-section">
+        <h2>Tour de France 2025</h2>
+        <div class="controles" style="justify-content: center; gap: 15px;">
+            <label for="tdf-stage-selector" style="font-weight: bold;">Choisir une étape :</label>
+            <select id="tdf-stage-selector" style="font-size: 1.1em; padding: 10px; border: 1px solid #bdc3c7; border-radius: 5px; flex-grow: 1; max-width: 500px;"></select>
+            <span id="tdf-stage-date" style="font-size: 1.1em; font-weight: 500; color: #34495e; background-color: #ffffff; padding: 10px 15px; border-radius: 5px; border: 1px solid #ddd;"></span>
+        </div>
+        <div style="text-align: center; margin-top: 20px; margin-bottom: 20px;">
+            <img id="tdf-stage-map" src="" alt="Carte de l'étape du Tour de France" style="max-width: 100%; height: auto; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+        </div>
+        <div style="text-align: center; margin-top: 15px;">
+            <a id="tdf-sup-aip-link" href="#" target="_blank" class="link-button" style="display: none; background-color: #c0392b;"></a>
+        </div>
+    </div>
+
+    <div class="map-section"><h2>Pélicandromes</h2><div style="text-align:center;"><a href="http://cncasc-app.fr/" target="_blank" class="link-button" style="background-color:#3498db;">Ouvrir Pélicandromes</a></div></div>
+    
+    <div class="map-section">
+        <h2>SYNERGI / CNCASC</h2>
+        <div class="controles">
+            <a href="https://synergi2.dgscgc.interieur.gouv.fr/evenements?forInit=false&statusEvent=PUBLIC" target="_blank" class="link-button" style="background-color:#16a085;">Ouvrir SYNERGI</a>
+            <a href="http://cncasc-app.fr/" target="_blank" class="link-button" style="background-color:#3498db;">Ouvrir CNCASC</a>
+        </div>
+    </div>
+    
+    <footer>Données : Météo-France, SIA, Windy.com, CheckWX.com. Page non commerciale, à usage personnel.</footer>
+    
+    <script>
+        // --- Clé API pour la source de données météo ---
+        const CHECKWX_API_KEY = "f96766a799024b5781b192257de10684";
+
+        // --- DONNÉES TOUR DE FRANCE ---
+        const tdfStages = [
+            { stage: 1, name: "Lille > Lille", date: "2025-07-05", mapUrl: "https://img.aso.fr/core_app/img-cycling-tdf-jpg/tdf25-et01-cartepot-v3/62214/0:0,2480:3508-960-0-90/da039", supAipUrl: null },
+            { stage: 2, name: "Lauwin-Planque > Boulogne-sur-Mer", date: "2025-07-06", mapUrl: "https://img.aso.fr/core_app/img-cycling-tdf-jpg/tdf25-et02-cartepot-v3/62224/0:0,3508:2480-960-0-90/bc0f0", supAipUrl: null },
+            { stage: 3, name: "Valenciennes > Dunkerque", date: "2025-07-07", mapUrl: "https://img.aso.fr/core_app/img-cycling-tdf-jpg/tdf25-et03-cartepot-v3/62218/0:0,3508:2480-960-0-90/9bd5e", supAipUrl: null },
+            { stage: 4, name: "Amiens > Rouen", date: "2025-07-08", mapUrl: "https://img.aso.fr/core_app/img-cycling-tdf-jpg/tdf25-et04-cartepot-v2/62230/0:0,3508:2480-960-0-90/15d73", supAipUrl: null },
+            { stage: 5, name: "Caen > Châteauroux", date: "2025-07-09", mapUrl: "https://img.aso.fr/core_app/img-cycling-tdf-jpg/tdf25-et05-cartepot-v2/62228/0:0,2480:3508-960-0-90/e7873", supAipUrl: null },
+            { stage: 6, name: "Tours > Le Lioran", date: "2025-07-10", mapUrl: "https://img.aso.fr/core_app/img-cycling-tdf-jpg/tdf25-et06-cartepot-v4/62233/0:0,2480:3508-960-0-90/e0036", supAipUrl: null },
+            { stage: 7, name: "Brioude > Issoire", date: "2025-07-11", mapUrl: "https://img.aso.fr/core_app/img-cycling-tdf-jpg/tdf25-et07-cartepot-v2/62231/0:0,3508:2480-960-0-90/36515", supAipUrl: null },
+            { stage: 8, name: "Clermont-Ferrand > Limoges", date: "2025-07-12", mapUrl: "https://img.aso.fr/core_app/img-cycling-tdf-jpg/tdf25-et08-cartepot-v2/62215/0:0,3508:2480-960-0-90/9643c", supAipUrl: null },
+            { stage: 9, name: "Limoges > Bordeaux", date: "2025-07-13", mapUrl: "https://img.aso.fr/core_app/img-cycling-tdf-jpg/tdf25-et09-cartepot-v3/62223/0:0,3508:2480-960-0-90/89bfe", supAipUrl: null },
+            { stage: 10, name: "Mont-de-Marsan > Pau", date: "2025-07-15", mapUrl: "https://img.aso.fr/core_app/img-cycling-tdf-jpg/tdf25-et10-cartepot-v2/62221/0:0,2480:3508-960-0-90/e1642", supAipUrl: null },
+            { stage: 11, name: "Toulouse > Villeneuve-sur-Lot", date: "2025-07-16", mapUrl: "https://img.aso.fr/core_app/img-cycling-tdf-jpg/tdf25-et11-cartepot-v2/62220/0:0,2480:3508-960-0-90/2392a", supAipUrl: null },
+            { stage: 12, name: "Auch > Hautacam", date: "2025-07-17", mapUrl: "https://img.aso.fr/core_app/img-cycling-tdf-jpg/tdf25-et12-cartepot-v1/62232/0:0,3508:2480-960-0-90/e3131", supAipUrl: "https://www.sia.aviation-civile.gouv.fr/media/store/documents/file/l/f/lf_sup_2025_116_fr.pdf" },
+            { stage: 13, name: "Loudenvielle > Peyragudes", date: "2025-07-18", mapUrl: "https://img.aso.fr/core_app/img-cycling-tdf-jpg/tdf25-et13-cartepot-v5/62219/0:0,2480:3508-960-0-90/6886e", supAipUrl: "https://www.sia.aviation-civile.gouv.fr/media/store/documents/file/l/f/lf_sup_2025_117_fr.pdf" },
+            { stage: 14, name: "Pau > Luchon Superbagnères", date: "2025-07-19", mapUrl: "https://img.aso.fr/core_app/img-cycling-tdf-jpg/tdf25-et14-cartepot-v3/62225/0:0,3508:2480-960-0-90/cd24e", supAipUrl: "https://www.sia.aviation-civile.gouv.fr/media/store/documents/file/l/f/lf_sup_2025_115_fr.pdf" },
+            { stage: 15, name: "Mende > Montpellier", date: "2025-07-20", mapUrl: "https://img.aso.fr/core_app/img-cycling-tdf-jpg/tdf25-et15-cartepot-v2/62229/0:0,3508:2480-960-0-90/200df", supAipUrl: null },
+            { stage: 16, name: "Orange > Gap", date: "2025-07-22", mapUrl: "https://img.aso.fr/core_app/img-cycling-tdf-jpg/tdf25-et16-cartepot-v1/62222/0:0,3508:2480-960-0-90/ead66", supAipUrl: null },
+            { stage: 17, name: "Tallard > La Mure", date: "2025-07-23", mapUrl: "https://img.aso.fr/core_app/img-cycling-tdf-jpg/tdf25-et17-cartepot-v1/62226/0:0,2480:3508-960-0-90/01f1d", supAipUrl: null },
+            { stage: 18, name: "Vif > Courchevel Col de la Loze", date: "2025-07-24", mapUrl: "https://img.aso.fr/core_app/img-cycling-tdf-jpg/tdf25-et18-cartepot-v2/62227/0:0,3508:2480-960-0-90/1d1c4", supAipUrl: "https://www.sia.aviation-civile.gouv.fr/media/store/documents/file/l/f/lf_sup_2025_121_fr.pdf" },
+            { stage: 19, name: "Albertville > La Plagne", date: "2025-07-25", mapUrl: "https://img.aso.fr/core_app/img-cycling-tdf-jpg/tdf25-et19-cartepot-v2/62216/0:0,2480:3508-960-0-90/ef7f5", supAipUrl: "https://www.sia.aviation-civile.gouv.fr/media/store/documents/file/l/f/lf_sup_2025_122_fr.pdf" },
+            { stage: 20, name: "Mâcon > Dijon", date: "2025-07-26", mapUrl: "https://img.aso.fr/core_app/img-cycling-tdf-jpg/tdf25-et20-cartepot-v1/62213/0:0,2480:3508-960-0-90/09c45", supAipUrl: null },
+            { stage: 21, name: "Paris-La Défense > Paris Champs-Élysées", date: "2025-07-27", mapUrl: "https://img.aso.fr/core_app/img-cycling-tdf-jpg/tdf25-et21-cartepot-v3/62217/0:0,3508:2480-960-0-90/811cb", supAipUrl: null }
+        ];
+
+        // --- GLOBAL VARIABLES ---
+        let fdsFileObject = null;
+        let gaarFileObject = null;
+        let supAipFileObjects = [];
+        let gaarMap = null;
+        let gaarDrawnCircuits = [];
+        const sessionStatus = document.getElementById('session-status');
+
+        // --- CORE INITIALIZATION ---
+        function waitForPdfJsAndInitialize() {
+            if (window.pdfjsLib) {
+                initializePage();
+            } else {
+                setTimeout(waitForPdfJsAndInitialize, 100);
+            }
+        }
+        window.onload = waitForPdfJsAndInitialize;
+        
+        function initializePage() {
+            window.scrollTo(0, 0);
+            initializePageTitle();
+            initializeTemsi();
+            initializeInteractivePdfViewers();
+            initializeSupAipLoader();
+            initializeNotamParser(); 
+            initializeManualMetarFetch();
+            initializeForeFlightButton();
+            initializeSessionManagement();
+            initializeHelpTooltips();
+            initializeTdfViewer();
+        }
+
+        function initializeTdfViewer() {
+            const stageSelector = document.getElementById('tdf-stage-selector');
+            const stageMap = document.getElementById('tdf-stage-map');
+            const stageDateSpan = document.getElementById('tdf-stage-date');
+            const supAipLink = document.getElementById('tdf-sup-aip-link');
+            
+            if (!stageSelector || !stageMap || !stageDateSpan || !supAipLink) return;
+
+            function updateDisplay(stageIndex) {
+                const selectedStage = tdfStages[stageIndex];
+                stageMap.src = selectedStage.mapUrl;
+                stageMap.alt = `Carte de l'étape ${selectedStage.stage}: ${selectedStage.name}`;
+                const date = new Date(`${selectedStage.date}T12:00:00`);
+                stageDateSpan.textContent = date.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+                if (selectedStage.supAipUrl) {
+                    supAipLink.href = selectedStage.supAipUrl;
+                    supAipLink.textContent = `Consulter le SUP AIP pour l'étape ${selectedStage.stage}`;
+                    supAipLink.style.display = 'inline-block';
+                } else {
+                    supAipLink.style.display = 'none';
+                }
+            }
+
+            function setDefaultStage() {
+                const now = new Date();
+                let defaultStageIndex = 0;
+                const referenceDate = new Date(now);
+                if (now.getHours() >= 22) referenceDate.setDate(referenceDate.getDate() + 1);
+                referenceDate.setHours(0, 0, 0, 0);
+                const foundIndex = tdfStages.findIndex(stage => new Date(`${stage.date}T00:00:00`) >= referenceDate);
+                defaultStageIndex = (foundIndex !== -1) ? foundIndex : tdfStages.length - 1;
+                stageSelector.selectedIndex = defaultStageIndex;
+                updateDisplay(defaultStageIndex);
+            }
+
+            tdfStages.forEach((stage, index) => {
+                const option = document.createElement('option');
+                option.value = index;
+                const dateObj = new Date(`${stage.date}T12:00:00`);
+                const formattedDate = dateObj.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
+                option.textContent = `Étape ${stage.stage} (${formattedDate}) : ${stage.name}`;
+                stageSelector.appendChild(option);
+            });
+
+            setDefaultStage();
+            stageSelector.addEventListener('change', (event) => updateDisplay(event.target.value));
+        }
+
+        function initializeHelpTooltips() {
+            const icon = document.getElementById('nats-help-icon');
+            const tooltip = document.getElementById('nats-help-tooltip');
+            if (!icon || !tooltip) return;
+            icon.addEventListener('click', () => { tooltip.style.display = (tooltip.style.display === 'none') ? 'block' : 'none'; });
+        }
+
+        function createAirportSectionElement(icao, fullName) {
+            const airportContainer = document.createElement('div');
+            airportContainer.id = `notam-container-${icao}`;
+            airportContainer.className = 'airport-section-container';
+            const airportTitle = document.createElement('h3');
+            airportTitle.textContent = `${fullName} `;
+            const metarTafToggleButton = document.createElement('button');
+            metarTafToggleButton.textContent = 'Afficher METAR/TAF';
+            metarTafToggleButton.className = 'metar-taf-toggle-btn';
+            metarTafToggleButton.dataset.icao = icao;
+            const metarTafContainer = document.createElement('div');
+            metarTafContainer.className = 'metar-taf-container';
+            metarTafContainer.style.display = 'none';
+            airportTitle.appendChild(metarTafToggleButton);
+            airportContainer.appendChild(airportTitle);
+            airportContainer.appendChild(metarTafContainer);
+            return airportContainer;
+        }
+
+        function createNotamItemElement(notamText, icao) {
+            const validity = parseNotamValidity(notamText);
+            const itemContainer = document.createElement('div');
+            itemContainer.className = 'notam-item';
+            if (validity.start) itemContainer.dataset.startDate = validity.start.toISOString();
+            if (validity.end) itemContainer.dataset.endDate = validity.end.toISOString();
+
+            const bMatch = notamText.match(/B\)\s*(\d{10})/);
+            const cMatch = notamText.match(/C\)\s*(\d{10}|PERM)/);
+            if (bMatch && cMatch) itemContainer.dataset.notamId = `${icao}-${bMatch[1]}-${cMatch[1]}`;
+
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.className = 'notam-checkbox';
+            itemContainer.appendChild(checkbox);
+
+            const contentWrapper = document.createElement('div');
+            contentWrapper.className = 'notam-content-wrapper';
+            
+            if (validity.text) {
+                const validityElement = document.createElement('div');
+                validityElement.className = 'notam-validity';
+                validityElement.textContent = validity.text;
+                contentWrapper.appendChild(validityElement);
+            }
+            
+            const textElement = document.createElement('div');
+            textElement.className = 'notam-text-content';
+            const supAipRegex = /(AIP\s+)?SUP\s+(\d{1,3})\/(\d{2})/gi;
+            let linkifiedText = notamText.replace(supAipRegex, (match, p1, supNumber, twoDigitYear) => {
+                const fullYear = `20${twoDigitYear}`;
+                const paddedNumber = supNumber.padStart(3, '0');
+                const baseUrl = "https://www.sia.aviation-civile.gouv.fr/media/store/documents/file/l/f/";
+                const pdfUrl = (fullYear === '2025') ? `${baseUrl}lf_sup_a_${fullYear}_${paddedNumber}_fr.pdf` : `${baseUrl}lf_sup_${fullYear}_${paddedNumber}_fr.pdf`;
+                return `<a href="${pdfUrl}" class="sup-aip-link" target="_blank" title="Ouvrir le PDF du SUP AIP ${match}">${match}</a>`;
+            });
+            textElement.innerHTML = linkifiedText.replace(/\s+([B-G]\))/g, '<br>$1');
+            contentWrapper.appendChild(textElement);
+            itemContainer.appendChild(contentWrapper);
+            return itemContainer;
+        }
+
+        function parseNotamValidity(notamBlock) {
+            let bMatch = notamBlock.match(/B\)\s*(\d{10})/);
+            let cMatch = notamBlock.match(/C\)\s*(\d{10}|PERM)/);
+            if (bMatch && cMatch) {
+                const s = bMatch[1], e = cMatch[1];
+                const start = new Date(Date.UTC(parseInt(`20${s.substring(0, 2)}`), parseInt(s.substring(2, 4)) - 1, parseInt(s.substring(4, 6)), parseInt(s.substring(6, 8)), parseInt(s.substring(8, 10))));
+                const end = e === 'PERM' ? new Date('2099-12-31T23:59:59Z') : new Date(Date.UTC(parseInt(`20${e.substring(0, 2)}`), parseInt(e.substring(2, 4)) - 1, parseInt(e.substring(4, 6)), parseInt(e.substring(6, 8)), parseInt(e.substring(8, 10))));
+                const validityText = `VALIDE DU ${s.substring(4,6)}/${s.substring(2,4)}/${`20${s.substring(0,2)}`} à ${s.substring(6,8)}h${s.substring(8,10)} AU ${e === 'PERM' ? 'PERMANENT' : `${e.substring(4,6)}/${e.substring(2,4)}/${`20${e.substring(0,2)}`} à ${e.substring(6,8)}h${e.substring(8,10)}`}`;
+                return { start, end, text: validityText };
+            }
+            return { text: null, start: null, end: null };
+        }
+        
+        async function fetchMetarTaf(icao, container) {
+            container.innerHTML = '<p>Chargement des données MTO...</p>';
+            if (!CHECKWX_API_KEY) {
+                container.innerHTML = `<p class="error-msg">Erreur : Clé API non trouvée dans le script.</p>`;
+                return;
+            }
+            const headers = { 'X-API-Key': CHECKWX_API_KEY };
+            try {
+                const [metarResponse, tafResponse] = await Promise.all([
+                    fetch(`https://api.checkwx.com/metar/${icao}`, { headers }),
+                    fetch(`https://api.checkwx.com/taf/${icao}`, { headers })
+                ]);
+                const metarJson = await metarResponse.json();
+                const tafJson = await tafResponse.json();
+                const metarDisplay = (metarJson.results > 0) ? metarJson.data[0] : 'METAR non disponible.';
+                const tafDisplay = (tafJson.results > 0) ? tafJson.data[0] : 'TAF non disponible.';
+                container.innerHTML = `<h4>METAR <button class="metar-taf-refresh-btn" data-icao="${icao}" title="Rafraîchir">↻</button></h4><pre>${metarDisplay}</pre><h4>TAF</h4><pre>${tafDisplay}</pre>`;
+            } catch (error) {
+                container.innerHTML = `<p class="error-msg">Une erreur de réseau est survenue.</p>`;
+            }
+        }
+        
+        function setupDropzone(zoneId, fileHandlerFunction) {
+            const dropzone = document.getElementById(zoneId);
+            if (!dropzone) return;
+            dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('drag-over'); });
+            dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag-over'));
+            dropzone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropzone.classList.remove('drag-over');
+                if (e.dataTransfer.files.length > 0) fileHandlerFunction(e.dataTransfer.files);
+            });
+        }
+        
+        function initializeTemsi() {
+             function populateTemsi() {
+                const select = document.getElementById('temsi-select');
+                const frame = document.getElementById('temsi-frame');
+                const info = document.getElementById('temsi-info-carte');
+                select.innerHTML = '';
+                const echeances = [6, 9, 12, 15, 18, 21];
+                const now = new Date();
+                const currentHour = now.getUTCHours();
+                const date = new Date(now);
+                let activeEcheance = [...echeances].reverse().find(e => currentHour >= e - 1);
+                if (activeEcheance === undefined) {
+                    activeEcheance = 21;
+                    date.setUTCDate(date.getUTCDate() - 1);
+                }
+                date.setUTCHours(activeEcheance, 0, 0, 0);
+                let initialEcheance = '';
+                for (let i = -3; i <= 4; i++) { 
+                    let echeanceDate = new Date(date);
+                    let echeanceIndex = echeances.indexOf(activeEcheance) + i;
+                    echeanceDate.setUTCDate(echeanceDate.getUTCDate() + Math.floor(echeanceIndex / echeances.length));
+                    echeanceIndex = (echeanceIndex % echeances.length + echeances.length) % echeances.length;
+                    echeanceDate.setUTCHours(echeances[echeanceIndex], 0, 0, 0);
+                    const dateString = `${echeanceDate.getUTCFullYear()}${String(echeanceDate.getUTCMonth()+1).padStart(2, '0')}${String(echeanceDate.getUTCDate()).padStart(2, '0')}${String(echeanceDate.getUTCHours()).padStart(2, '0')}0000`;
+                    const option = document.createElement("option");
+                    option.value = dateString;
+                    let label = `${getLabelForDate(echeanceDate)} ${String(echeanceDate.getUTCHours()).padStart(2, '0')}h00 UTC`;
+                    if (i === 0) {
+                        label += " (Actuelle)";
+                        option.selected = true;
+                        initialEcheance = dateString;
+                    }
+                    option.textContent = label;
+                    select.appendChild(option);
+                }
+                const baseURL = 'https://aviation.meteo.fr/FR/aviation/affiche_image.php?login=fampsLSMuYmAdrAK4GqcZWRol2hoZHHd1uE%3D&layer=sigwx/fr/france&echeance=';
+                const update = e => { frame.src = baseURL + e; info.textContent = `Carte valide pour le ${e.substring(6,8)}/${e.substring(4,6)}/${e.substring(0,4)} à ${e.substring(8,10)}h00 UTC`; };
+                select.addEventListener('change', e => update(e.target.value));
+                update(initialEcheance);
+            }
+            populateTemsi();
+        }
+
+        function createInteractivePdfHandler(viewerContainer, file, callback, initialScale = 1.5) {
+            const canvas = viewerContainer.querySelector('.pdf-canvas');
+            const controls = viewerContainer.querySelector('.interactive-pdf-controls');
+            const wrapper = viewerContainer.querySelector('.pdf-canvas-wrapper');
+            const ctx = canvas.getContext('2d');
+            let pdfDoc = null, pageNum = 1, pageRendering = false, pageNumPending = null, scale = initialScale;
+            let isPanning = false, panStart = { x: 0, y: 0 };
+            let initialPinchDistance = null, startScale = null;
+
+            function getDistance(t1, t2) { const dx = t1.clientX - t2.clientX, dy = t1.clientY - t2.clientY; return Math.sqrt(dx * dx + dy * dy); }
+            function renderPage(num) {
+                pageRendering = true;
+                pdfDoc.getPage(num).then(page => {
+                    const pixelRatio = Math.max(window.devicePixelRatio || 1, 2);
+                    const viewport = page.getViewport({ scale: scale * pixelRatio });
+                    canvas.height = viewport.height; canvas.width = viewport.width;
+                    canvas.style.height = `${viewport.height / pixelRatio}px`; canvas.style.width = `${viewport.width / pixelRatio}px`;
+                    page.render({ canvasContext: ctx, viewport: viewport }).promise.then(() => {
+                        pageRendering = false;
+                        if (pageNumPending !== null) { renderPage(pageNumPending); pageNumPending = null; }
+                    });
+                });
+                controls.querySelector('.page-num').textContent = num;
+            }
+            function queueRenderPage(num) { if (pageRendering) pageNumPending = num; else renderPage(num); }
+            controls.addEventListener('click', e => {
+                if (!pdfDoc || !e.target.dataset.action) return;
+                const action = e.target.dataset.action;
+                if (action === 'prev' && pageNum > 1) { pageNum--; queueRenderPage(pageNum); }
+                else if (action === 'next' && pageNum < pdfDoc.numPages) { pageNum++; queueRenderPage(pageNum); }
+                else if (action === 'zoom-in') { scale = Math.min(5.0, scale + 0.2); queueRenderPage(pageNum); }
+                else if (action === 'zoom-out') { scale = Math.max(0.3, scale - 0.2); queueRenderPage(pageNum); }
+            });
+            wrapper.addEventListener('wheel', e => { e.preventDefault(); scale = e.deltaY < 0 ? Math.min(5.0, scale + 0.1) : Math.max(0.3, scale - 0.1); queueRenderPage(pageNum); });
+            wrapper.addEventListener('mousedown', e => { isPanning = true; panStart = { x: e.clientX + wrapper.scrollLeft, y: e.clientY + wrapper.scrollTop }; });
+            wrapper.addEventListener('mouseup', () => isPanning = false);
+            wrapper.addEventListener('mouseleave', () => isPanning = false);
+            wrapper.addEventListener('mousemove', e => { if (isPanning) { e.preventDefault(); wrapper.scrollLeft = panStart.x - e.clientX; wrapper.scrollTop = panStart.y - e.clientY; } });
+            wrapper.addEventListener('touchstart', e => {
+                if (e.touches.length === 2) { e.preventDefault(); isPanning = false; initialPinchDistance = getDistance(e.touches[0], e.touches[1]); startScale = scale; }
+                else if (e.touches.length === 1) { isPanning = true; panStart = { x: e.touches[0].clientX + wrapper.scrollLeft, y: e.touches[0].clientY + wrapper.scrollTop }; }
+            }, { passive: false });
+            wrapper.addEventListener('touchmove', e => {
+                if (e.touches.length === 2 && initialPinchDistance) { e.preventDefault(); scale = Math.max(0.3, Math.min(startScale * (getDistance(e.touches[0], e.touches[1]) / initialPinchDistance), 5.0)); queueRenderPage(pageNum); }
+                else if (e.touches.length === 1 && isPanning) { e.preventDefault(); wrapper.scrollLeft = panStart.x - e.touches[0].clientX; wrapper.scrollTop = panStart.y - e.touches[0].clientY; }
+            }, { passive: false });
+            wrapper.addEventListener('touchend', () => { isPanning = false; initialPinchDistance = null; startScale = null; });
+            const fileReader = new FileReader();
+            fileReader.onload = function() {
+                pdfjsLib.getDocument(new Uint8Array(this.result)).promise.then(pdfDoc_ => {
+                    pdfDoc = pdfDoc_; controls.querySelector('.page-count').textContent = pdfDoc.numPages;
+                    pageNum = 1; renderPage(pageNum); viewerContainer.style.display = 'block';
+                    if (callback) callback(file);
+                });
+            };
+            fileReader.readAsArrayBuffer(file);
+        }
+
+        function initializeGaarMapFromFile(gaarPdfFile) {
+            const statusDiv = document.getElementById('gaar-status');
+            if (!gaarMap) {
+                gaarMap = L.map('gaar-map-display').setView([46.2276, 2.2137], 6);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(gaarMap);
+            }
+            async function handlePdfFile(file) {
+                if (!file || file.type !== 'application/pdf') { statusDiv.textContent = "Erreur: Fichier PDF requis."; return; }
+                statusDiv.textContent = 'Analyse du PDF...';
+                gaarDrawnCircuits.forEach(({ polygon, markers }) => { gaarMap.removeLayer(polygon); markers.forEach(m => gaarMap.removeLayer(m)); });
+                gaarDrawnCircuits = [];
+                try {
+                    const textContent = await pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise.then(p => p.getPage(1)).then(p => p.getTextContent());
+                    const allCircuits = extractAllCircuits(textContent.items.map(item => item.str).join(' '));
+                    if (allCircuits.length > 0) { statusDiv.textContent = `Géocodage en cours...`; await geocodeAndDrawAll(allCircuits); }
+                    else { throw new Error("Aucun circuit trouvé."); }
+                } catch (error) { statusDiv.textContent = `Erreur : ${error.message}`; }
+            }
+            function extractAllCircuits(text) { const c = []; const s = /[1-9][\d,]*\s*h\s+([A-ZÀ-ÿ-]+)\s+([A-ZÀ-ÿ-]+)\s+([A-ZÀ-ÿ-]+)/ig, d = /[1-9][\d,]*\s*h\s+([A-ZÀ-ÿ -]+?)\s*–\s*([A-ZÀ-ÿ -]+?)\s*–\s*([A-ZÀ-ÿ -]+?)(?=\s+[A-Z]{4}|\s+Lever)/ig; let m; while ((m=s.exec(text))!==null) c.push([m[1],m[2],m[3]]); while ((m=d.exec(text))!==null) { const n=[m[1].trim(),m[2].trim(),m[3].trim()]; if (!c.some(x=>x.join('')===n.join(''))) c.push(n); } return c; }
+            async function geocodeAndDrawAll(allCircuits) { const colors=['blue','red','green','purple','orange'], fg=[]; for(const [i, cityNames] of allCircuits.entries()) { const {coordMap, resolvedNames}=await geocodeAndDisambiguate(cityNames), coords=resolvedNames.map(c=>coordMap.get(c)).filter(Boolean); if (coords.length===3) { const p=L.polygon(coords,{color:colors[i%colors.length]}).addTo(gaarMap), m=coords.map((c,ci)=>{const k=L.marker(c,{draggable:true}).addTo(gaarMap); k.options.circuitIndex=gaarDrawnCircuits.length; k.options.cityIndex=ci; k.bindTooltip(resolvedNames[ci],{permanent:true,direction:'top',className:'gaar-city-label'}).openTooltip(); k.bindPopup(()=>createPopupContent(resolvedNames[ci],k.options.circuitIndex,ci)); k.on('dragend',handleMarkerDrag); return k;}); gaarDrawnCircuits.push({polygon:p,markers:m,cityNames:resolvedNames}); fg.push(p);}} if (fg.length>0) { gaarMap.fitBounds(L.featureGroup(fg).getBounds().pad(0.2)); statusDiv.textContent = `Affichage de ${fg.length} circuit(s).`;} else { throw new Error("Géocodage impossible.");}}
+            function handleMarkerDrag(e) { updatePolygon(e.target.options.circuitIndex); }
+            window.handleGaarPointUpdate = async function(ci, cityIdx) { const input = document.getElementById(`gaar-input-${ci}-${cityIdx}`), newName = input.value.trim(); if (!newName) return; statusDiv.textContent=`Recherche de "${newName}"...`; const geo = await geocodeCity(newName, 1); if (geo) { const c=gaarDrawnCircuits[ci], m=c.markers[cityIdx]; m.setLatLng(geo[0].latlon); c.cityNames[ciIdx]=newName; m.setTooltipContent(newName); m.closePopup(); updatePolygon(ci); statusDiv.textContent=`Point mis à jour.`; } else { statusDiv.textContent=`Coordonnées introuvables.`; }};
+            function createPopupContent(name, cIdx, cityIdx) { const f=document.createElement('div'); f.className='gaar-popup-form'; f.innerHTML=`<label>Modifier :</label><input type="text" id="gaar-input-${cIdx}-${cityIdx}" value="${name}"><button onclick="handleGaarPointUpdate(${cIdx}, ${cityIdx})">OK</button>`; return f; }
+            function updatePolygon(cIdx) { const c=gaarDrawnCircuits[cIdx], l=c.markers.map(m=>m.getLatLng()); c.polygon.setLatLngs(l); }
+            async function geocodeAndDisambiguate(names) { const map=new Map(), resolved=[...names], ambigIdx=names.findIndex(n=>['AIX'].includes(n.toUpperCase())); if(ambigIdx!==-1){const ambigCity=names[ambigIdx],refCities=names.filter((_,i)=>i!==ambigIdx),refCoords=(await Promise.all(refCities.map(c=>geocodeCity(c,1)))).filter(Boolean).map(c=>c[0].latlon);if(refCoords.length>0){const cands=await geocodeCity(ambigCity,5);if(cands){const best=cands.reduce((b,cur)=>{const dist=refCoords.reduce((s,r)=>s+getDistance(r,cur.latlon),0);return dist<b.dist?{cand:cur,dist}:{...b}},{cand:null,dist:Infinity}).cand;if(best){resolved[ambigIdx]=best.name.split(',')[0];map.set(resolved[ambigIdx],best.latlon);}}}} for(const c of resolved) if(!map.has(c)){const g=await geocodeCity(c,1);if(g)map.set(c,g[0].latlon);} return{coordMap:map,resolvedNames:resolved};}
+            async function geocodeCity(name, limit = 1) { try { const r = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(name)}, France&limit=${limit}`); const d=await r.json(); return (d&&d.length>0)?d.map(i=>({name:i.display_name,latlon:[parseFloat(i.lat),parseFloat(i.lon)]})):null;}catch(e){return null;}}
+            function getDistance(c1, c2) {const R=6371,dLat=(c2[0]-c1[0])*Math.PI/180,dLon=(c2[1]-c1[1])*Math.PI/180,a=Math.sin(dLat/2)**2+Math.cos(c1[0]*Math.PI/180)*Math.cos(c2[0]*Math.PI/180)*Math.sin(dLon/2)**2;return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));}
+            handlePdfFile(gaarPdfFile);
+        }
+            
+        function initializeInteractivePdfViewers() {
+            const createFileHandler = (fileObjectSetter, infoId, viewerId, mapInitFn, initialScale = 1.5) => (files) => {
+                const file = files[0];
+                if (!file || file.type !== 'application/pdf') return;
+                fileObjectSetter(file);
+                document.getElementById(infoId).textContent = `Document chargé : ${file.name}`;
+                createInteractivePdfHandler(document.getElementById(viewerId), file, mapInitFn, initialScale);
+                if (viewerId === 'pdf-interactive-container-gaar') document.getElementById('gaar-map-section').style.display = 'block';
+            };
+            const fdsHandler = createFileHandler(f => fdsFileObject = f, 'pdf-info-fds', 'pdf-interactive-container-fds', null, 1.65);
+            const gaarHandler = createFileHandler(f => gaarFileObject = f, 'pdf-info-gaar', 'pdf-interactive-container-gaar', initializeGaarMapFromFile, 1.3);
+            const notamHandler = (files) => {
+                const file = files[0]; if (!file || file.type !== 'application/pdf') return;
+                document.getElementById('pdf-info-notam').textContent = `Document chargé : ${file.name}`;
+                extractTextFromPdf(file, document.getElementById('pdf-info-notam')); 
+            };
+            document.getElementById('pdf-load-fds-btn').addEventListener('click', () => document.getElementById('pdf-input-fds').click());
+            document.getElementById('pdf-input-fds').addEventListener('change', (e) => fdsHandler(e.target.files));
+            setupDropzone('fds-dropzone', fdsHandler);
+            document.getElementById('pdf-load-gaar-btn').addEventListener('click', () => document.getElementById('pdf-input-gaar').click());
+            document.getElementById('pdf-input-gaar').addEventListener('change', (e) => gaarHandler(e.target.files));
+            setupDropzone('gaar-dropzone', gaarHandler);
+            document.getElementById('pdf-load-notam-btn').addEventListener('click', () => document.getElementById('pdf-input-notam').click());
+            document.getElementById('pdf-input-notam').addEventListener('change', (e) => notamHandler(e.target.files));
+            setupDropzone('notam-pdf-dropzone', notamHandler);
+        }
+        
+        function initializeSupAipLoader() {
+            const loadBtn = document.getElementById('pdf-load-sup-aip-btn'), addBtn = document.getElementById('pdf-add-sup-aip-btn');
+            const fileInput = document.getElementById('pdf-input-sup-aip'), container = document.getElementById('sup-aip-container');
+            loadBtn.addEventListener('click', () => fileInput.click()); addBtn.addEventListener('click', () => fileInput.click());
+            container.addEventListener('click', (e) => {
+                if (e.target && e.target.matches('.sup-aip-delete-btn')) {
+                    const itemToRemove = e.target.closest('.sup-aip-item'), fileName = itemToRemove.dataset.fileName;
+                    supAipFileObjects = supAipFileObjects.filter(f => f.name !== fileName); itemToRemove.remove();
+                }
+            });
+            const addSupAipFiles = (files) => {
+                if (!files.length) return;
+                for (const file of files) {
+                    if (file.type !== 'application/pdf' || supAipFileObjects.some(f => f.name === file.name)) continue;
+                    supAipFileObjects.push(file);
+                    const item = document.createElement('div');
+                    item.className = 'sup-aip-item'; item.dataset.fileName = file.name;
+                    item.innerHTML = `<h3>${file.name}<button class="sup-aip-delete-btn" title="Supprimer">×</button></h3><div class="interactive-pdf-viewer"><div class="interactive-pdf-controls"><button class="pdf-nav-btn" data-action="prev">Préc.</button><span>Page <span class="page-num">1</span>/<span class="page-count">1</span></span><button class="pdf-nav-btn" data-action="next">Suiv.</button><div class="zoom-controls"><button class="pdf-nav-btn" data-action="zoom-out">-</button><span>Zoom</span><button class="pdf-nav-btn" data-action="zoom-in">+</button></div></div><div class="pdf-canvas-wrapper"><canvas class="pdf-canvas"></canvas></div></div>`;
+                    container.appendChild(item);
+                    createInteractivePdfHandler(item.querySelector('.interactive-pdf-viewer'), file);
+                }
+                loadBtn.style.display = 'none'; addBtn.style.display = 'inline-block';
+            };
+            fileInput.addEventListener('change', (e) => addSupAipFiles(e.target.files));
+            setupDropzone('sup-aip-dropzone', addSupAipFiles); window.addSupAipFiles = addSupAipFiles;
+        }
+
+        function initializeForeFlightButton() { document.getElementById('foreflight-btn').href = 'foreflightmobile://'; }
+        
+        async function fileToSavable(file) {
+            if (!file) return null;
+            return {
+                name: file.name,
+                type: file.type,
+                buffer: await file.arrayBuffer()
+            };
+        }
+
+        function savableToFile(savable) {
+            if (!savable || !savable.buffer) return null;
+            return new File([savable.buffer], savable.name, { type: savable.type });
+        }
+
+        // --- SESSION MANAGEMENT (LOCAL & IMPORT/EXPORT) ---
+        function initializeSessionManagement() {
+            // Local storage in IndexedDB
+            const dbName = 'briefingSessionDB', storeName = 'sessionStore';
+            let db;
+            function openDB() { return new Promise((resolve, reject) => { const r = indexedDB.open(dbName, 1); r.onerror = () => reject("Erreur DB."); r.onsuccess = e => { db = e.target.result; resolve(); }; r.onupgradeneeded = e => e.target.result.createObjectStore(storeName, { keyPath: 'id' }); }); }
+            
+            async function performSave() {
+                if (!db) await openDB();
+                sessionStatus.textContent = "Sauvegarde locale en cours...";
+                const dataToSave = await gatherSessionData();
+                dataToSave.id = 'currentSession';
+                dataToSave.savedAt = new Date();
+                
+                const store = db.transaction([storeName], 'readwrite').objectStore(storeName);
+                const request = store.put(dataToSave);
+                request.onsuccess = () => { sessionStatus.textContent = `Session locale sauvegardée à ${new Date().toLocaleTimeString()}.`; };
+                request.onerror = (e) => { sessionStatus.textContent = `Erreur de sauvegarde locale: ${e.target.error}`; console.error("Erreur IndexedDB:", e.target.error);};
+            }
+
+            document.getElementById('save-session-btn').addEventListener('click', performSave);
+            document.getElementById('clear-session-btn').addEventListener('click', async () => {
+                if (confirm("Vraiment effacer la session sauvegardée localement ?")) {
+                    try { if (!db) await openDB(); db.transaction([storeName], 'readwrite').objectStore(storeName).clear(); alert("Sauvegarde locale effacée. Rechargement..."); location.reload(); }
+                    catch (error) { sessionStatus.textContent = `Erreur: ${error}`; }
+                }
+            });
+
+            (async function loadLocalSession() {
+                try {
+                    await openDB();
+                    db.transaction([storeName], 'readonly').objectStore(storeName).get('currentSession').onsuccess = async e => {
+                        const data = e.target.result;
+                        if (data) {
+                            sessionStatus.textContent = "Restauration de la session locale...";
+                            await restoreSessionFromData(data);
+                            sessionStatus.textContent = `Session locale restaurée (du ${new Date(data.savedAt).toLocaleString('fr-FR')})`;
+                        } else {
+                            sessionStatus.textContent = "Aucune session sauvegardée localement.";
+                        }
+                    };
+                } catch (error) { sessionStatus.textContent = `Erreur DB: ${error}`; }
+            })();
+
+            // Import/Export functionality
+            document.getElementById('export-session-btn').addEventListener('click', async () => {
+                sessionStatus.textContent = "Préparation de l'export...";
+                try {
+                    const sessionData = await gatherSessionData();
+                    const jsonString = JSON.stringify(sessionData, null, 2);
+                    const blob = new Blob([jsonString], {type: "application/json"});
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    const fileName = `briefing_${new Date().toISOString().split('T')[0]}.json`;
+                    a.href = url;
+                    a.download = fileName;
+                    
+                    sessionStatus.textContent = 'Cliquez sur "Télécharger" dans la fenêtre de l\'iPad.';
+                    
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+
+                } catch (error) {
+                    sessionStatus.textContent = `Erreur lors de l'export: ${error.message}`;
+                    console.error("Export Error:", error);
+                }
+            });
+
+            const importInput = document.getElementById('import-session-input');
+            document.getElementById('import-session-btn').addEventListener('click', () => importInput.click());
+            importInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                sessionStatus.textContent = `Chargement de ${file.name}...`;
+                const reader = new FileReader();
+                reader.onload = async (event) => {
+                    try {
+                        const sessionData = JSON.parse(event.target.result);
+                        await restoreSessionFromData(sessionData);
+                        sessionStatus.textContent = `Session importée depuis ${file.name}.`;
+                    } catch (error) {
+                        sessionStatus.textContent = `Erreur lors de l'import: ${error.message}`;
+                        console.error("Import Error:", error);
+                        alert("Le fichier de session est invalide ou corrompu.");
+                    }
+                };
+                reader.readAsText(file);
+                importInput.value = ''; // Reset input
+            });
+        }
+        
+        async function gatherSessionData() {
+            const checkedNotamIds = [], highlightedNotams = {};
+            document.querySelectorAll('#notam-display .notam-item').forEach(item => {
+                const id = item.dataset.notamId; if (!id) return;
+                if (item.querySelector('.notam-checkbox').checked) checkedNotamIds.push(id);
+                const content = item.querySelector('.notam-text-content').innerHTML;
+                if (content.includes('<mark')) highlightedNotams[id] = content;
+            });
+            
+            const fileToB64 = async (file) => {
+                if (!file) return null;
+                const buffer = await file.arrayBuffer();
+                let binary = '';
+                const bytes = new Uint8Array(buffer);
+                for (let i = 0; i < bytes.byteLength; i++) { binary += String.fromCharCode(bytes[i]); }
+                return { name: file.name, type: file.type, data: window.btoa(binary) };
+            };
+
+            return {
+                version: "1.2",
+                fds: await fileToB64(fdsFileObject),
+                gaar: await fileToB64(gaarFileObject),
+                supAips: await Promise.all(supAipFileObjects.map(f => fileToB64(f))),
+                notamText: document.getElementById('notam-input').value,
+                notamState: { checkedIds: checkedNotamIds, highlights: highlightedNotams },
+            };
+        }
+        
+        async function restoreSessionFromData(data) {
+            const b64ToFile = (b64Data) => {
+                if (!b64Data || !b64Data.data) return null;
+                const binary = window.atob(b64Data.data);
+                const len = binary.length;
+                const bytes = new Uint8Array(len);
+                for (let i = 0; i < len; i++) { bytes[i] = binary.charCodeAt(i); }
+                return new File([bytes], b64Data.name, {type: b64Data.type});
+            };
+
+            if (data.fds) {
+                const file = b64ToFile(data.fds);
+                fdsFileObject = file;
+                document.getElementById('pdf-info-fds').textContent = `Document chargé : ${file.name}`;
+                createInteractivePdfHandler(document.getElementById('pdf-interactive-container-fds'), file, null, 1.65);
+            }
+            if (data.gaar) {
+                const file = b64ToFile(data.gaar);
+                gaarFileObject = file;
+                document.getElementById('pdf-info-gaar').textContent = `Document chargé : ${file.name}`;
+                createInteractivePdfHandler(document.getElementById('pdf-interactive-container-gaar'), file, initializeGaarMapFromFile, 1.3);
+                document.getElementById('gaar-map-section').style.display = 'block';
+            }
+            if (data.supAips && data.supAips.length > 0) {
+                const files = data.supAips.map(s => b64ToFile(s)).filter(Boolean);
+                if (files.length > 0) window.addSupAipFiles(files);
+            }
+            if (data.notamText) {
+                document.getElementById('notam-input').value = data.notamText;
+                if(data.notamText) window.parseAndDisplayNotams(data.notamState || null);
+            }
+        }
+        
+        async function extractTextFromPdf(file, pdfInfoElement) { 
+            const notamInput = document.getElementById('notam-input'); 
+            pdfInfoElement.textContent = `Extraction du texte de ${file.name}...`; 
+            try { 
+                const fileReader = new FileReader(); 
+                fileReader.readAsArrayBuffer(file); 
+                await new Promise((resolve, reject) => { fileReader.onload = resolve; fileReader.onerror = reject; }); 
+                const pdf = await pdfjsLib.getDocument({ data: fileReader.result }).promise; 
+                let fullText = ''; 
+                for (let i = 1; i <= pdf.numPages; i++) { 
+                    const page = await pdf.getPage(i); 
+                    const textContent = await page.getTextContent(); 
+                    let lastY = -1;
+                    textContent.items.forEach(item => {
+                        if (lastY !== -1 && item.transform[5] < lastY - 5) fullText += '\n';
+                        fullText += item.str;
+                        lastY = item.transform[5];
+                    });
+                    fullText += '\n\n';
+                } 
+                notamInput.value = fullText.trim().replace(/Page\s+\d+\s+of\s+\d+/g, ''); 
+                pdfInfoElement.textContent = `Texte extrait de ${file.name}.`; 
+                window.parseAndDisplayNotams();
+            } catch (error) { 
+                console.error("Erreur d'extraction PDF:", error); 
+                pdfInfoElement.textContent = "Erreur d'extraction du texte du PDF."; 
+                let detailedMessage = "Impossible d'extraire le texte de ce PDF.\n\n";
+                if (error.name === 'PasswordException' || (error.message && error.message.toLowerCase().includes('password'))) {
+                    detailedMessage += "Raison probable : Le fichier est protégé par un mot de passe.";
+                } else {
+                    detailedMessage += "Raison probable : Le fichier est corrompu, vide, ou dans un format non supporté.";
+                }
+                detailedMessage += "\n\nDétail technique : " + error.message;
+                alert(detailedMessage + "\n\nVous pouvez toujours le copier/coller manuellement.");
+            } 
+        }
+        
+        function generateNotamPdf() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            let y = 15;
+            const margin = 10;
+            const pageHeight = doc.internal.pageSize.getHeight();
+            const usableWidth = doc.internal.pageSize.getWidth() - 2 * margin;
+
+            const airportSections = document.querySelectorAll('#notam-display .airport-section-container');
+            const visibleNotamsExist = Array.from(airportSections).some(section => section.querySelector('.notam-item:not(.hidden-by-filter):not(.hidden-by-prefilter)'));
+
+            if (!visibleNotamsExist) {
+                alert("Aucun NOTAM sélectionné à sauvegarder.");
+                return;
+            }
+
+            doc.setFont("helvetica", "bold").setFontSize(18).text("Sélection de NOTAMs", doc.internal.pageSize.getWidth() / 2, y, { align: "center" });
+            y += 7;
+            const today = new Date();
+            doc.setFont("helvetica", "normal").setFontSize(10).text(`Généré le ${today.toLocaleDateString('fr-FR')} à ${today.toLocaleTimeString('fr-FR')}`, doc.internal.pageSize.getWidth() / 2, y, { align: "center" });
+            y += 15;
+
+            airportSections.forEach(section => {
+                const visibleItems = section.querySelectorAll('.notam-item:not(.hidden-by-filter):not(.hidden-by-prefilter)');
+                if (visibleItems.length === 0) return;
+                if (y > pageHeight - 20) { doc.addPage(); y = 15; }
+                const airportTitle = section.querySelector('h3').textContent.replace(/Afficher METAR\/TAF/g, '').trim();
+                doc.setFont("helvetica", "bold").setFontSize(14).text(airportTitle, margin, y);
+                y += 8;
+
+                visibleItems.forEach(item => {
+                    if (y > pageHeight - 30) { doc.addPage(); y = 15; }
+                    const validityEl = item.querySelector('.notam-validity');
+                    if (validityEl) {
+                        doc.setFont("helvetica", "bolditalic").setFontSize(8).setTextColor(50);
+                        const validityLines = doc.splitTextToSize(validityEl.textContent, usableWidth - 5);
+                        doc.text(validityLines, margin + 5, y);
+                        y += validityLines.length * 3.5;
+                    }
+                    doc.setFont("helvetica", "normal").setFontSize(9).setTextColor(0);
+                    const notamText = (item.querySelector('.notam-text-content')).innerText;
+                    const notamLines = doc.splitTextToSize(notamText, usableWidth - 5);
+                    doc.text(notamLines, margin + 5, y);
+                    y += notamLines.length * 4 + 5;
+                });
+            });
+            doc.save(`selection_notams_${today.toISOString().split('T')[0]}.pdf`);
+        }
+
+        function initializeNotamParser() { 
+            const notamInput = document.getElementById('notam-input'), notamDisplay = document.getElementById('notam-display'), notamSection = document.querySelector('.notam-section');
+            const filterButtons = document.querySelectorAll('.filter-action'), showAllButtons = document.querySelectorAll('.show-all-action'), savePdfButtons = document.querySelectorAll('.save-pdf-action');
+            const predefinedIcaoOrder = ['LFTW', 'LFML', 'LFTH', 'LFMD', 'LFHO', 'LFLU', 'LFMH', 'LFMU', 'LFMP', 'LFMK', 'LFCC', 'LFBD', 'LFBL', 'LFBM', 'LFBP', 'LFKC', 'LFKB', 'LFKJ', 'LFKF', 'LFJR', 'LFAQ', 'LFLX', 'LFSG', 'LFRV'];
+            const icaoToFullName = {
+                'LFTW':'LFTW - NIMES GARONS', 'LFML':'LFML - MARSEILLE PROVENCE', 'LFTH':'LFTH - TOULON HYERES', 
+                'LFMD':'LFMD - CANNES MANDELIEU', 'LFHO':'LFHO - AUBENAS ARDECHE MERIDIONALE', 'LFLU':'LFLU - VALENCE CHABEUIL', 
+                'LFMH':'LFMH - ST ETIENNE BOUTHEON', 'LFMU':'LFMU - BEZIERS VIAS', 'LFMP':'LFMP - PERPIGNAN RIVESALTES', 
+                'LFMK':'LFMK - CARCASSONNE SALVAZA', 'LFCC':'LFCC - CAHORS LALBENQUE', 'LFBD':'LFBD - BORDEAUX MERIGNAC', 
+                'LFBL':'LFBL - LIMOGES BELLEGARDE', 'LFBM':'LFBM - MONT DE MARSAN', 'LFBP':'LFBP - PAU PYRENEES', 
+                'LFKC':'LFKC - CALVI STE CATHERINE', 'LFKB':'LFKB - BASTIA PORETTA', 'LFKJ':'LFKJ - AJACCIO NAPOLEON BONAPARTE', 
+                'LFKF':'LFKF - FIGARI SUD CORSE', 'LFJR':'LFJR - ANGERS LOIRE', 
+                'LFAQ':'LFAQ - ALBERT BRAY', 
+                'LFLX':'LFLX - CHATEAUROUX DEOLS', 'LFSG':'LFSG - EPINAL MIRECOURT', 'LFRV':'LFRV - VANNES GOLFE DU MORBIHAN'
+            };
+            const keywordsToFilter = ['crane', 'rffs', 'grf', 'obstacles', 'obst', 'police', 'lights'];
+
+            function renderInitialAirportSections() {
+                notamDisplay.innerHTML = ''; 
+                predefinedIcaoOrder.forEach(icao => {
+                    const fullName = icaoToFullName[icao] || `${icao} - INCONNU`;
+                    notamDisplay.appendChild(createAirportSectionElement(icao, fullName));
+                });
+            }
+
+            function applyLiveFilters() {
+                const isDateFilterActive = document.getElementById('notam-date-filter-cb').checked;
+                const isKeywordFilterActive = document.getElementById('notam-keyword-filter-cb').checked;
+                
+                const today = new Date();
+                const todayStart = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate(), 0, 0, 0));
+                const todayEnd = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate(), 23, 59, 59));
+
+                document.querySelectorAll('#notam-display .notam-item').forEach(item => {
+                    let shouldBeHidden = false;
+                    
+                    if (isDateFilterActive) {
+                        const notamStart = item.dataset.startDate ? new Date(item.dataset.startDate) : null;
+                        const notamEnd = item.dataset.endDate ? new Date(item.dataset.endDate) : null;
+                        if (notamStart && notamEnd && !(notamStart <= todayEnd && notamEnd >= todayStart)) {
+                            shouldBeHidden = true;
+                        }
+                    }
+
+                    if (isKeywordFilterActive && !shouldBeHidden) {
+                        if (keywordsToFilter.some(k => item.textContent.toLowerCase().includes(k))) {
+                            shouldBeHidden = true;
+                        }
+                    }
+                    item.classList.toggle('hidden-by-prefilter', shouldBeHidden);
+                });
+            }
+
+            window.parseAndDisplayNotams = function(savedState = null) {
+                const rawText = notamInput.value; if (!rawText.trim()) return;
+                const airportSections = rawText.split(/\n\s*(?=LF[A-Z]{2}\s+-\s+)/);
+                const airportsData = {};
+                airportSections.forEach(section => {
+                    const lines = section.trim().split('\n'), header = lines.shift() || "";
+                    if (!header.match(/^LF[A-Z]{2}\s+-\s+/)) return;
+                    if (header.includes("No information received")) { airportsData[header] = [header]; return; }
+                    const content = lines.join('\n').replace(/Page \d+ of \d+\s*\n?/gi, '').replace(/\.(Q\))/g, '.\n$1');
+                    airportsData[header] = content.split(/(?=Q\))/g).filter(b => b.trim().startsWith('Q)')).map(b => b.trim().replace(/(\r\n|\n){2,}/g, '\n'));
+                });
+                
+                renderInitialAirportSections();
+
+                Object.keys(airportsData).forEach(airportName => {
+                    const icao = airportName.split(' ')[0];
+                    let container = document.getElementById(`notam-container-${icao}`);
+                    if (!container) {
+                        container = createAirportSectionElement(icao, airportName);
+                        notamDisplay.appendChild(container);
+                    }
+                    container.querySelectorAll('.notam-item').forEach(item => item.remove());
+                    (airportsData[airportName] || []).forEach(notamText => container.appendChild(createNotamItemElement(notamText, icao)));
+                });
+                
+                applyLiveFilters();
+
+                const controlsVisible = document.querySelectorAll('.notam-item').length > 0;
+                document.getElementById('notam-controls-top').style.display = controlsVisible ? 'flex' : 'none';
+                document.getElementById('notam-controls-bottom').style.display = controlsVisible ? 'flex' : 'none';
+                
+                if (savedState) {
+                    if (savedState.highlights) Object.entries(savedState.highlights).forEach(([id, html]) => { const item = document.querySelector(`[data-notam-id="${id}"]`); if (item) item.querySelector('.notam-text-content').innerHTML = html; });
+                    if (savedState.checkedIds) savedState.checkedIds.forEach(id => { const item = document.querySelector(`[data-notam-id="${id}"]`); if (item) item.querySelector('.notam-checkbox').checked = true; });
+                    if (savedState.checkedIds && savedState.checkedIds.length > 0) applySelectionFilter();
+                }
+            }
+            
+            function applySelectionFilter() {
+                document.querySelectorAll('.notam-item').forEach(item => item.classList.toggle('hidden-by-filter', !item.querySelector('.notam-checkbox').checked));
+                filterButtons.forEach(btn => btn.style.display = 'none');
+                showAllButtons.forEach(btn => btn.style.display = 'inline-block');
+                savePdfButtons.forEach(btn => btn.style.display = 'inline-block');
+            }
+            function resetSelectionFilter() {
+                document.querySelectorAll('.hidden-by-filter').forEach(item => item.classList.remove('hidden-by-filter'));
+                showAllButtons.forEach(btn => btn.style.display = 'none');
+                savePdfButtons.forEach(btn => btn.style.display = 'none');
+                filterButtons.forEach(btn => btn.style.display = 'inline-block');
+            }
+            
+            renderInitialAirportSections();
+            (document.getElementById('notam-parse-btn') || {}).addEventListener('click', () => window.parseAndDisplayNotams());
+            filterButtons.forEach(b => b.addEventListener('click', applySelectionFilter));
+            showAllButtons.forEach(b => b.addEventListener('click', resetSelectionFilter));
+            savePdfButtons.forEach(b => b.addEventListener('click', generateNotamPdf));
+            document.getElementById('notam-date-filter-cb').addEventListener('change', applyLiveFilters);
+            document.getElementById('notam-keyword-filter-cb').addEventListener('change', applyLiveFilters);
+
+            notamSection.addEventListener('click', async (e) => {
+                const t = e.target;
+                if (t.matches('.sup-aip-link')) { e.preventDefault(); window.open(t.href, '_blank'); return; }
+                if (t.matches('.metar-taf-toggle-btn')) { const c = t.closest('.airport-section-container').querySelector('.metar-taf-container'); const h = c.style.display === 'none'; c.style.display = h ? 'block' : 'none'; t.textContent = h ? 'Masquer METAR/TAF' : 'Afficher METAR/TAF'; if (h && !c.dataset.loaded) { await fetchMetarTaf(t.dataset.icao, c); c.dataset.loaded = 'true'; } }
+                if (t.matches('.metar-taf-refresh-btn')) { await fetchMetarTaf(t.dataset.icao, t.closest('.metar-taf-container')); }
+                const mark = t.closest('mark.highlighted-text'); if(mark && !window.getSelection().toString()) { const p = mark.parentNode; while(mark.firstChild) p.insertBefore(mark.firstChild, mark); p.removeChild(mark); p.normalize(); }
+            });
+
+            function handleTextHighlight(event) {
+                const textContentDiv = event.target.closest('.notam-text-content'); if (!textContentDiv) return;
+                setTimeout(() => {
+                    const selection = window.getSelection(); if (!selection || selection.isCollapsed || !textContentDiv.contains(selection.anchorNode)) return;
+                    const range = selection.getRangeAt(0);
+                    if (event.type !== 'touchend' && !event.ctrlKey) {
+                        textContentDiv.querySelectorAll('mark.highlighted-text').forEach(h => { const p = h.parentNode; while (h.firstChild) p.insertBefore(h.firstChild, h); p.removeChild(h); });
+                        textContentDiv.normalize();
+                    }
+                    const newSelection = window.getSelection(); if (newSelection.isCollapsed) return;
+                    const newRange = newSelection.getRangeAt(0);
+                    const mark = document.createElement('mark'); mark.className = 'highlighted-text';
+                    try { newRange.surroundContents(mark); } catch (e) { console.warn("Surlignage impossible.", e); }
+                    newSelection.removeAllRanges();
+                }, 10);
+            }
+            notamSection.addEventListener('mouseup', handleTextHighlight);
+            notamSection.addEventListener('touchend', handleTextHighlight);
+        }
+        
+        function initializeManualMetarFetch() {
+            const fetchBtn = document.getElementById('manual-metar-fetch-btn'), input = document.getElementById('manual-icao-input'), display = document.getElementById('manual-metar-display');
+            const handleFetch = () => {
+                const icaos = input.value.trim().toUpperCase().split(/\s+/).filter(Boolean); if (!icaos.length) return;
+                display.innerHTML = '';
+                icaos.forEach(icao => {
+                    const container = createAirportSectionElement(icao, icao); display.appendChild(container);
+                    const mtoContainer = container.querySelector('.metar-taf-container'), btn = container.querySelector('.metar-taf-toggle-btn');
+                    mtoContainer.style.display = 'block'; btn.textContent = 'Masquer METAR/TAF'; fetchMetarTaf(icao, mtoContainer);
+                });
+            };
+            fetchBtn.addEventListener('click', handleFetch);
+            input.addEventListener('keypress', (e) => { if (e.key === 'Enter') { e.preventDefault(); handleFetch(); } });
+        }
+
+        function initializePageTitle() {
+            const titleElement = document.getElementById('main-title');
+            titleElement.textContent = `Briefing Fdf du ${new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}`;
+            const timeDisplay = document.getElementById('current-time-display');
+            const updateTime = () => timeDisplay.textContent = new Date().toLocaleTimeString('fr-FR');
+            updateTime(); setInterval(updateTime, 1000);
+        }
+
+        function getLabelForDate(d){const a=new Date(Date.UTC((new Date).getUTCFullYear(),(new Date).getUTCMonth(),(new Date).getUTCDate())),t=new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate())),e=Math.round((t-a)/864e5);return 0===e?"Aujourd'hui":1===e?"Demain":-1===e?"Hier":e>1?`Dans ${e} jours`:`Il y a ${-e} jours`}
+    </script>
+</body>
+</html>
