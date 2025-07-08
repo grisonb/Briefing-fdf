@@ -397,7 +397,7 @@
         <div class="page-header-background"></div>
         <h1 id="main-title">Briefing Fdf</h1>
         <p id="current-time-display"></p>
-        <p style="position: relative; z-index: 2; text-align: center; color: #333; font-size: 1em; margin-top: -25px; margin-bottom: 30px;">v1.193 beta</p>
+        <p style="position: relative; z-index: 2; text-align: center; color: #333; font-size: 1em; margin-top: -25px; margin-bottom: 30px;">v1.194 beta</p>
     </div>
 
     <div class="session-management"><h3>Gestion de la Session</h3><button id="save-session-btn" class="link-button" style="background-color: #28a745;">Sauvegarder la session</button><button id="clear-session-btn" class="link-button" style="background-color: var(--sc-red);">Effacer la sauvegarde</button><p id="session-status"></p></div>
@@ -611,7 +611,7 @@
         let gaarMap = null;
         let gaarDrawnCircuits = [];
         let isAddingManualCircuit = false;
-        const manualCircuitColor = 'magenta';
+        const manualCircuitColors = ['#ff00ff', '#00ffff', '#ff8c00', '#00ff00', '#ff1493']; // Magenta, Cyan, Orange, Vert, Rose
 
         // --- CORE INITIALIZATION ---
         function waitForPdfJsAndInitialize() {
@@ -1185,28 +1185,37 @@
             
             function handleMapClickForManualAdd(e) {
                 if (!isAddingManualCircuit) return;
-                
-                let currentManualCircuit = gaarDrawnCircuits.find(c => c.isManual && c.isActive);
-                if (!currentManualCircuit) {
-                    const circuitIndex = gaarDrawnCircuits.length;
-                    currentManualCircuit = {
+
+                let activeManualCircuit = gaarDrawnCircuits.find(c => c.isManual && c.isActive);
+
+                if (!activeManualCircuit || activeManualCircuit.markers.length >= 3) {
+                    if (activeManualCircuit) {
+                        activeManualCircuit.isActive = false;
+                    }
+                    
+                    // Déterminer la couleur du nouveau circuit
+                    const manualCircuitsCount = gaarDrawnCircuits.filter(c => c.isManual).length;
+                    const newCircuitColor = manualCircuitColors[manualCircuitsCount % manualCircuitColors.length];
+                    
+                    activeManualCircuit = {
                         polygon: null,
                         markers: [],
                         cityNames: [],
-                        color: manualCircuitColor,
+                        color: newCircuitColor, // Utiliser la nouvelle couleur
                         isManual: true,
-                        isActive: true
+                        isActive: true 
                     };
-                    gaarDrawnCircuits.push(currentManualCircuit);
+                    gaarDrawnCircuits.push(activeManualCircuit);
                 }
-                
-                const circuitIndex = gaarDrawnCircuits.indexOf(currentManualCircuit);
-                const cityIndex = currentManualCircuit.markers.length;
+
+                const circuitIndex = gaarDrawnCircuits.indexOf(activeManualCircuit);
+                const cityIndex = activeManualCircuit.markers.length;
                 const pointName = `Point ${cityIndex + 1}`;
-                const newMarker = createGaarMarker(e.latlng, pointName, circuitIndex, cityIndex, manualCircuitColor);
+                // Utiliser la couleur stockée dans le circuit pour créer le marqueur
+                const newMarker = createGaarMarker(e.latlng, pointName, circuitIndex, cityIndex, activeManualCircuit.color);
                 
-                currentManualCircuit.markers.push(newMarker);
-                currentManualCircuit.cityNames.push(pointName);
+                activeManualCircuit.markers.push(newMarker);
+                activeManualCircuit.cityNames.push(pointName);
                 
                 updatePolygon(circuitIndex);
             }
