@@ -134,7 +134,6 @@
         
         .carte-container iframe { width: 100%; height: 100%; border: none; }
         
-        /* MODIFICATION : Zoom et décalage de la carte TEMSI */
         #temsi-frame {
             transform: scale(1.25) translate(8%, 8%);
             transform-origin: center;
@@ -151,7 +150,16 @@
         .link-button:hover { opacity: 0.9; transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
         
         .notam-controls { display: none; justify-content: center; flex-wrap: wrap; gap: 15px; margin-top: 20px; }
-        #notam-controls-bottom { width: 100%; max-width: 980px; margin-top: -20px; margin-bottom: 40px; padding: 0 20px; box-sizing: border-box; }
+        
+        #notam-controls-bottom { 
+            width: 100%; 
+            max-width: 980px; 
+            margin-top: 20px;
+            margin-bottom: 0;
+            padding: 0 20px; 
+            box-sizing: border-box; 
+        }
+
         .confirm-action { background-color: #3498db !important; }
         .confirm-action:hover { background-color: #2980b9 !important; }
         .reset { background-color: #95a5a6; }
@@ -160,10 +168,56 @@
         .notam-pre-filter {
             display: flex;
             justify-content: center;
+            align-items: center;
             flex-wrap: wrap;
             gap: 25px;
             margin-bottom: 25px;
             font-size: 0.9em;
+        }
+        
+        .filter-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        #keyword-filter-toggle-btn {
+            background-color: #7f8c8d;
+            color: white;
+            padding: 8px 15px;
+            font-size: 1em;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        .filter-list {
+            display: none;
+            position: absolute;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            min-width: 250px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 10;
+            border-radius: 5px;
+            padding: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            right: 0;
+        }
+        .filter-list label {
+            display: block;
+            padding: 4px 8px;
+            cursor: pointer;
+            color: var(--dark-text);
+            border-radius: 3px;
+            font-weight: normal;
+            text-transform: capitalize;
+            user-select: none;
+        }
+        .filter-list label:hover {
+            background-color: #f0f0f0;
+        }
+        .filter-list input {
+            margin-right: 8px;
+            vertical-align: middle;
         }
         
         #notam-display h3, #manual-metar-display h3 { border-bottom: 2px solid var(--sc-yellow); padding-bottom: 5px; margin-top: 30px; color: var(--sc-blue);}
@@ -176,7 +230,7 @@
             padding: 15px; 
             margin-bottom: 15px; 
             border-radius: 4px; 
-            transition: background-color 0.2s, border-left-color 0.2s; 
+            transition: background-color 0.2s, border-left-color 0.2s, max-height 0.3s ease-out, opacity 0.3s ease-out; 
             background-color: #f8f9fa;
         }
         .notam-item:has(.notam-checkbox:checked) { 
@@ -255,41 +309,35 @@
         
         #manual-metar-section { margin-top: 40px; padding-top: 20px; border-top: 2px solid var(--sc-blue); }
         #manual-icao-input { width: 70%; max-width: 500px; text-transform: uppercase; }
-        .hidden-by-filter { display: none; }
+        
+        .hidden-by-filter, .hidden-by-prefilter { 
+            display: none !important;
+        }
 
         footer { margin-top: 20px; font-size: 0.9em; color: #666; }
 
-        /* --- STYLES SPÉCIFIQUES À LA CARTE GAAR --- */
         #gaar-map-container {
             width: 100%;
             display: flex;
             flex-direction: column;
             align-items: center;
         }
-        #gaar-drop-zone { 
-            border: 3px dashed #ccc; 
-            border-radius: 10px; 
-            width: 100%; 
-            padding: 50px; 
-            text-align: center; 
-            color: #666; 
-            font-size: 1.2em; 
-            margin-bottom: 20px; 
-            cursor: pointer;
-            transition: background-color 0.2s;
-            box-sizing: border-box;
+        #gaar-map-controls {
+            margin-bottom: 15px;
         }
-        #gaar-drop-zone:hover {
-            background-color: #f0f8ff;
+        #add-manual-circuit-btn.active {
+            background-color: #c0392b;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
         }
         #gaar-map-display { width: 100%; height: 500px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        #gaar-map-display.crosshair-cursor { cursor: crosshair; }
         #gaar-status { margin-top: 15px; font-weight: bold; color: #555; min-height: 20px; text-align: center; }
         .gaar-city-label { background-color: rgba(255, 255, 255, 0.8); border: 1px solid #999; border-radius: 3px; font-size: 10px; font-weight: bold; padding: 2px 5px; box-shadow: none; }
-        .gaar-popup-form { display: flex; flex-direction: column; gap: 5px; }
+        .gaar-popup-form { display: flex; flex-direction: column; gap: 8px; }
         .gaar-popup-form input { border: 1px solid #ccc; padding: 5px; border-radius: 3px; }
         .gaar-popup-form button { background-color: #007bff; color: white; border: none; padding: 5px 8px; border-radius: 3px; cursor: pointer; }
+        .gaar-popup-form .delete-point-btn { background-color: var(--sc-red); }
 
-        /* --- STYLES POUR LE TUTO --- */
         .help-icon {
             display: inline-flex;
             justify-content: center;
@@ -349,7 +397,7 @@
         <div class="page-header-background"></div>
         <h1 id="main-title">Briefing Fdf</h1>
         <p id="current-time-display"></p>
-        <p style="position: relative; z-index: 2; text-align: center; color: #333; font-size: 1em; margin-top: -25px; margin-bottom: 30px;">v1.182 beta</p>
+        <p style="position: relative; z-index: 2; text-align: center; color: #333; font-size: 1em; margin-top: -25px; margin-bottom: 30px;">v1.192 beta</p>
     </div>
 
     <div class="session-management"><h3>Gestion de la Session</h3><button id="save-session-btn" class="link-button" style="background-color: #28a745;">Sauvegarder la session</button><button id="clear-session-btn" class="link-button" style="background-color: var(--sc-red);">Effacer la sauvegarde</button><p id="session-status"></p></div>
@@ -380,6 +428,7 @@
         <h2>Diagramme GAAR</h2>
         <div class="pdf-controls">
             <button id="pdf-load-gaar-btn" class="link-button" style="background-color: #16a085;">Charger le Diagramme GAAR</button>
+            <button id="pdf-reset-gaar-btn" class="link-button" style="background-color: var(--sc-red); display: none;">Supprimer GAAR</button>
             <input type="file" id="pdf-input-gaar" accept="application/pdf">
         </div>
         <div id="pdf-interactive-container-gaar" class="interactive-pdf-viewer" style="display: none;">
@@ -389,10 +438,12 @@
         <p id="pdf-info-gaar" class="pdf-info"></p>
     </div>
     
-    <!-- NOUVELLE SECTION POUR LA CARTE GAAR AUTOMATIQUE -->
     <div class="map-section" id="gaar-map-section" style="display: none;">
         <h2>Carte des Circuits GAAR</h2>
         <div id="gaar-map-container">
+            <div id="gaar-map-controls">
+                <button id="add-manual-circuit-btn" class="link-button" style="background-color: #27ae60;">Ajouter un Circuit Manuel</button>
+            </div>
             <div id="gaar-map-display"></div>
             <div id="gaar-status">En attente du chargement du diagramme GAAR...</div>
         </div>
@@ -405,7 +456,6 @@
     <div id="notam-pdf-dropzone" class="pdf-section dropzone">
         <h2>Extraire les NOTAMs d'un PDF</h2>
         <div class="pdf-controls">
-            <!-- POSITION MODIFIÉE -->
             <span id="nats-help-icon" class="help-icon" title="Comment utiliser NATS ?">?</span>
             <a href="https://nats-uk.ead-it.com/fwf-nats/restricted/user/ino/brief_aerodrome.faces?menuId=C920E9BB76441A9AE05341741DC25BDD" target="_blank" class="link-button" style="background-color: #8e44ad;">Accéder au Briefing NATS</a>
             <button id="pdf-load-notam-btn" class="link-button" style="background-color: #2c3e50;">Charger PDF des NOTAMs</button>
@@ -445,7 +495,18 @@
             <div style="text-align:center; padding-top: 20px;"><button id="notam-parse-btn" class="link-button" style="background-color: #d35400;">Analyser le texte</button></div>
         </div>
         
-        <div class="notam-pre-filter"><div><input type="checkbox" id="notam-date-filter-cb" checked><label for="notam-date-filter-cb">Afficher uniquement les NOTAMs valides aujourd'hui</label></div><div><input type="checkbox" id="notam-keyword-filter-cb" checked><label for="notam-keyword-filter-cb">Masquer NOTAMs non-pertinents (grues, RFFS...)</label></div></div>
+        <div class="notam-pre-filter">
+            <div>
+                <input type="checkbox" id="notam-date-filter-cb" checked>
+                <label for="notam-date-filter-cb">Afficher uniquement les NOTAMs valides aujourd'hui</label>
+            </div>
+            <div class="filter-dropdown">
+                <button id="keyword-filter-toggle-btn">Filtres par Mots-Clés</button>
+                <div id="keyword-filter-list" class="filter-list" style="display: none;">
+                    <!-- Rempli dynamiquement par JS -->
+                </div>
+            </div>
+        </div>
         
         <div id="notam-controls-top" class="notam-controls">
             <button class="link-button confirm-action filter-action">Garder la sélection</button>
@@ -516,7 +577,7 @@
     
     <script>
         // --- Clé API pour la source de données météo ---
-        const CHECKWX_API_KEY = "f96766a799024b5781b192257de10684"; 
+        const CHECKWX_API_KEY = "f96766a799024b5781b192257de10684";
 
         // --- DONNÉES TOUR DE FRANCE ---
         const tdfStages = [
@@ -547,18 +608,23 @@
         let fdsFileObject = null;
         let gaarFileObject = null;
         let supAipFileObjects = [];
-        
-        // --- GAAR MAP SPECIFIC VARIABLES ---
         let gaarMap = null;
         let gaarDrawnCircuits = [];
+        let isAddingManualCircuit = false;
+        const manualCircuitColor = 'magenta';
 
         // --- CORE INITIALIZATION ---
-        window.onload = function() {
-            window.scrollTo(0, 0);
-            initializePage();
-        };
+        function waitForPdfJsAndInitialize() {
+            if (window.pdfjsLib) {
+                initializePage();
+            } else {
+                setTimeout(waitForPdfJsAndInitialize, 100);
+            }
+        }
+        window.onload = waitForPdfJsAndInitialize;
         
         function initializePage() {
+            window.scrollTo(0, 0);
             initializePageTitle();
             initializeTemsi();
             initializeInteractivePdfViewers();
@@ -577,22 +643,14 @@
             const stageDateSpan = document.getElementById('tdf-stage-date');
             const supAipLink = document.getElementById('tdf-sup-aip-link');
             
-            if (!stageSelector || !stageMap || !stageDateSpan || !supAipLink) {
-                console.error("Éléments du Tour de France non trouvés. L'initialisation est annulée.");
-                return;
-            }
+            if (!stageSelector || !stageMap || !stageDateSpan || !supAipLink) return;
 
             function updateDisplay(stageIndex) {
                 const selectedStage = tdfStages[stageIndex];
                 stageMap.src = selectedStage.mapUrl;
                 stageMap.alt = `Carte de l'étape ${selectedStage.stage}: ${selectedStage.name}`;
                 const date = new Date(`${selectedStage.date}T12:00:00`);
-                stageDateSpan.textContent = date.toLocaleDateString('fr-FR', {
-                    weekday: 'long',
-                    day: 'numeric',
-                    month: 'long',
-                    year: 'numeric'
-                });
+                stageDateSpan.textContent = date.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
                 if (selectedStage.supAipUrl) {
                     supAipLink.href = selectedStage.supAipUrl;
                     supAipLink.textContent = `Consulter le SUP AIP pour l'étape ${selectedStage.stage}`;
@@ -606,19 +664,10 @@
                 const now = new Date();
                 let defaultStageIndex = 0;
                 const referenceDate = new Date(now);
-                if (now.getHours() >= 22) {
-                    referenceDate.setDate(referenceDate.getDate() + 1);
-                }
+                if (now.getHours() >= 22) referenceDate.setDate(referenceDate.getDate() + 1);
                 referenceDate.setHours(0, 0, 0, 0);
-                const foundIndex = tdfStages.findIndex(stage => {
-                    const stageDate = new Date(`${stage.date}T00:00:00`);
-                    return stageDate >= referenceDate;
-                });
-                if (foundIndex !== -1) {
-                    defaultStageIndex = foundIndex;
-                } else {
-                    defaultStageIndex = tdfStages.length - 1;
-                }
+                const foundIndex = tdfStages.findIndex(stage => new Date(`${stage.date}T00:00:00`) >= referenceDate);
+                defaultStageIndex = (foundIndex !== -1) ? foundIndex : tdfStages.length - 1;
                 stageSelector.selectedIndex = defaultStageIndex;
                 updateDisplay(defaultStageIndex);
             }
@@ -633,50 +682,32 @@
             });
 
             setDefaultStage();
-
-            stageSelector.addEventListener('change', (event) => {
-                updateDisplay(event.target.value);
-            });
+            stageSelector.addEventListener('change', (event) => updateDisplay(event.target.value));
         }
 
         function initializeHelpTooltips() {
             const icon = document.getElementById('nats-help-icon');
             const tooltip = document.getElementById('nats-help-tooltip');
-
-            if (!icon || !tooltip) {
-                console.error("Éléments du tutoriel introuvables.");
-                return;
-            }
-
-            icon.addEventListener('click', () => {
-                const isHidden = tooltip.style.display === 'none';
-                tooltip.style.display = isHidden ? 'block' : 'none';
-            });
+            if (!icon || !tooltip) return;
+            icon.addEventListener('click', () => { tooltip.style.display = (tooltip.style.display === 'none') ? 'block' : 'none'; });
         }
 
-        // --- NOTAM/MTO HELPER FUNCTIONS (GLOBAL SCOPE) ---
-        
         function createAirportSectionElement(icao, fullName) {
             const airportContainer = document.createElement('div');
             airportContainer.id = `notam-container-${icao}`;
             airportContainer.className = 'airport-section-container';
-            
             const airportTitle = document.createElement('h3');
             airportTitle.textContent = `${fullName} `;
-
             const metarTafToggleButton = document.createElement('button');
             metarTafToggleButton.textContent = 'Afficher METAR/TAF';
             metarTafToggleButton.className = 'metar-taf-toggle-btn';
             metarTafToggleButton.dataset.icao = icao;
-            
             const metarTafContainer = document.createElement('div');
             metarTafContainer.className = 'metar-taf-container';
             metarTafContainer.style.display = 'none';
-
             airportTitle.appendChild(metarTafToggleButton);
             airportContainer.appendChild(airportTitle);
             airportContainer.appendChild(metarTafContainer);
-
             return airportContainer;
         }
 
@@ -684,13 +715,12 @@
             const validity = parseNotamValidity(notamText);
             const itemContainer = document.createElement('div');
             itemContainer.className = 'notam-item';
+            if (validity.start) itemContainer.dataset.startDate = validity.start.toISOString();
+            if (validity.end) itemContainer.dataset.endDate = validity.end.toISOString();
 
             const bMatch = notamText.match(/B\)\s*(\d{10})/);
             const cMatch = notamText.match(/C\)\s*(\d{10}|PERM)/);
-            if (bMatch && cMatch) {
-                const notamId = `${icao}-${bMatch[1]}-${cMatch[1]}`;
-                itemContainer.dataset.notamId = notamId;
-            }
+            if (bMatch && cMatch) itemContainer.dataset.notamId = `${icao}-${bMatch[1]}-${cMatch[1]}`;
 
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
@@ -709,131 +739,64 @@
             
             const textElement = document.createElement('div');
             textElement.className = 'notam-text-content';
-
             const supAipRegex = /(AIP\s+)?SUP\s+(\d{1,3})\/(\d{2})/gi;
             let linkifiedText = notamText.replace(supAipRegex, (match, p1, supNumber, twoDigitYear) => {
                 const fullYear = `20${twoDigitYear}`;
                 const paddedNumber = supNumber.padStart(3, '0');
-                let pdfUrl;
                 const baseUrl = "https://www.sia.aviation-civile.gouv.fr/media/store/documents/file/l/f/";
-
-                if (fullYear === '2025') {
-                    pdfUrl = `${baseUrl}lf_sup_a_${fullYear}_${paddedNumber}_fr.pdf`;
-                } else {
-                    pdfUrl = `${baseUrl}lf_sup_${fullYear}_${paddedNumber}_fr.pdf`;
-                }
-                
+                const pdfUrl = (fullYear === '2025') ? `${baseUrl}lf_sup_a_${fullYear}_${paddedNumber}_fr.pdf` : `${baseUrl}lf_sup_${fullYear}_${paddedNumber}_fr.pdf`;
                 return `<a href="${pdfUrl}" class="sup-aip-link" target="_blank" title="Ouvrir le PDF du SUP AIP ${match}">${match}</a>`;
             });
-            
-            const formattedTextWithLineBreaks = linkifiedText.replace(/\s+([B-G]\))/g, '<br>$1');
-            textElement.innerHTML = formattedTextWithLineBreaks;
+            textElement.innerHTML = linkifiedText.replace(/\s+([B-G]\))/g, '<br>$1');
             contentWrapper.appendChild(textElement);
             itemContainer.appendChild(contentWrapper);
             return itemContainer;
         }
 
         function parseNotamValidity(notamBlock) {
-            const now = new Date();
-            const yearPrefix = String(now.getUTCFullYear()).substring(0, 2);
             let bMatch = notamBlock.match(/B\)\s*(\d{10})/);
             let cMatch = notamBlock.match(/C\)\s*(\d{10}|PERM)/);
-
             if (bMatch && cMatch) {
-                const s = bMatch[1];
-                const e = cMatch[1];
-                const start = new Date(Date.UTC(parseInt(yearPrefix + s.substring(0, 2)), parseInt(s.substring(2, 4)) - 1, parseInt(s.substring(4, 6)), parseInt(s.substring(6, 8)), parseInt(s.substring(8, 10))));
-                const end = e === 'PERM' ? new Date('2099-12-31T23:59:59Z') : new Date(Date.UTC(parseInt(yearPrefix + e.substring(0, 2)), parseInt(e.substring(2, 4)) - 1, parseInt(e.substring(4, 6)), parseInt(e.substring(6, 8)), parseInt(e.substring(8, 10))));
-                const validityText = `VALIDE DU ${s.substring(4,6)}/${s.substring(2,4)}/${yearPrefix}${s.substring(0,2)} à ${s.substring(6,8)}h${s.substring(8,10)} AU ${e === 'PERM' ? 'PERMANENT' : `${e.substring(4,6)}/${e.substring(2,4)}/${yearPrefix}${e.substring(0,2)} à ${e.substring(6,8)}h${e.substring(8,10)}`}`;
-                return { start, end, text: validityText, active: now >= start && now <= end };
+                const s = bMatch[1], e = cMatch[1];
+                const start = new Date(Date.UTC(parseInt(`20${s.substring(0, 2)}`), parseInt(s.substring(2, 4)) - 1, parseInt(s.substring(4, 6)), parseInt(s.substring(6, 8)), parseInt(s.substring(8, 10))));
+                const end = e === 'PERM' ? new Date('2099-12-31T23:59:59Z') : new Date(Date.UTC(parseInt(`20${e.substring(0, 2)}`), parseInt(e.substring(2, 4)) - 1, parseInt(e.substring(4, 6)), parseInt(e.substring(6, 8)), parseInt(e.substring(8, 10))));
+                const validityText = `VALIDE DU ${s.substring(4,6)}/${s.substring(2,4)}/${`20${s.substring(0,2)}`} à ${s.substring(6,8)}h${s.substring(8,10)} AU ${e === 'PERM' ? 'PERMANENT' : `${e.substring(4,6)}/${e.substring(2,4)}/${`20${e.substring(0,2)}`} à ${e.substring(6,8)}h${e.substring(8,10)}`}`;
+                return { start, end, text: validityText };
             }
-            return { active: true, text: null };
+            return { text: null, start: null, end: null };
         }
         
         async function fetchMetarTaf(icao, container) {
             container.innerHTML = '<p>Chargement des données MTO...</p>';
-
-            if (!CHECKWX_API_KEY || CHECKWX_API_KEY === "VOTRE_CLÉ_API_CHECKWX_ICI") {
-                const errorMessage = 'Erreur : Clé API CheckWX non configurée. Veuillez l\'ajouter en haut du script.';
-                container.innerHTML = `<p class="error-msg">${errorMessage}</p>`;
-                console.error(errorMessage);
+            if (!CHECKWX_API_KEY) {
+                container.innerHTML = `<p class="error-msg">Erreur : Clé API non trouvée dans le script.</p>`;
                 return;
             }
-
             const headers = { 'X-API-Key': CHECKWX_API_KEY };
-            const metarPromise = fetch(`https://api.checkwx.com/metar/${icao}`, { headers });
-            const tafPromise = fetch(`https://api.checkwx.com/taf/${icao}`, { headers });
-
             try {
-                const results = await Promise.allSettled([metarPromise, tafPromise]);
-                
-                let metarDisplay = "Erreur de récupération du METAR.";
-                let tafDisplay = "Erreur de récupération du TAF.";
-
-                // Traitement du résultat METAR
-                if (results[0].status === 'fulfilled') {
-                    const response = results[0].value;
-                    if (response.ok) {
-                        const json = await response.json();
-                        metarDisplay = (json.results > 0) ? json.data[0] : 'METAR non disponible pour ce terrain.';
-                    } else {
-                         metarDisplay = `Erreur serveur (METAR): ${response.status}`;
-                    }
-                } else {
-                    console.error(`Erreur fetch METAR pour ${icao}:`, results[0].reason);
-                }
-
-                // Traitement du résultat TAF
-                if (results[1].status === 'fulfilled') {
-                     const response = results[1].value;
-                    if (response.ok) {
-                        const json = await response.json();
-                        tafDisplay = (json.results > 0) ? json.data[0] : 'TAF non disponible pour ce terrain.';
-                    } else {
-                        tafDisplay = `Erreur serveur (TAF): ${response.status}`;
-                    }
-                } else {
-                    console.error(`Erreur fetch TAF pour ${icao}:`, results[1].reason);
-                }
-                
-                // Affichage final
-                let html = `<h4>METAR <button class="metar-taf-refresh-btn" data-icao="${icao}" title="Rafraîchir les données MTO">↻</button></h4>`;
-                html += `<pre>${metarDisplay}</pre>`;
-                html += `<h4>TAF</h4>`;
-                html += `<pre>${tafDisplay}</pre>`;
-                
-                container.innerHTML = html;
-
+                const [metarResponse, tafResponse] = await Promise.all([
+                    fetch(`https://api.checkwx.com/metar/${icao}`, { headers }),
+                    fetch(`https://api.checkwx.com/taf/${icao}`, { headers })
+                ]);
+                const metarJson = await metarResponse.json();
+                const tafJson = await tafResponse.json();
+                const metarDisplay = (metarJson.results > 0) ? metarJson.data[0] : 'METAR non disponible.';
+                const tafDisplay = (tafJson.results > 0) ? tafJson.data[0] : 'TAF non disponible.';
+                container.innerHTML = `<h4>METAR <button class="metar-taf-refresh-btn" data-icao="${icao}" title="Rafraîchir">↻</button></h4><pre>${metarDisplay}</pre><h4>TAF</h4><pre>${tafDisplay}</pre>`;
             } catch (error) {
-                console.error(`Erreur inattendue pour ${icao}:`, error);
-                container.innerHTML = `<p class="error-msg">Une erreur inattendue est survenue.</p>`;
+                container.innerHTML = `<p class="error-msg">Une erreur de réseau est survenue.</p>`;
             }
         }
         
-        // --- FEATURE INITIALIZATION FUNCTIONS ---
-
         function setupDropzone(zoneId, fileHandlerFunction) {
             const dropzone = document.getElementById(zoneId);
             if (!dropzone) return;
-
-            dropzone.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                dropzone.classList.add('drag-over');
-            });
-            
-            dropzone.addEventListener('dragleave', () => {
-                dropzone.classList.remove('drag-over');
-            });
-
+            dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('drag-over'); });
+            dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag-over'));
             dropzone.addEventListener('drop', (e) => {
                 e.preventDefault();
-                dropzone.classList.remove('active', 'drag-over');
-                const message = dropzone.querySelector('.dropzone-message');
-                if (message) message.style.display = 'none';
-
-                if (e.dataTransfer.files.length > 0) {
-                    fileHandlerFunction(e.dataTransfer.files);
-                }
+                dropzone.classList.remove('drag-over');
+                if (e.dataTransfer.files.length > 0) fileHandlerFunction(e.dataTransfer.files);
             });
         }
         
@@ -846,38 +809,23 @@
                 const echeances = [6, 9, 12, 15, 18, 21];
                 const now = new Date();
                 const currentHour = now.getUTCHours();
-                
                 const date = new Date(now);
-                const reversedEcheances = [...echeances].reverse();
-                
-                // CORRECTION TEMSI: Une carte est disponible 1h avant sa validité.
-                // On cherche la dernière échéance `e` pour laquelle `currentHour >= e - 1`.
-                let activeEcheance = reversedEcheances.find(e => currentHour >= e - 1);
-
+                let activeEcheance = [...echeances].reverse().find(e => currentHour >= e - 1);
                 if (activeEcheance === undefined) {
-                    // Si on est avant 5h UTC, la dernière carte valide est celle de 21h UTC de la veille.
                     activeEcheance = 21;
                     date.setUTCDate(date.getUTCDate() - 1);
                 }
-                
                 date.setUTCHours(activeEcheance, 0, 0, 0);
-                
                 let initialEcheance = '';
-                // On génère 8 options autour de l'échéance active pour avoir un choix large.
                 for (let i = -3; i <= 4; i++) { 
                     let echeanceDate = new Date(date);
                     let echeanceIndex = echeances.indexOf(activeEcheance) + i;
-                    
-                    const dayOffset = Math.floor(echeanceIndex / echeances.length);
-                    echeanceDate.setUTCDate(echeanceDate.getUTCDate() + dayOffset);
-                    
+                    echeanceDate.setUTCDate(echeanceDate.getUTCDate() + Math.floor(echeanceIndex / echeances.length));
                     echeanceIndex = (echeanceIndex % echeances.length + echeances.length) % echeances.length;
                     echeanceDate.setUTCHours(echeances[echeanceIndex], 0, 0, 0);
-
                     const dateString = `${echeanceDate.getUTCFullYear()}${String(echeanceDate.getUTCMonth()+1).padStart(2, '0')}${String(echeanceDate.getUTCDate()).padStart(2, '0')}${String(echeanceDate.getUTCHours()).padStart(2, '0')}0000`;
                     const option = document.createElement("option");
                     option.value = dateString;
-                    
                     let label = `${getLabelForDate(echeanceDate)} ${String(echeanceDate.getUTCHours()).padStart(2, '0')}h00 UTC`;
                     if (i === 0) {
                         label += " (Actuelle)";
@@ -892,7 +840,6 @@
                 select.addEventListener('change', e => update(e.target.value));
                 update(initialEcheance);
             }
-
             populateTemsi();
         }
 
@@ -901,481 +848,548 @@
             const controls = viewerContainer.querySelector('.interactive-pdf-controls');
             const wrapper = viewerContainer.querySelector('.pdf-canvas-wrapper');
             const ctx = canvas.getContext('2d');
-            
-            // Variables de gestion d'état
             let pdfDoc = null, pageNum = 1, pageRendering = false, pageNumPending = null, scale = initialScale;
-            
-            // Variables pour le Panning (souris et tactile)
             let isPanning = false, panStart = { x: 0, y: 0 };
-            
-            // Variables pour le Pinch-to-Zoom
             let initialPinchDistance = null, startScale = null;
 
-            function getDistance(touch1, touch2) {
-                const dx = touch1.clientX - touch2.clientX;
-                const dy = touch1.clientY - touch2.clientY;
-                return Math.sqrt(dx * dx + dy * dy);
-            }
-
+            function getDistance(t1, t2) { const dx = t1.clientX - t2.clientX, dy = t1.clientY - t2.clientY; return Math.sqrt(dx * dx + dy * dy); }
             function renderPage(num) {
                 pageRendering = true;
                 pdfDoc.getPage(num).then(page => {
                     const pixelRatio = Math.max(window.devicePixelRatio || 1, 2);
                     const viewport = page.getViewport({ scale: scale * pixelRatio });
-                    
-                    canvas.height = viewport.height;
-                    canvas.width = viewport.width;
-                    canvas.style.height = `${viewport.height / pixelRatio}px`;
-                    canvas.style.width = `${viewport.width / pixelRatio}px`;
-
-                    const renderTask = page.render({ canvasContext: ctx, viewport: viewport });
-                    renderTask.promise.then(() => {
+                    canvas.height = viewport.height; canvas.width = viewport.width;
+                    canvas.style.height = `${viewport.height / pixelRatio}px`; canvas.style.width = `${viewport.width / pixelRatio}px`;
+                    page.render({ canvasContext: ctx, viewport: viewport }).promise.then(() => {
                         pageRendering = false;
                         if (pageNumPending !== null) { renderPage(pageNumPending); pageNumPending = null; }
                     });
                 });
                 controls.querySelector('.page-num').textContent = num;
             }
-
-            function queueRenderPage(num) { if (pageRendering) { pageNumPending = num; } else { renderPage(num); } }
-            
+            function queueRenderPage(num) { if (pageRendering) pageNumPending = num; else renderPage(num); }
             controls.addEventListener('click', e => {
                 if (!pdfDoc || !e.target.dataset.action) return;
                 const action = e.target.dataset.action;
                 if (action === 'prev' && pageNum > 1) { pageNum--; queueRenderPage(pageNum); }
                 else if (action === 'next' && pageNum < pdfDoc.numPages) { pageNum++; queueRenderPage(pageNum); }
-                else if (action === 'zoom-in' && scale < 5.0) { scale = parseFloat((scale + 0.2).toFixed(2)); queueRenderPage(pageNum); }
-                else if (action === 'zoom-out' && scale > 0.3) { scale = parseFloat((scale - 0.2).toFixed(2)); queueRenderPage(pageNum); }
+                else if (action === 'zoom-in') { scale = Math.min(5.0, scale + 0.2); queueRenderPage(pageNum); }
+                else if (action === 'zoom-out') { scale = Math.max(0.3, scale - 0.2); queueRenderPage(pageNum); }
             });
-
-            // GESTION DE LA SOURIS
-            wrapper.addEventListener('wheel', e => {
-                if (!pdfDoc) return;
-                e.preventDefault();
-                if (e.deltaY < 0 && scale < 5.0) { scale = parseFloat((scale + 0.1).toFixed(2)); }
-                else if (e.deltaY > 0 && scale > 0.3) { scale = parseFloat((scale - 0.1).toFixed(2)); }
-                queueRenderPage(pageNum);
-            });
-            wrapper.addEventListener('mousedown', e => { isPanning = true; panStart.x = e.clientX + wrapper.scrollLeft; panStart.y = e.clientY + wrapper.scrollTop; });
+            wrapper.addEventListener('wheel', e => { e.preventDefault(); scale = e.deltaY < 0 ? Math.min(5.0, scale + 0.1) : Math.max(0.3, scale - 0.1); queueRenderPage(pageNum); });
+            wrapper.addEventListener('mousedown', e => { isPanning = true; panStart = { x: e.clientX + wrapper.scrollLeft, y: e.clientY + wrapper.scrollTop }; });
             wrapper.addEventListener('mouseup', () => isPanning = false);
             wrapper.addEventListener('mouseleave', () => isPanning = false);
             wrapper.addEventListener('mousemove', e => { if (isPanning) { e.preventDefault(); wrapper.scrollLeft = panStart.x - e.clientX; wrapper.scrollTop = panStart.y - e.clientY; } });
-            
-            // GESTION DU TACTILE (PINCH-TO-ZOOM ET PANNING)
             wrapper.addEventListener('touchstart', e => {
-                if (e.touches.length === 2) { // Pinch
-                    e.preventDefault();
-                    isPanning = false;
-                    initialPinchDistance = getDistance(e.touches[0], e.touches[1]);
-                    startScale = scale;
-                } else if (e.touches.length === 1) { // Pan
-                    isPanning = true;
-                    panStart.x = e.touches[0].clientX + wrapper.scrollLeft;
-                    panStart.y = e.touches[0].clientY + wrapper.scrollTop;
-                }
+                if (e.touches.length === 2) { e.preventDefault(); isPanning = false; initialPinchDistance = getDistance(e.touches[0], e.touches[1]); startScale = scale; }
+                else if (e.touches.length === 1) { isPanning = true; panStart = { x: e.touches[0].clientX + wrapper.scrollLeft, y: e.touches[0].clientY + wrapper.scrollTop }; }
             }, { passive: false });
-
             wrapper.addEventListener('touchmove', e => {
-                if (e.touches.length === 2 && initialPinchDistance && startScale) { // Pinching
-                    e.preventDefault();
-                    const currentDistance = getDistance(e.touches[0], e.touches[1]);
-                    const newScale = startScale * (currentDistance / initialPinchDistance);
-                    scale = Math.max(0.3, Math.min(newScale, 5.0)); // Clamp scale
-                    queueRenderPage(pageNum);
-                } else if (e.touches.length === 1 && isPanning) { // Panning
-                    e.preventDefault();
-                    wrapper.scrollLeft = panStart.x - e.touches[0].clientX;
-                    wrapper.scrollTop = panStart.y - e.touches[0].clientY;
-                }
+                if (e.touches.length === 2 && initialPinchDistance) { e.preventDefault(); scale = Math.max(0.3, Math.min(startScale * (getDistance(e.touches[0], e.touches[1]) / initialPinchDistance), 5.0)); queueRenderPage(pageNum); }
+                else if (e.touches.length === 1 && isPanning) { e.preventDefault(); wrapper.scrollLeft = panStart.x - e.touches[0].clientX; wrapper.scrollTop = panStart.y - e.touches[0].clientY; }
             }, { passive: false });
-
-            wrapper.addEventListener('touchend', e => {
-                isPanning = false;
-                initialPinchDistance = null;
-                startScale = null;
-            });
-
-            // Chargement du PDF
+            wrapper.addEventListener('touchend', () => { isPanning = false; initialPinchDistance = null; startScale = null; });
             const fileReader = new FileReader();
             fileReader.onload = function() {
                 pdfjsLib.getDocument(new Uint8Array(this.result)).promise.then(pdfDoc_ => {
-                    pdfDoc = pdfDoc_;
-                    controls.querySelector('.page-count').textContent = pdfDoc.numPages;
-                    pageNum = 1;
-                    renderPage(pageNum);
-                    viewerContainer.style.display = 'block';
+                    pdfDoc = pdfDoc_; controls.querySelector('.page-count').textContent = pdfDoc.numPages;
+                    pageNum = 1; renderPage(pageNum); viewerContainer.style.display = 'block';
                     if (callback) callback(file);
                 });
             };
             fileReader.readAsArrayBuffer(file);
         }
 
-        // --- NOUVELLE LOGIQUE D'INITIALISATION POUR LA CARTE GAAR ---
+        // --- GAAR MAP LOGIC ---
         function initializeGaarMapFromFile(gaarPdfFile) {
             const statusDiv = document.getElementById('gaar-status');
-
-            // Initialise la carte si elle n'existe pas encore
+            const mapDisplay = document.getElementById('gaar-map-display');
+            
             if (!gaarMap) {
-                gaarMap = L.map('gaar-map-display').setView([46.2276, 2.2137], 6);
+                gaarMap = L.map(mapDisplay).setView([46.2276, 2.2137], 6);
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(gaarMap);
-            }
-
-            // Gère l'analyse et l'affichage des circuits
-            async function handlePdfFile(file) {
-                if (!file || file.type !== 'application/pdf') {
-                    statusDiv.textContent = "Erreur : Le fichier doit être au format PDF.";
-                    return;
-                }
-                statusDiv.textContent = 'Analyse du PDF...';
-                
-                // Nettoie les anciens circuits de la carte
-                gaarDrawnCircuits.forEach(({ polygon, markers }) => {
-                    gaarMap.removeLayer(polygon);
-                    markers.forEach(m => gaarMap.removeLayer(m));
-                });
-                gaarDrawnCircuits = [];
-
-                try {
-                    const arrayBuffer = await file.arrayBuffer();
-                    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-                    const page = await pdf.getPage(1);
-                    const textContent = await page.getTextContent();
-                    const allCircuits = extractAllCircuits(textContent.items.map(item => item.str).join(' '));
-
-                    if (allCircuits.length > 0) {
-                        statusDiv.textContent = `Géocodage en cours...`;
-                        await geocodeAndDrawAll(allCircuits);
-                    } else {
-                        throw new Error("Aucun circuit géographique actif n'a été trouvé.");
-                    }
-                } catch (error) {
-                    statusDiv.textContent = `Erreur : ${error.message}`;
-                }
+                gaarMap.on('click', handleMapClickForManualAdd);
             }
             
-            function extractAllCircuits(text) {
-                const circuits = [];
-                const spaceRegex = /[1-9][\d,]*\s*h\s+([A-ZÀ-ÿ-]+)\s+([A-ZÀ-ÿ-]+)\s+([A-ZÀ-ÿ-]+)/ig;
-                const dashRegex = /[1-9][\d,]*\s*h\s+([A-ZÀ-ÿ -]+?)\s*–\s*([A-ZÀ-ÿ -]+?)\s*–\s*([A-ZÀ-ÿ -]+?)(?=\s+[A-Z]{4}|\s+Lever)/ig;
+            async function handlePdfFile(file) {
+                if (!file || file.type !== 'application/pdf') { statusDiv.textContent = "Erreur: Fichier PDF requis."; return; }
+                statusDiv.textContent = 'Analyse du PDF...';
+                clearAllCircuits();
                 
-                let match;
-                while ((match = spaceRegex.exec(text)) !== null) circuits.push([match[1], match[2], match[3]]);
-                while ((match = dashRegex.exec(text)) !== null) {
-                    const newCircuit = [match[1].trim(), match[2].trim(), match[3].trim()];
-                    if (!circuits.some(c => c.join('') === newCircuit.join(''))) circuits.push(newCircuit);
+                try {
+                    const pdf = await pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
+                    const page = await pdf.getPage(1);
+                    const textContent = await page.getTextContent();
+                    
+                    const allCircuits = extractAllCircuits(textContent.items);
+
+                    if (allCircuits.length > 0) { 
+                        statusDiv.textContent = `Géocodage de ${allCircuits.length} circuit(s) en cours...`; 
+                        await geocodeAndDrawAll(allCircuits); 
+                    } else { 
+                        throw new Error("Aucun circuit trouvé dans le PDF."); 
+                    }
+                } catch (error) { statusDiv.textContent = `Erreur : ${error.message}`; }
+            }
+            
+            function extractAllCircuits(items) {
+                const circuits = [];
+                const dashRegex = /[–-]/;
+                const spaceOnlyRegex = /^[A-ZÀ-ÿ\s]+$/;
+
+                for (const item of items) {
+                    const text = item.str.trim();
+                    const upperText = text.toUpperCase();
+
+                    // Exclure les faux positifs communs
+                    if (upperText.includes('SOLEIL') || upperText.includes('GUET') || upperText === 'TRANSIT' || text.length < 8) {
+                        continue;
+                    }
+                    if (upperText === 'GAAR SUPP' || upperText === 'GAAR LITTORAL') {
+                        continue;
+                    }
+                    
+                    let cities = [];
+
+                    // Stratégie A: pour les circuits avec tirets (ex: "GAAR SUPP: AVIGNON – FREJUS - AIX")
+                    if (dashRegex.test(text)) {
+                        const contentAfterColon = text.includes(':') ? text.split(':')[1] : text;
+                        cities = contentAfterColon.trim().split(/\s*[–-]\s*/).map(s => s.trim()).filter(Boolean);
+                    } 
+                    // Stratégie B: pour les circuits avec espaces seulement (ex: "AVIGNON ISTRES AIX")
+                    else if (spaceOnlyRegex.test(text)) {
+                        cities = text.split(/\s+/).filter(Boolean);
+                    }
+
+                    if (cities.length >= 2) {
+                        const finalCities = [];
+                        for (let i = 0; i < cities.length; i++) {
+                            const city = cities[i].toUpperCase();
+                            if (city === 'AIX') {
+                                finalCities.push('AIX EN PROVENCE');
+                            } else if (city === 'MRS') {
+                                finalCities.push('MARSEILLE');
+                            } else if (city === 'SAINT' && cities[i + 1]?.toUpperCase() === 'FLORENT') {
+                                finalCities.push('SAINT FLORENT');
+                                i++; // On saute le "FLORENT" qui a déjà été traité
+                            } else {
+                                finalCities.push(cities[i]);
+                            }
+                        }
+                        circuits.push(finalCities);
+                    }
                 }
                 return circuits;
             }
-
+            
             async function geocodeAndDrawAll(allCircuits) {
-                const colors = ['blue', 'red', 'green', 'purple', 'orange'];
-                const featureGroup = [];
-
-                for (const [index, cityNames] of allCircuits.entries()) {
+                const colors = ['blue', 'red', 'green', 'purple', 'orange'], featureGroup = [];
+                for (const [i, cityNames] of allCircuits.entries()) {
+                    
                     const { coordMap, resolvedNames } = await geocodeAndDisambiguate(cityNames);
-                    const coordinates = resolvedNames.map(city => coordMap.get(city)).filter(Boolean);
-
-                    if (coordinates.length === 3) {
-                        const polygon = L.polygon(coordinates, { color: colors[index % colors.length] }).addTo(gaarMap);
-                        const markers = coordinates.map((coord, cityIndex) => {
-                            const marker = L.marker(coord, { draggable: true }).addTo(gaarMap);
-                            marker.options.circuitIndex = gaarDrawnCircuits.length;
-                            marker.options.cityIndex = cityIndex;
-                            marker.bindTooltip(resolvedNames[cityIndex], { permanent: true, direction: 'top', className: 'gaar-city-label' }).openTooltip();
-                            marker.bindPopup(() => createPopupContent(resolvedNames[cityIndex], marker.options.circuitIndex, cityIndex));
-                            marker.on('dragend', handleMarkerDrag);
-                            return marker;
-                        });
-
-                        gaarDrawnCircuits.push({ polygon, markers, cityNames: resolvedNames });
-                        featureGroup.push(polygon);
+                    const coords = resolvedNames.map(c => coordMap.get(c)).filter(Boolean);
+                    
+                    if (coords.length >= 2) {
+                        const circuitIndex = gaarDrawnCircuits.length;
+                        const circuitColor = colors[i % colors.length];
+                        const markers = coords.map((coord, cityIndex) => createGaarMarker(coord, resolvedNames[cityIndex], circuitIndex, cityIndex, circuitColor));
+                        
+                        let shape = (coords.length >= 3) 
+                            ? L.polygon(coords, { color: circuitColor }).addTo(gaarMap)
+                            : L.polyline(coords, { color: circuitColor }).addTo(gaarMap);
+                        
+                        gaarDrawnCircuits.push({ polygon: shape, markers: markers, cityNames: resolvedNames, color: circuitColor, isManual: false });
+                        featureGroup.push(shape);
                     }
                 }
-
                 if (featureGroup.length > 0) {
                     gaarMap.fitBounds(L.featureGroup(featureGroup).getBounds().pad(0.2));
-                    statusDiv.textContent = `Affichage de ${featureGroup.length} circuit(s). Tapez sur un point pour le modifier.`;
+                    statusDiv.textContent = `Affichage de ${featureGroup.length} circuit(s).`;
                 } else {
                     throw new Error("Géocodage impossible pour les circuits trouvés.");
                 }
             }
-            
-            function handleMarkerDrag(e) {
-                const marker = e.target;
-                const { circuitIndex } = marker.options;
-                updatePolygon(circuitIndex);
+
+            function createGaarMarker(coord, name, circuitIndex, cityIndex, color) {
+                const marker = L.circleMarker(coord, { 
+                    radius: 8,
+                    fillColor: color,
+                    color: '#000',
+                    weight: 1,
+                    opacity: 1,
+                    fillOpacity: 0.8
+                }).addTo(gaarMap);
+
+                marker.options.circuitIndex = circuitIndex;
+                marker.options.cityIndex = cityIndex;
+                marker.bindTooltip(name, { permanent: true, direction: 'top', className: 'gaar-city-label' }).openTooltip();
+                marker.bindPopup(() => createPopupContent(name, circuitIndex, cityIndex));
+                return marker;
             }
 
-            window.handleGaarPointUpdate = async function (circuitIndex, cityIndex) {
+            window.handleGaarPointUpdate = async function(circuitIndex, cityIndex) {
                 const input = document.getElementById(`gaar-input-${circuitIndex}-${cityIndex}`);
-                const newName = input.value.trim();
-                if (!newName) return;
-
+                const newName = input.value.trim(); if (!newName) return;
                 statusDiv.textContent = `Recherche de "${newName}"...`;
-                const geocoded = await geocodeCity(newName, 1);
-                if (geocoded) {
-                    const circuit = gaarDrawnCircuits[circuitIndex];
-                    const marker = circuit.markers[cityIndex];
-                    marker.setLatLng(geocoded[0].latlon);
+                const geo = await geocodeCity(newName, 1);
+                if (geo) {
+                    const circuit = gaarDrawnCircuits[circuitIndex], marker = circuit.markers[cityIndex];
+                    marker.setLatLng(geo[0].latlon);
                     circuit.cityNames[cityIndex] = newName;
                     marker.setTooltipContent(newName);
                     marker.closePopup();
                     updatePolygon(circuitIndex);
-                    statusDiv.textContent = `Point mis à jour avec ${newName}.`;
+                    statusDiv.textContent = `Point mis à jour.`;
                 } else {
-                    statusDiv.textContent = `Impossible de trouver les coordonnées pour "${newName}".`;
+                    statusDiv.textContent = `Coordonnées introuvables pour "${newName}".`;
                 }
-            }
+            };
+            
+            window.handleGaarPointDelete = function(circuitIndex, cityIndex) {
+                const circuit = gaarDrawnCircuits[circuitIndex];
+                if (!circuit) return;
 
-            function createPopupContent(cityName, circuitIndex, cityIndex) {
+                const markerToRemove = circuit.markers[cityIndex];
+                if (markerToRemove) gaarMap.removeLayer(markerToRemove);
+                
+                circuit.markers.splice(cityIndex, 1);
+                circuit.cityNames.splice(cityIndex, 1);
+
+                circuit.markers.forEach((marker, newIndex) => {
+                    marker.options.cityIndex = newIndex;
+                    marker.bindPopup(() => createPopupContent(circuit.cityNames[newIndex], circuitIndex, newIndex));
+                });
+
+                if (circuit.markers.length < 2) {
+                    if (circuit.polygon) gaarMap.removeLayer(circuit.polygon);
+                    circuit.polygon = null;
+                    if (circuit.markers.length === 0) {
+                         gaarDrawnCircuits[circuitIndex] = null;
+                    }
+                } else {
+                    updatePolygon(circuitIndex);
+                }
+                
+                const wasCircuitDeleted = gaarDrawnCircuits[circuitIndex] === null;
+                if (wasCircuitDeleted) {
+                    gaarDrawnCircuits = gaarDrawnCircuits.filter(Boolean);
+                    gaarDrawnCircuits.forEach((c, newCIndex) => {
+                         c.markers.forEach(m => {
+                            m.options.circuitIndex = newCIndex;
+                            m.bindPopup(() => createPopupContent(m.getTooltip().getContent(), newCIndex, m.options.cityIndex));
+                        });
+                    });
+                }
+
+                statusDiv.textContent = `Point supprimé.`;
+            };
+
+            function createPopupContent(name, cIdx, cityIdx) {
                 const form = document.createElement('div');
                 form.className = 'gaar-popup-form';
-                form.innerHTML = `<label>Modifier le nom du point :</label><input type="text" id="gaar-input-${circuitIndex}-${cityIndex}" value="${cityName}" placeholder="Nouveau nom"><button onclick="handleGaarPointUpdate(${circuitIndex}, ${cityIndex})">Mettre à jour</button>`;
+                form.innerHTML = `
+                    <label>Modifier le nom :</label>
+                    <input type="text" id="gaar-input-${cIdx}-${cityIdx}" value="${name}">
+                    <button onclick="handleGaarPointUpdate(${cIdx}, ${cityIdx})">OK</button>
+                    <button class="delete-point-btn" onclick="handleGaarPointDelete(${cIdx}, ${cityIdx})">Supprimer ce point</button>
+                `;
                 return form;
             }
 
             function updatePolygon(circuitIndex) {
                 const circuit = gaarDrawnCircuits[circuitIndex];
-                const newLatLngs = circuit.markers.map(m => m.getLatLng());
-                circuit.polygon.setLatLngs(newLatLngs);
+                if (!circuit || circuit.markers.length < 2) return;
+                const latlngs = circuit.markers.map(m => m.getLatLng());
+                
+                if (circuit.polygon) {
+                    if (latlngs.length < 3 && circuit.polygon instanceof L.Polygon) {
+                        gaarMap.removeLayer(circuit.polygon);
+                        circuit.polygon = L.polyline(latlngs, { color: circuit.color }).addTo(gaarMap);
+                    } else {
+                        circuit.polygon.setLatLngs(latlngs);
+                    }
+                } else {
+                    if (latlngs.length >= 3) {
+                         circuit.polygon = L.polygon(latlngs, { color: circuit.color }).addTo(gaarMap);
+                    } else {
+                         circuit.polygon = L.polyline(latlngs, { color: circuit.color }).addTo(gaarMap);
+                    }
+                }
             }
 
-            async function geocodeAndDisambiguate(cityNames) {
-                const ambiguousNames = {'AIX': 'Aix-en-Provence'};
-                const coordMap = new Map();
-                let resolvedNames = [...cityNames];
-                const ambiguousCityIndex = cityNames.findIndex(name => Object.keys(ambiguousNames).includes(name.toUpperCase()));
-                if (ambiguousCityIndex !== -1) {
-                    const ambiguousCity = cityNames[ambiguousCityIndex];
-                    const referenceCities = cityNames.filter((_, i) => i !== ambiguousCityIndex);
-                    const referenceCoords = (await Promise.all(referenceCities.map(city => geocodeCity(city, 1)))).filter(Boolean).map(c => c[0].latlon);
-                    if (referenceCoords.length > 0) {
-                        const candidates = await geocodeCity(ambiguousCity, 5);
-                        if (candidates) {
-                            const bestCandidate = candidates.reduce((best, current) => {
-                                const currentDist = referenceCoords.reduce((sum, ref) => sum + getDistance(ref, current.latlon), 0);
-                                return currentDist < best.dist ? { cand: current, dist: currentDist } : best;
-                            }, { cand: null, dist: Infinity }).cand;
-                            if (bestCandidate) {
-                                resolvedNames[ambiguousCityIndex] = bestCandidate.name.split(',')[0];
-                                coordMap.set(resolvedNames[ambiguousCityIndex], bestCandidate.latlon);
+            async function geocodeAndDisambiguate(names) {
+                const map = new Map(), resolved = [...names], ambigNames = ['AIX', 'LEZIGNAN'];
+                const isCorsicanCircuit = names.some(n => ['CALVI', 'SAINT FLORENT'].includes(n.toUpperCase()));
+                
+                for (const [i, name] of names.entries()) {
+                    if (ambigNames.includes(name.toUpperCase())) {
+                        const refCities = names.filter((_, idx) => i !== idx);
+                        const refCoords = (await Promise.all(refCities.map(c => geocodeCity(c, 1)))).filter(Boolean).map(c => c[0].latlon);
+                        
+                        if (refCoords.length > 0) {
+                            const searchQuery = name.toUpperCase() === 'LEZIGNAN' ? 'Lézignan-Corbières' : name;
+                            const cands = await geocodeCity(searchQuery, 5);
+                            
+                            if (cands) {
+                                const best = cands.reduce((b, cur) => {
+                                    const dist = refCoords.reduce((s, r) => s + getDistance(r, cur.latlon), 0);
+                                    return dist < b.dist ? {cand: cur, dist} : {...b};
+                                }, {cand: null, dist: Infinity}).cand;
+                                
+                                if (best) {
+                                    resolved[i] = best.name.split(',')[0];
+                                    map.set(resolved[i], best.latlon);
+                                }
                             }
                         }
                     }
                 }
-                for (const city of resolvedNames) {
-                    if (!coordMap.has(city)) {
-                        const geocoded = await geocodeCity(city, 1);
-                        if (geocoded) coordMap.set(city, geocoded[0].latlon);
+
+                for (const name of resolved) {
+                    if (!map.has(name)) {
+                        const query = isCorsicanCircuit ? `${name}, Corse` : `${name}, France`;
+                        const g = await geocodeCity(query, 1);
+                        if (g) map.set(name, g[0].latlon);
                     }
                 }
-                return { coordMap, resolvedNames };
+                return {coordMap: map, resolvedNames: resolved};
             }
-            async function geocodeCity(name, limit = 1) { const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(name)}, France&limit=${limit}`; try { const response = await fetch(url); const data = await response.json(); return (data && data.length > 0) ? data.map(item => ({ name: item.display_name, latlon: [parseFloat(item.lat), parseFloat(item.lon)] })) : null; } catch (e) { return null; } }
-            function getDistance(c1, c2) { const R=6371,dLat=(c2[0]-c1[0])*Math.PI/180,dLon=(c2[1]-c1[1])*Math.PI/180,a=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(c1[0]*Math.PI/180)*Math.cos(c2[0]*Math.PI/180)*Math.sin(dLon/2)*Math.sin(dLon/2);return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a))}
+
+            async function geocodeCity(name, limit = 1) { try { const r = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(name)}&limit=${limit}`); const d=await r.json(); return (d&&d.length>0)?d.map(i=>({name:i.display_name,latlon:[parseFloat(i.lat),parseFloat(i.lon)]})):null;}catch(e){return null;}}
+            function getDistance(c1, c2) {const R=6371,dLat=(c2[0]-c1[0])*Math.PI/180,dLon=(c2[1]-c1[1])*Math.PI/180,a=Math.sin(dLat/2)**2+Math.cos(c1[0]*Math.PI/180)*Math.cos(c2[0]*Math.PI/180)*Math.sin(dLon/2)**2;return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));}
             
-            // Lancement du traitement
+            function handleMapClickForManualAdd(e) {
+                if (!isAddingManualCircuit) return;
+                
+                let currentManualCircuit = gaarDrawnCircuits.find(c => c.isManual && c.isActive);
+                if (!currentManualCircuit) {
+                    const circuitIndex = gaarDrawnCircuits.length;
+                    currentManualCircuit = {
+                        polygon: null,
+                        markers: [],
+                        cityNames: [],
+                        color: manualCircuitColor,
+                        isManual: true,
+                        isActive: true
+                    };
+                    gaarDrawnCircuits.push(currentManualCircuit);
+                }
+                
+                const circuitIndex = gaarDrawnCircuits.indexOf(currentManualCircuit);
+                const cityIndex = currentManualCircuit.markers.length;
+                const pointName = `Point ${cityIndex + 1}`;
+                const newMarker = createGaarMarker(e.latlng, pointName, circuitIndex, cityIndex, manualCircuitColor);
+                
+                currentManualCircuit.markers.push(newMarker);
+                currentManualCircuit.cityNames.push(pointName);
+                
+                updatePolygon(circuitIndex);
+            }
+
+            document.getElementById('add-manual-circuit-btn').addEventListener('click', toggleManualCircuitMode);
+            
             handlePdfFile(gaarPdfFile);
+        }
+
+        function clearAllCircuits() {
+            gaarDrawnCircuits.forEach(({ polygon, markers }) => {
+                if (polygon) gaarMap.removeLayer(polygon);
+                if (markers) markers.forEach(m => gaarMap.removeLayer(m));
+            });
+            gaarDrawnCircuits = [];
+        }
+
+        function resetGaarSection() {
+            gaarFileObject = null;
+            document.getElementById('pdf-input-gaar').value = null;
+            document.getElementById('pdf-info-gaar').textContent = '';
+            document.getElementById('pdf-interactive-container-gaar').style.display = 'none';
+            document.getElementById('gaar-map-section').style.display = 'none';
+            document.getElementById('pdf-load-gaar-btn').style.display = 'inline-block';
+            document.getElementById('pdf-reset-gaar-btn').style.display = 'none';
+            
+            if (gaarMap) {
+                clearAllCircuits();
+                document.getElementById('gaar-status').textContent = 'En attente du chargement du diagramme GAAR...';
+            }
+            if(isAddingManualCircuit) {
+                toggleManualCircuitMode();
+            }
+        }
+        
+        function toggleManualCircuitMode() {
+            const btn = document.getElementById('add-manual-circuit-btn');
+            const mapContainer = document.getElementById('gaar-map-display');
+            isAddingManualCircuit = !isAddingManualCircuit;
+
+            if (isAddingManualCircuit) {
+                btn.classList.add('active');
+                btn.textContent = "Terminer l'ajout (cliquez ici)";
+                mapContainer.classList.add('crosshair-cursor');
+            } else {
+                gaarDrawnCircuits.forEach(c => c.isActive = false);
+                btn.classList.remove('active');
+                btn.textContent = 'Ajouter un Circuit Manuel';
+                mapContainer.classList.remove('crosshair-cursor');
+            }
         }
             
         function initializeInteractivePdfViewers() {
-            const fdsInput = document.getElementById('pdf-input-fds');
-            document.getElementById('pdf-load-fds-btn').addEventListener('click', () => fdsInput.click());
-            const fdsFileHandler = (files) => {
+            const createFileHandler = (fileObjectSetter, infoId, viewerId, mapInitFn, initialScale = 1.5) => (files) => {
                 const file = files[0];
                 if (!file || file.type !== 'application/pdf') return;
-                fdsFileObject = file;
-                document.getElementById('pdf-info-fds').textContent = `Document chargé : ${file.name}`;
-                createInteractivePdfHandler(document.getElementById('pdf-interactive-container-fds'), file, null, 1.65);
+                fileObjectSetter(file);
+                document.getElementById(infoId).textContent = `Document chargé : ${file.name}`;
+                createInteractivePdfHandler(document.getElementById(viewerId), file, mapInitFn, initialScale);
+                if (viewerId === 'pdf-interactive-container-gaar') {
+                    document.getElementById('gaar-map-section').style.display = 'block';
+                    document.getElementById('pdf-load-gaar-btn').style.display = 'none';
+                    document.getElementById('pdf-reset-gaar-btn').style.display = 'inline-block';
+                }
             };
-            fdsInput.addEventListener('change', (e) => fdsFileHandler(e.target.files));
-            setupDropzone('fds-dropzone', fdsFileHandler);
-
-            const gaarInput = document.getElementById('pdf-input-gaar');
-            document.getElementById('pdf-load-gaar-btn').addEventListener('click', () => gaarInput.click());
-            const gaarFileHandler = (files) => {
-                const file = files[0];
-                if (!file || file.type !== 'application/pdf') return;
-                gaarFileObject = file;
-                document.getElementById('pdf-info-gaar').textContent = `Document chargé : ${file.name}`;
-                createInteractivePdfHandler(document.getElementById('pdf-interactive-container-gaar'), file, initializeGaarMapFromFile, 1.3);
-                document.getElementById('gaar-map-section').style.display = 'block';
+            const fdsHandler = createFileHandler(f => fdsFileObject = f, 'pdf-info-fds', 'pdf-interactive-container-fds', null, 1.65);
+            const gaarHandler = createFileHandler(f => gaarFileObject = f, 'pdf-info-gaar', 'pdf-interactive-container-gaar', initializeGaarMapFromFile, 1.3);
+            const notamHandler = (files) => {
+                const file = files[0]; if (!file || file.type !== 'application/pdf') return;
+                document.getElementById('pdf-info-notam').textContent = `Document chargé : ${file.name}`;
+                extractTextFromPdf(file, document.getElementById('pdf-info-notam')); 
             };
-            gaarInput.addEventListener('change', (e) => gaarFileHandler(e.target.files));
-            setupDropzone('gaar-dropzone', gaarFileHandler);
-
-            const notamInput = document.getElementById('pdf-input-notam');
-            const notamInfo = document.getElementById('pdf-info-notam');
-            document.getElementById('pdf-load-notam-btn').addEventListener('click', () => notamInput.click());
-            const notamFileHandler = (files) => {
-                 const file = files[0];
-                if (!file || file.type !== 'application/pdf') return;
-                notamInfo.textContent = `Document chargé : ${file.name}`;
-                extractTextFromPdf(file, notamInfo); 
-            };
-            notamInput.addEventListener('change', (e) => notamFileHandler(e.target.files));
-            setupDropzone('notam-pdf-dropzone', notamFileHandler);
+            document.getElementById('pdf-load-fds-btn').addEventListener('click', () => document.getElementById('pdf-input-fds').click());
+            document.getElementById('pdf-input-fds').addEventListener('change', (e) => fdsHandler(e.target.files));
+            setupDropzone('fds-dropzone', fdsHandler);
+            document.getElementById('pdf-load-gaar-btn').addEventListener('click', () => document.getElementById('pdf-input-gaar').click());
+            document.getElementById('pdf-input-gaar').addEventListener('change', (e) => gaarHandler(e.target.files));
+            setupDropzone('gaar-dropzone', gaarHandler);
+            document.getElementById('pdf-reset-gaar-btn').addEventListener('click', resetGaarSection);
+            document.getElementById('pdf-load-notam-btn').addEventListener('click', () => document.getElementById('pdf-input-notam').click());
+            document.getElementById('pdf-input-notam').addEventListener('change', (e) => notamHandler(e.target.files));
+            setupDropzone('notam-pdf-dropzone', notamHandler);
         }
         
         function initializeSupAipLoader() {
-            const loadBtn = document.getElementById('pdf-load-sup-aip-btn');
-            const addBtn = document.getElementById('pdf-add-sup-aip-btn');
-            const fileInput = document.getElementById('pdf-input-sup-aip');
-            const container = document.getElementById('sup-aip-container');
-            
-            loadBtn.addEventListener('click', () => fileInput.click());
-            addBtn.addEventListener('click', () => fileInput.click());
-            
+            const loadBtn = document.getElementById('pdf-load-sup-aip-btn'), addBtn = document.getElementById('pdf-add-sup-aip-btn');
+            const fileInput = document.getElementById('pdf-input-sup-aip'), container = document.getElementById('sup-aip-container');
+            loadBtn.addEventListener('click', () => fileInput.click()); addBtn.addEventListener('click', () => fileInput.click());
             container.addEventListener('click', (e) => {
                 if (e.target && e.target.matches('.sup-aip-delete-btn')) {
-                    const itemToRemove = e.target.closest('.sup-aip-item');
-                    const fileName = itemToRemove.dataset.fileName;
-                    supAipFileObjects = supAipFileObjects.filter(f => f.name !== fileName);
-                    itemToRemove.remove();
+                    const itemToRemove = e.target.closest('.sup-aip-item'), fileName = itemToRemove.dataset.fileName;
+                    supAipFileObjects = supAipFileObjects.filter(f => f.name !== fileName); itemToRemove.remove();
                 }
             });
-
             const addSupAipFiles = (files) => {
-                if (files.length === 0) return;
+                if (!files.length) return;
                 for (const file of files) {
-                    if (file.type !== 'application/pdf') continue;
-                    if (supAipFileObjects.some(f => f.name === file.name)) continue;
-                    
+                    if (file.type !== 'application/pdf' || supAipFileObjects.some(f => f.name === file.name)) continue;
                     supAipFileObjects.push(file);
-
-                    const itemContainer = document.createElement('div');
-                    itemContainer.className = 'sup-aip-item';
-                    itemContainer.dataset.fileName = file.name;
-                    itemContainer.innerHTML = `<div class="sup-aip-header"><h3>${file.name}</h3><button class="sup-aip-delete-btn" title="Supprimer ce document">×</button></div><div class="interactive-pdf-viewer"><div class="interactive-pdf-controls"><button class="pdf-nav-btn" data-action="prev">Page Préc.</button><span>Page <span class="page-num">1</span> / <span class="page-count">1</span></span><button class="pdf-nav-btn" data-action="next">Page Suiv.</button><div class="zoom-controls"><button class="pdf-nav-btn" data-action="zoom-out">-</button><span>Zoom</span><button class="pdf-nav-btn" data-action="zoom-in">+</button></div></div><div class="pdf-canvas-wrapper"><canvas class="pdf-canvas"></canvas></div></div>`;
-                    container.appendChild(itemContainer);
-                    const viewer = itemContainer.querySelector('.interactive-pdf-viewer');
-                    createInteractivePdfHandler(viewer, file);
+                    const item = document.createElement('div');
+                    item.className = 'sup-aip-item'; item.dataset.fileName = file.name;
+                    item.innerHTML = `<h3>${file.name}<button class="sup-aip-delete-btn" title="Supprimer">×</button></h3><div class="interactive-pdf-viewer"><div class="interactive-pdf-controls"><button class="pdf-nav-btn" data-action="prev">Préc.</button><span>Page <span class="page-num">1</span>/<span class="page-count">1</span></span><button class="pdf-nav-btn" data-action="next">Suiv.</button><div class="zoom-controls"><button class="pdf-nav-btn" data-action="zoom-out">-</button><span>Zoom</span><button class="pdf-nav-btn" data-action="zoom-in">+</button></div></div><div class="pdf-canvas-wrapper"><canvas class="pdf-canvas"></canvas></div></div>`;
+                    container.appendChild(item);
+                    createInteractivePdfHandler(item.querySelector('.interactive-pdf-viewer'), file);
                 }
-                loadBtn.style.display = 'none';
-                addBtn.style.display = 'inline-block';
+                loadBtn.style.display = 'none'; addBtn.style.display = 'inline-block';
             };
-
-            fileInput.addEventListener('change', (event) => addSupAipFiles(event.target.files));
-            setupDropzone('sup-aip-dropzone', addSupAipFiles);
-            window.addSupAipFiles = addSupAipFiles;
+            fileInput.addEventListener('change', (e) => addSupAipFiles(e.target.files));
+            setupDropzone('sup-aip-dropzone', addSupAipFiles); window.addSupAipFiles = addSupAipFiles;
         }
 
-        function initializeForeFlightButton() {
-            const ffButton = document.getElementById('foreflight-btn');
-            if (!ffButton) return;
-            ffButton.href = 'foreflightmobile://';
-        }
+        function initializeForeFlightButton() { document.getElementById('foreflight-btn').href = 'foreflightmobile://'; }
         
-        function initializeSessionManagement() {
-            const dbName = 'briefingSessionDB';
-            const storeName = 'sessionStore';
-            const sessionStatus = document.getElementById('session-status');
-            let db;
+        async function fileToSavable(file) {
+            if (!file) return null;
+            return {
+                name: file.name,
+                type: file.type,
+                buffer: await file.arrayBuffer()
+            };
+        }
 
-            function openDB() {
-                return new Promise((resolve, reject) => {
-                    const request = indexedDB.open(dbName, 1);
-                    request.onerror = () => reject("Erreur IndexedDB.");
-                    request.onsuccess = (event) => { db = event.target.result; resolve(); };
-                    request.onupgradeneeded = (event) => { event.target.result.createObjectStore(storeName, { keyPath: 'id' }); };
-                });
-            }
+        function savableToFile(savable) {
+            if (!savable || !savable.buffer) return null;
+            return new File([savable.buffer], savable.name, { type: savable.type });
+        }
+
+        function initializeSessionManagement() {
+            const dbName = 'briefingSessionDB', storeName = 'sessionStore', sessionStatus = document.getElementById('session-status');
+            let db;
+            function openDB() { return new Promise((resolve, reject) => { const r = indexedDB.open(dbName, 1); r.onerror = () => reject("Erreur DB."); r.onsuccess = e => { db = e.target.result; resolve(); }; r.onupgradeneeded = e => e.target.result.createObjectStore(storeName, { keyPath: 'id' }); }); }
             
             async function performSave() {
                 if (!db) await openDB();
                 sessionStatus.textContent = "Sauvegarde en cours...";
-                
-                const checkedNotamIds = [];
-                const highlightedNotams = {};
+                const checkedNotamIds = [], highlightedNotams = {};
                 document.querySelectorAll('#notam-display .notam-item').forEach(item => {
-                    const notamId = item.dataset.notamId;
-                    if (!notamId) return;
-
-                    if (item.querySelector('.notam-checkbox').checked) {
-                        checkedNotamIds.push(notamId);
-                    }
-                    
-                    const highlightContent = item.querySelector('.notam-text-content').innerHTML;
-                    if (highlightContent.includes('<mark')) {
-                       highlightedNotams[notamId] = highlightContent;
-                    }
+                    const id = item.dataset.notamId; if (!id) return;
+                    if (item.querySelector('.notam-checkbox').checked) checkedNotamIds.push(id);
+                    const content = item.querySelector('.notam-text-content').innerHTML;
+                    if (content.includes('<mark')) highlightedNotams[id] = content;
                 });
-
-                return new Promise((resolve, reject) => {
-                    const transaction = db.transaction([storeName], 'readwrite');
-                    const store = transaction.objectStore(storeName);
-                    
+                
+                try {
                     const dataToSave = {
                         id: 'currentSession',
-                        fds: fdsFileObject,
-                        gaar: gaarFileObject,
-                        supAips: supAipFileObjects,
+                        fds: await fileToSavable(fdsFileObject),
+                        gaar: await fileToSavable(gaarFileObject),
+                        supAips: await Promise.all(supAipFileObjects.map(f => fileToSavable(f))),
                         notamText: document.getElementById('notam-input').value,
-                        notamState: {
-                            checkedIds: checkedNotamIds,
-                            highlights: highlightedNotams
-                        },
+                        notamState: { checkedIds: checkedNotamIds, highlights: highlightedNotams },
                         savedAt: new Date()
                     };
 
+                    const store = db.transaction([storeName], 'readwrite').objectStore(storeName);
                     const request = store.put(dataToSave);
-                    request.onsuccess = () => {
-                        const now = new Date();
-                        sessionStatus.textContent = `Session sauvegardée manuellement à ${now.toLocaleTimeString()}.`;
-                        resolve();
-                    };
-                    request.onerror = () => { sessionStatus.textContent = `Erreur de sauvegarde: ${request.error}`; reject(request.error); };
-                });
+                    request.onsuccess = () => { sessionStatus.textContent = `Session sauvegardée à ${new Date().toLocaleTimeString()}.`; };
+                    request.onerror = (e) => { sessionStatus.textContent = `Erreur de sauvegarde: ${e.target.error}`; console.error("Erreur IndexedDB:", e.target.error);};
+                } catch (error) {
+                    sessionStatus.textContent = `Erreur de préparation des fichiers: ${error.message}`;
+                    console.error("Erreur de préparation avant sauvegarde :", error);
+                }
             }
-            
-            document.getElementById('save-session-btn').addEventListener('click', performSave);
 
+            document.getElementById('save-session-btn').addEventListener('click', performSave);
             document.getElementById('clear-session-btn').addEventListener('click', async () => {
-                if (confirm("Voulez-vous vraiment effacer la session sauvegardée ? Cette action est irréversible.")) {
-                    try {
-                        if (!db) await openDB();
-                        const transaction = db.transaction([storeName], 'readwrite');
-                        const store = transaction.objectStore(storeName);
-                        store.clear();
-                        alert("Sauvegarde effacée. La page va se recharger.");
-                        location.reload();
-                    } catch (error) { sessionStatus.textContent = `Erreur: ${error}`; }
+                if (confirm("Vraiment effacer la session sauvegardée ?")) {
+                    try { if (!db) await openDB(); db.transaction([storeName], 'readwrite').objectStore(storeName).clear(); alert("Sauvegarde effacée. Rechargement..."); location.reload(); }
+                    catch (error) { sessionStatus.textContent = `Erreur: ${error}`; }
                 }
             });
-            
+
             (async function loadSession() {
                 try {
                     await openDB();
-                    const transaction = db.transaction([storeName], 'readonly');
-                    const store = transaction.objectStore(storeName);
-                    const request = store.get('currentSession');
-                    request.onsuccess = () => {
-                        const data = request.result;
+                    db.transaction([storeName], 'readonly').objectStore(storeName).get('currentSession').onsuccess = e => {
+                        const data = e.target.result;
                         if (data) {
-                            if (data.fds) { fdsFileObject = data.fds; document.getElementById('pdf-info-fds').textContent = `Document chargé : ${data.fds.name}`; createInteractivePdfHandler(document.getElementById('pdf-interactive-container-fds'), data.fds, null, 1.65); }
-                            if (data.gaar) { 
-                                gaarFileObject = data.gaar; 
-                                document.getElementById('pdf-info-gaar').textContent = `Document chargé : ${data.gaar.name}`; 
-                                createInteractivePdfHandler(document.getElementById('pdf-interactive-container-gaar'), data.gaar, initializeGaarMapFromFile, 1.3); 
-                                document.getElementById('gaar-map-section').style.display = 'block';
+                            if (data.fds) {
+                                const file = savableToFile(data.fds);
+                                fdsFileObject = file;
+                                document.getElementById('pdf-info-fds').textContent = `Document chargé : ${file.name}`;
+                                createInteractivePdfHandler(document.getElementById('pdf-interactive-container-fds'), file, null, 1.65);
                             }
-                            if (data.supAips && data.supAips.length > 0) { window.addSupAipFiles(data.supAips); }
-                            
+                            if (data.gaar) {
+                                const file = savableToFile(data.gaar);
+                                gaarFileObject = file;
+                                document.getElementById('pdf-info-gaar').textContent = `Document chargé : ${file.name}`;
+                                createInteractivePdfHandler(document.getElementById('pdf-interactive-container-gaar'), file, initializeGaarMapFromFile, 1.3);
+                                document.getElementById('gaar-map-section').style.display = 'block';
+                                document.getElementById('pdf-load-gaar-btn').style.display = 'none';
+                                document.getElementById('pdf-reset-gaar-btn').style.display = 'inline-block';
+                            }
+                            if (data.supAips && data.supAips.length > 0) {
+                                const files = data.supAips.map(s => savableToFile(s)).filter(Boolean);
+                                if (files.length > 0) window.addSupAipFiles(files);
+                            }
                             if (data.notamText) {
                                 document.getElementById('notam-input').value = data.notamText;
-                                if(document.getElementById('notam-input').value) {
-                                    window.parseAndDisplayNotams(data.notamState || null);
-                                }
+                                if(data.notamText) window.parseAndDisplayNotams(data.notamState || null);
                             }
-
-                            const savedDate = new Date(data.savedAt);
-                            sessionStatus.textContent = `Session restaurée (sauvegardée le ${savedDate.toLocaleDateString()} à ${savedDate.toLocaleTimeString()})`;
+                            sessionStatus.textContent = `Session restaurée (du ${new Date(data.savedAt).toLocaleString('fr-FR')})`;
                         } else {
                             sessionStatus.textContent = "Aucune session sauvegardée.";
                         }
                     };
-                    request.onerror = () => { sessionStatus.textContent = `Impossible de charger la session: ${request.error}`; }
-                } catch (error) { sessionStatus.textContent = `Impossible d'initialiser la base de données: ${error}`; }
+                } catch (error) { sessionStatus.textContent = `Erreur DB: ${error}`; }
             })();
         }
         
@@ -1393,9 +1407,7 @@
                     const textContent = await page.getTextContent(); 
                     let lastY = -1;
                     textContent.items.forEach(item => {
-                        if (lastY !== -1 && item.transform[5] < lastY - 5) {
-                            fullText += '\n';
-                        }
+                        if (lastY !== -1 && item.transform[5] < lastY - 5) fullText += '\n';
                         fullText += item.str;
                         lastY = item.transform[5];
                     });
@@ -1407,7 +1419,14 @@
             } catch (error) { 
                 console.error("Erreur d'extraction PDF:", error); 
                 pdfInfoElement.textContent = "Erreur d'extraction du texte du PDF."; 
-                alert("Impossible d'extraire le texte de ce PDF. Vous pouvez toujours le copier/coller manuellement."); 
+                let detailedMessage = "Impossible d'extraire le texte de ce PDF.\n\n";
+                if (error.name === 'PasswordException' || (error.message && error.message.toLowerCase().includes('password'))) {
+                    detailedMessage += "Raison probable : Le fichier est protégé par un mot de passe.";
+                } else {
+                    detailedMessage += "Raison probable : Le fichier est corrompu, vide, ou dans un format non supporté.";
+                }
+                detailedMessage += "\n\nDétail technique : " + error.message;
+                alert(detailedMessage + "\n\nVous pouvez toujours le copier/coller manuellement.");
             } 
         }
         
@@ -1417,396 +1436,250 @@
             let y = 15;
             const margin = 10;
             const pageHeight = doc.internal.pageSize.getHeight();
-            const pageWidth = doc.internal.pageSize.getWidth();
-            const usableWidth = pageWidth - 2 * margin;
+            const usableWidth = doc.internal.pageSize.getWidth() - 2 * margin;
 
             const airportSections = document.querySelectorAll('#notam-display .airport-section-container');
-            const visibleNotamsExist = Array.from(airportSections).some(section => 
-                section.querySelector('.notam-item:not(.hidden-by-filter)')
-            );
+            const visibleNotamsExist = Array.from(airportSections).some(section => section.querySelector('.notam-item:not(.hidden-by-filter):not(.hidden-by-prefilter)'));
 
             if (!visibleNotamsExist) {
                 alert("Aucun NOTAM sélectionné à sauvegarder.");
                 return;
             }
 
-            doc.setFont("helvetica", "bold");
-            doc.setFontSize(18);
-            doc.text("Sélection de NOTAMs", pageWidth / 2, y, { align: "center" });
+            doc.setFont("helvetica", "bold").setFontSize(18).text("Sélection de NOTAMs", doc.internal.pageSize.getWidth() / 2, y, { align: "center" });
             y += 7;
-
             const today = new Date();
-            const dateString = `Généré le ${today.toLocaleDateString('fr-FR')} à ${today.toLocaleTimeString('fr-FR')}`;
-            doc.setFont("helvetica", "normal");
-            doc.setFontSize(10);
-            doc.text(dateString, pageWidth / 2, y, { align: "center" });
+            doc.setFont("helvetica", "normal").setFontSize(10).text(`Généré le ${today.toLocaleDateString('fr-FR')} à ${today.toLocaleTimeString('fr-FR')}`, doc.internal.pageSize.getWidth() / 2, y, { align: "center" });
             y += 15;
 
             airportSections.forEach(section => {
-                const visibleItems = section.querySelectorAll('.notam-item:not(.hidden-by-filter)');
+                const visibleItems = section.querySelectorAll('.notam-item:not(.hidden-by-filter):not(.hidden-by-prefilter)');
                 if (visibleItems.length === 0) return;
-
-                if (y > pageHeight - 20) {
-                    doc.addPage();
-                    y = 15;
-                }
-                
+                if (y > pageHeight - 20) { doc.addPage(); y = 15; }
                 const airportTitle = section.querySelector('h3').textContent.replace(/Afficher METAR\/TAF/g, '').trim();
-                doc.setFont("helvetica", "bold");
-                doc.setFontSize(14);
-                doc.text(airportTitle, margin, y);
+                doc.setFont("helvetica", "bold").setFontSize(14).text(airportTitle, margin, y);
                 y += 8;
 
                 visibleItems.forEach(item => {
-                    if (y > pageHeight - 30) {
-                        doc.addPage();
-                        y = 15;
-                    }
-                    
+                    if (y > pageHeight - 30) { doc.addPage(); y = 15; }
                     const validityEl = item.querySelector('.notam-validity');
                     if (validityEl) {
-                        doc.setFont("helvetica", "bolditalic");
-                        doc.setFontSize(8);
-                        doc.setTextColor(50);
+                        doc.setFont("helvetica", "bolditalic").setFontSize(8).setTextColor(50);
                         const validityLines = doc.splitTextToSize(validityEl.textContent, usableWidth - 5);
                         doc.text(validityLines, margin + 5, y);
                         y += validityLines.length * 3.5;
                     }
-
-                    const notamTextEl = item.querySelector('.notam-text-content');
-                    doc.setFont("helvetica", "normal");
-                    doc.setFontSize(9);
-                    doc.setTextColor(0);
-                    const notamText = notamTextEl.innerText || notamTextEl.textContent;
+                    doc.setFont("helvetica", "normal").setFontSize(9).setTextColor(0);
+                    const notamText = (item.querySelector('.notam-text-content')).innerText;
                     const notamLines = doc.splitTextToSize(notamText, usableWidth - 5);
                     doc.text(notamLines, margin + 5, y);
-                    y += notamLines.length * 4;
-
-                    y += 5;
+                    y += notamLines.length * 4 + 5;
                 });
             });
-
             doc.save(`selection_notams_${today.toISOString().split('T')[0]}.pdf`);
         }
 
         function initializeNotamParser() { 
-            const parseButton = document.getElementById('notam-parse-btn'); 
-            const notamInput = document.getElementById('notam-input'); 
-            const notamSection = document.querySelector('.notam-section');
-            const notamDisplay = document.getElementById('notam-display');
-            
-            const filterButtons = document.querySelectorAll('.filter-action');
-            const showAllButtons = document.querySelectorAll('.show-all-action');
-            const savePdfButtons = document.querySelectorAll('.save-pdf-action');
-
-            const predefinedIcaoOrder = [
-                'LFTW', 'LFML', 'LFTH', 'LFMD', 'LFHO', 'LFLU', 'LFMH', 'LFMU', 'LFMP', 'LFMK', 'LFCC', 
-                'LFBD', 'LFBL', 'LFBM', 'LFBP', 'LFKC', 'LFKB', 'LFKJ', 'LFKF', 'LFJR', 'LFAQ', 'LFLX', 
-                'LFSG', 'LFRV'
-            ];
+            const notamInput = document.getElementById('notam-input'), notamDisplay = document.getElementById('notam-display'), notamSection = document.querySelector('.notam-section');
+            const filterButtons = document.querySelectorAll('.filter-action'), showAllButtons = document.querySelectorAll('.show-all-action'), savePdfButtons = document.querySelectorAll('.save-pdf-action');
+            const predefinedIcaoOrder = ['LFTW', 'LFML', 'LFTH', 'LFMD', 'LFHO', 'LFLU', 'LFMH', 'LFMU', 'LFMP', 'LFMK', 'LFCC', 'LFBD', 'LFBL', 'LFBM', 'LFBP', 'LFKC', 'LFKB', 'LFKJ', 'LFKF', 'LFJR', 'LFAQ', 'LFLX', 'LFSG', 'LFRV'];
             const icaoToFullName = {
-                'LFTW': 'LFTW - NIMES GARONS', 'LFML': 'LFML - MARSEILLE PROVENCE', 'LFTH': 'LFTH - TOULON HYERES',
-                'LFMD': 'LFMD - CANNES MANDELIEU', 'LFHO': 'LFHO - AUBENAS ARDECHE MERIDIONALE', 'LFLU': 'LFLU - VALENCE CHABEUIL',
-                'LFMH': 'LFMH - ST ETIENNE BOUTHEON', 'LFMU': 'LFMU - BEZIERS VIAS', 'LFMP': 'LFMP - PERPIGNAN RIVESALTES',
-                'LFMK': 'LFMK - CARCASSONNE SALVAZA', 'LFCC': 'LFCC - CAHORS LALBENQUE', 'LFBD': 'LFBD - BORDEAUX MERIGNAC',
-                'LFBL': 'LFBL - LIMOGES BELLEGARDE', 'LFBM': 'LFBM - MONT DE MARSAN', 'LFBP': 'LFBP - PAU PYRENEES',
-                'LFKC': 'LFKC - CALVI STE CATHERINE', 'LFKB': 'LFKB - BASTIA PORETTA', 'LFKJ': 'LFKJ - AJACCIO NAPOLEON BONAPARTE',
-                'LFKF': 'LFKF - FIGARI SUD CORSE', 'LFJR': 'LFJR - ANGERS LOIRE', 'LFAQ': 'LFAQ - LE TOUQUET PARIS PLAGE', 
-                'LFLX': 'LFLX - CHATEAUROUX DEOLS',
-                'LFSG': 'LFSG - EPINAL MIRECOURT', 'LFRV': 'LFRV - VANNES GOLFE DU MORBIHAN'
+                'LFTW':'LFTW - NIMES GARONS', 'LFML':'LFML - MARSEILLE PROVENCE', 'LFTH':'LFTH - TOULON HYERES', 
+                'LFMD':'LFMD - CANNES MANDELIEU', 'LFHO':'LFHO - AUBENAS ARDECHE MERIDIONALE', 'LFLU':'LFLU - VALENCE CHABEUIL', 
+                'LFMH':'LFMH - ST ETIENNE BOUTHEON', 'LFMU':'LFMU - BEZIERS VIAS', 'LFMP':'LFMP - PERPIGNAN RIVESALTES', 
+                'LFMK':'LFMK - CARCASSONNE SALVAZA', 'LFCC':'LFCC - CAHORS LALBENQUE', 'LFBD':'LFBD - BORDEAUX MERIGNAC', 
+                'LFBL':'LFBL - LIMOGES BELLEGARDE', 'LFBM':'LFBM - MONT DE MARSAN', 'LFBP':'LFBP - PAU PYRENEES', 
+                'LFKC':'LFKC - CALVI STE CATHERINE', 'LFKB':'LFKB - BASTIA PORETTA', 'LFKJ':'LFKJ - AJACCIO NAPOLEON BONAPARTE', 
+                'LFKF':'LFKF - FIGARI SUD CORSE', 'LFJR':'LFJR - ANGERS LOIRE', 
+                'LFAQ':'LFAQ - ALBERT BRAY', 
+                'LFLX':'LFLX - CHATEAUROUX DEOLS', 'LFSG':'LFSG - EPINAL MIRECOURT', 'LFRV':'LFRV - VANNES GOLFE DU MORBIHAN'
             };
+            const keywordsToFilter = [
+                'aerodrome administration', 'animal', 'avgas 100ll', 'crane', 'dme', 'drill', 
+                'fato', 'grf', 'handling', 'lights', 'model flying', 'night parachuting', 
+                'obst', 'obstacles', 'police', 'radar', 'rffs', 'telescopic', 'trees', 
+                'unpaved', 'vor', 'wig wag'
+            ];
+
+            function setupKeywordFilterDropdown() {
+                const filterListContainer = document.getElementById('keyword-filter-list');
+                const toggleBtn = document.getElementById('keyword-filter-toggle-btn');
+                filterListContainer.innerHTML = '';
+                
+                keywordsToFilter.forEach(keyword => {
+                    const id = `filter-cb-${keyword.replace(/\s+/g, '-')}`;
+                    const label = document.createElement('label');
+                    label.htmlFor = id;
+                    
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.id = id;
+                    checkbox.dataset.keyword = keyword;
+                    checkbox.checked = true;
+                    checkbox.addEventListener('change', applyLiveFilters);
+
+                    label.appendChild(checkbox);
+                    label.appendChild(document.createTextNode(keyword.toUpperCase()));
+                    filterListContainer.appendChild(label);
+                });
+
+                toggleBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    filterListContainer.style.display = filterListContainer.style.display === 'block' ? 'none' : 'block';
+                });
+
+                window.addEventListener('click', (e) => {
+                    if (!toggleBtn.contains(e.target) && !filterListContainer.contains(e.target)) {
+                        filterListContainer.style.display = 'none';
+                    }
+                });
+            }
 
             function renderInitialAirportSections() {
                 notamDisplay.innerHTML = ''; 
                 predefinedIcaoOrder.forEach(icao => {
                     const fullName = icaoToFullName[icao] || `${icao} - INCONNU`;
-                    const airportSection = createAirportSectionElement(icao, fullName);
-                    notamDisplay.appendChild(airportSection);
+                    notamDisplay.appendChild(createAirportSectionElement(icao, fullName));
                 });
             }
 
-            function displayParsedNotams(airportsData) {
-                document.querySelectorAll('#notam-display .notam-item').forEach(item => item.remove());
-
+            function applyLiveFilters() {
                 const isDateFilterActive = document.getElementById('notam-date-filter-cb').checked;
-                const isKeywordFilterActive = document.getElementById('notam-keyword-filter-cb').checked;
-                const keywordsToFilter = ['crane', 'rffs', 'grf', 'obstacles', 'obst', 'police', 'lights'];
+                const activeKeywords = Array.from(document.querySelectorAll('#keyword-filter-list input:checked')).map(cb => cb.dataset.keyword);
                 
-                const allAirportFullNames = Object.keys(airportsData);
+                const today = new Date();
+                const todayStart = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate(), 0, 0, 0));
+                const todayEnd = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate(), 23, 59, 59));
 
-                allAirportFullNames.forEach(airportName => {
-                    const icao = airportName.split(' ')[0];
-                    let airportContainer = document.getElementById(`notam-container-${icao}`);
+                document.querySelectorAll('#notam-display .notam-item').forEach(item => {
+                    let shouldBeHidden = false;
                     
-                    if (!airportContainer) {
-                        airportContainer = createAirportSectionElement(icao, airportName);
-                        notamDisplay.appendChild(airportContainer);
-                    }
-
-                    const rawNotams = airportsData[airportName];
-                    if (rawNotams && rawNotams.length > 0 && rawNotams[0].startsWith('No information')) {
-                        return;
-                    }
-
-                    let displayableNotams = rawNotams || [];
                     if (isDateFilterActive) {
-                        displayableNotams = displayableNotams.filter(notam => parseNotamValidity(notam).active);
+                        const notamStart = item.dataset.startDate ? new Date(item.dataset.startDate) : null;
+                        const notamEnd = item.dataset.endDate ? new Date(item.dataset.endDate) : null;
+                        if (notamStart && notamEnd && !(notamStart <= todayEnd && notamEnd >= todayStart)) {
+                            shouldBeHidden = true;
+                        }
                     }
-                    if (isKeywordFilterActive) {
-                        displayableNotams = displayableNotams.filter(notam => {
-                            const notamLower = notam.toLowerCase();
-                            return !keywordsToFilter.some(keyword => notamLower.includes(keyword));
-                        });
-                    }
-                    
-                    displayableNotams.forEach(notamText => {
-                        const notamItem = createNotamItemElement(notamText, icao);
-                        airportContainer.appendChild(notamItem);
-                    });
-                });
 
-                const notamControlsTop = document.getElementById('notam-controls-top');
-                const notamControlsBottom = document.getElementById('notam-controls-bottom');
-                if (document.querySelectorAll('.notam-item').length > 0) {
-                    notamControlsTop.style.display = 'flex';
-                    notamControlsBottom.style.display = 'flex';
-                } else {
-                    notamControlsTop.style.display = 'none';
-                    notamControlsBottom.style.display = 'none';
+                    if (activeKeywords.length > 0 && !shouldBeHidden) {
+                        const itemText = item.textContent.toLowerCase();
+                        if (activeKeywords.some(k => itemText.includes(k))) {
+                            shouldBeHidden = true;
+                        }
+                    }
+                    item.classList.toggle('hidden-by-prefilter', shouldBeHidden);
+                });
+            }
+
+            window.parseAndDisplayNotams = function(savedState = null) {
+                const rawText = notamInput.value; if (!rawText.trim()) return;
+                const airportSections = rawText.split(/\n\s*(?=LF[A-Z]{2}\s+-\s+)/);
+                const airportsData = {};
+                airportSections.forEach(section => {
+                    const lines = section.trim().split('\n'), header = lines.shift() || "";
+                    if (!header.match(/^LF[A-Z]{2}\s+-\s+/)) return;
+                    if (header.includes("No information received")) { airportsData[header] = [header]; return; }
+                    const content = lines.join('\n').replace(/Page \d+ of \d+\s*\n?/gi, '').replace(/\.(Q\))/g, '.\n$1');
+                    airportsData[header] = content.split(/(?=Q\))/g).filter(b => b.trim().startsWith('Q)')).map(b => b.trim().replace(/(\r\n|\n){2,}/g, '\n'));
+                });
+                
+                renderInitialAirportSections();
+
+                Object.keys(airportsData).forEach(airportName => {
+                    const icao = airportName.split(' ')[0];
+                    let container = document.getElementById(`notam-container-${icao}`);
+                    if (!container) {
+                        container = createAirportSectionElement(icao, airportName);
+                        notamDisplay.appendChild(container);
+                    }
+                    container.querySelectorAll('.notam-item').forEach(item => item.remove());
+                    (airportsData[airportName] || []).forEach(notamText => container.appendChild(createNotamItemElement(notamText, icao)));
+                });
+                
+                applyLiveFilters();
+
+                const controlsVisible = document.querySelectorAll('.notam-item').length > 0;
+                document.getElementById('notam-controls-top').style.display = controlsVisible ? 'flex' : 'none';
+                document.getElementById('notam-controls-bottom').style.display = controlsVisible ? 'flex' : 'none';
+                
+                if (savedState) {
+                    if (savedState.highlights) Object.entries(savedState.highlights).forEach(([id, html]) => { const item = document.querySelector(`[data-notam-id="${id}"]`); if (item) item.querySelector('.notam-text-content').innerHTML = html; });
+                    if (savedState.checkedIds) savedState.checkedIds.forEach(id => { const item = document.querySelector(`[data-notam-id="${id}"]`); if (item) item.querySelector('.notam-checkbox').checked = true; });
+                    if (savedState.checkedIds && savedState.checkedIds.length > 0) applySelectionFilter();
                 }
             }
-
-            function applyNotamFilter() {
-                document.querySelectorAll('.notam-item').forEach(item => {
-                    const checkbox = item.querySelector('.notam-checkbox');
-                    if (checkbox && !checkbox.checked) {
-                        item.classList.add('hidden-by-filter');
-                    }
-                });
+            
+            function applySelectionFilter() {
+                document.querySelectorAll('.notam-item').forEach(item => item.classList.toggle('hidden-by-filter', !item.querySelector('.notam-checkbox').checked));
                 filterButtons.forEach(btn => btn.style.display = 'none');
                 showAllButtons.forEach(btn => btn.style.display = 'inline-block');
                 savePdfButtons.forEach(btn => btn.style.display = 'inline-block');
             }
-
-            // --- Main logic for this initializer ---
-
-            renderInitialAirportSections();
-
-            window.parseAndDisplayNotams = function(savedState = null) {
-                const rawText = notamInput.value; 
-                if (!rawText.trim()) return; 
-
-                const airportSections = rawText.split(/\n\s*(?=LF[A-Z]{2}\s+-\s+)/);
-                const airportsData = {};
-                
-                airportSections.forEach(section => {
-                    const trimmedSection = section.trim();
-                    if (!trimmedSection) return;
-                    const lines = trimmedSection.split('\n');
-                    const header = lines.shift() || ""; 
-                    if (!header.match(/^LF[A-Z]{2}\s+-\s+/)) return;
-                    const content = lines.join('\n');
-                    
-                    if (header.includes("No information received")) {
-                        airportsData[header] = [header];
-                    } else {
-                        const cleanedContent = content.replace(/Page \d+ of \d+\s*\n?/gi, '');
-                        const notamBlocks = cleanedContent.split(/(?=Q\))/g)
-                            .filter(block => block.trim().startsWith('Q)'))
-                            .map(block => block.trim().replace(/(\r\n|\n){2,}/g, '\n'));
-                        airportsData[header] = notamBlocks;
-                    }
-                });
-                
-                if (Object.keys(airportsData).length === 0 && !rawText.includes('No information received')) {
-                     alert("Aucun aéroport au format 'LXXX - NOM' n'a été trouvé. Le format est peut-être incorrect.");
-                     return;
-                }
-                
-                displayParsedNotams(airportsData); 
-                
-                if (savedState) {
-                    if (savedState.highlights) {
-                        for (const [id, html] of Object.entries(savedState.highlights)) {
-                            const item = document.querySelector(`[data-notam-id="${id}"]`);
-                            if (item) {
-                                item.querySelector('.notam-text-content').innerHTML = html;
-                            }
-                        }
-                    }
-                    if (savedState.checkedIds) {
-                        savedState.checkedIds.forEach(id => {
-                            const item = document.querySelector(`[data-notam-id="${id}"]`);
-                            if (item) {
-                                const checkbox = item.querySelector('.notam-checkbox');
-                                if (checkbox) checkbox.checked = true;
-                            }
-                        });
-                    }
-                    
-                    if (savedState.checkedIds && savedState.checkedIds.length > 0) {
-                        applyNotamFilter();
-                    }
-                }
+            function resetSelectionFilter() {
+                document.querySelectorAll('.hidden-by-filter').forEach(item => item.classList.remove('hidden-by-filter'));
+                showAllButtons.forEach(btn => btn.style.display = 'none');
+                savePdfButtons.forEach(btn => btn.style.display = 'none');
+                filterButtons.forEach(btn => btn.style.display = 'inline-block');
             }
             
-            parseButton.addEventListener('click', () => window.parseAndDisplayNotams()); 
-            
-            filterButtons.forEach(button => button.addEventListener('click', applyNotamFilter));
+            setupKeywordFilterDropdown();
+            renderInitialAirportSections();
+            (document.getElementById('notam-parse-btn') || {}).addEventListener('click', () => window.parseAndDisplayNotams());
+            filterButtons.forEach(b => b.addEventListener('click', applySelectionFilter));
+            showAllButtons.forEach(b => b.addEventListener('click', resetSelectionFilter));
+            savePdfButtons.forEach(b => b.addEventListener('click', generateNotamPdf));
+            document.getElementById('notam-date-filter-cb').addEventListener('change', applyLiveFilters);
 
-            showAllButtons.forEach(button => {
-                button.addEventListener('click', () => {
-                    document.querySelectorAll('.hidden-by-filter').forEach(item => {
-                        item.classList.remove('hidden-by-filter');
-                    });
-                    showAllButtons.forEach(btn => btn.style.display = 'none');
-                    savePdfButtons.forEach(btn => btn.style.display = 'none');
-                    filterButtons.forEach(btn => btn.style.display = 'inline-block');
-                });
+            notamSection.addEventListener('click', async (e) => {
+                const t = e.target;
+                if (t.matches('.sup-aip-link')) { e.preventDefault(); window.open(t.href, '_blank'); return; }
+                if (t.matches('.metar-taf-toggle-btn')) { const c = t.closest('.airport-section-container').querySelector('.metar-taf-container'); const h = c.style.display === 'none'; c.style.display = h ? 'block' : 'none'; t.textContent = h ? 'Masquer METAR/TAF' : 'Afficher METAR/TAF'; if (h && !c.dataset.loaded) { await fetchMetarTaf(t.dataset.icao, c); c.dataset.loaded = 'true'; } }
+                if (t.matches('.metar-taf-refresh-btn')) { await fetchMetarTaf(t.dataset.icao, t.closest('.metar-taf-container')); }
+                const mark = t.closest('mark.highlighted-text'); if(mark && !window.getSelection().toString()) { const p = mark.parentNode; while(mark.firstChild) p.insertBefore(mark.firstChild, mark); p.removeChild(mark); p.normalize(); }
             });
 
-            savePdfButtons.forEach(button => button.addEventListener('click', generateNotamPdf));
-
-            notamSection.addEventListener('click', async (event) => {
-                const target = event.target;
-                
-                if (target.matches('.sup-aip-link')) {
-                    event.preventDefault();
-                    window.open(target.href, '_blank');
-                    return;
-                }
-
-                if (target.matches('.metar-taf-toggle-btn')) {
-                    const button = target;
-                    const icao = button.dataset.icao;
-                    const container = button.closest('.airport-section-container').querySelector('.metar-taf-container');
-                    const isHidden = container.style.display === 'none';
-                    container.style.display = isHidden ? 'block' : 'none';
-                    button.textContent = isHidden ? 'Masquer METAR/TAF' : 'Afficher METAR/TAF';
-                    if (isHidden && !container.dataset.loaded) {
-                        await fetchMetarTaf(icao, container);
-                        container.dataset.loaded = 'true';
-                    }
-                }
-                if (target.matches('.metar-taf-refresh-btn')) {
-                    const button = target;
-                    const icao = button.dataset.icao;
-                    const container = button.closest('.metar-taf-container');
-                    await fetchMetarTaf(icao, container);
-                }
-
-                const selection = window.getSelection();
-                if (selection && !selection.isCollapsed) {
-                    return;
-                }
-                const targetMark = event.target.closest('mark.highlighted-text');
-                if (targetMark) {
-                    const parent = targetMark.parentNode;
-                    while (targetMark.firstChild) {
-                        parent.insertBefore(targetMark.firstChild, targetMark);
-                    }
-                    parent.removeChild(targetMark);
-                    parent.normalize();
-                }
-            });
-
-            // CORRECTION: Logique de surlignage tactile/souris
             function handleTextHighlight(event) {
-                const textContentDiv = event.target.closest('.notam-text-content');
-                if (!textContentDiv) return;
-                
+                const textContentDiv = event.target.closest('.notam-text-content'); if (!textContentDiv) return;
                 setTimeout(() => {
-                    const selection = window.getSelection();
-                    if (!selection || selection.isCollapsed || selection.rangeCount === 0) return;
-
+                    const selection = window.getSelection(); if (!selection || selection.isCollapsed || !textContentDiv.contains(selection.anchorNode)) return;
                     const range = selection.getRangeAt(0);
-                    if (!textContentDiv.contains(range.commonAncestorContainer)) return;
-                    
-                    const isTouchEvent = event.type === 'touchend';
-                    
-                    // Pour la SOURIS: on efface les surlignages précédents SEULEMENT si la touche CTRL n'est PAS enfoncée.
-                    // Pour le TACTILE: on n'efface JAMAIS les surlignages précédents pour permettre le multi-surlignage.
-                    if (!isTouchEvent && !event.ctrlKey) {
-                        textContentDiv.querySelectorAll('mark.highlighted-text').forEach(highlight => {
-                            const parent = highlight.parentNode;
-                            while (highlight.firstChild) parent.insertBefore(highlight.firstChild, highlight);
-                            parent.removeChild(highlight);
-                        });
+                    if (event.type !== 'touchend' && !event.ctrlKey) {
+                        textContentDiv.querySelectorAll('mark.highlighted-text').forEach(h => { const p = h.parentNode; while (h.firstChild) p.insertBefore(h.firstChild, h); p.removeChild(h); });
                         textContentDiv.normalize();
                     }
-
-                    // On récupère la nouvelle sélection (qui peut être différente si on a tout effacé)
-                    const newSelection = window.getSelection();
-                    if (newSelection.isCollapsed) return;
+                    const newSelection = window.getSelection(); if (newSelection.isCollapsed) return;
                     const newRange = newSelection.getRangeAt(0);
-
-                    const mark = document.createElement('mark');
-                    mark.className = 'highlighted-text';
-                    try {
-                        newRange.surroundContents(mark);
-                    } catch (e) {
-                        console.warn("Impossible d'entourer la sélection.", e);
-                    }
+                    const mark = document.createElement('mark'); mark.className = 'highlighted-text';
+                    try { newRange.surroundContents(mark); } catch (e) { console.warn("Surlignage impossible.", e); }
                     newSelection.removeAllRanges();
                 }, 10);
             }
-            
             notamSection.addEventListener('mouseup', handleTextHighlight);
             notamSection.addEventListener('touchend', handleTextHighlight);
         }
         
         function initializeManualMetarFetch() {
-            const fetchBtn = document.getElementById('manual-metar-fetch-btn');
-            const input = document.getElementById('manual-icao-input');
-            const display = document.getElementById('manual-metar-display');
-
+            const fetchBtn = document.getElementById('manual-metar-fetch-btn'), input = document.getElementById('manual-icao-input'), display = document.getElementById('manual-metar-display');
             const handleFetch = () => {
-                const icaos = input.value.trim().toUpperCase().split(/\s+/).filter(Boolean);
-                if (icaos.length === 0) return;
-
-                display.innerHTML = ''; 
-
+                const icaos = input.value.trim().toUpperCase().split(/\s+/).filter(Boolean); if (!icaos.length) return;
+                display.innerHTML = '';
                 icaos.forEach(icao => {
-                    const airportContainer = createAirportSectionElement(icao, icao);
-                    display.appendChild(airportContainer);
-                    // Automatically fetch and show MTO
-                    const metarTafContainer = airportContainer.querySelector('.metar-taf-container');
-                    const toggleBtn = airportContainer.querySelector('.metar-taf-toggle-btn');
-                    metarTafContainer.style.display = 'block';
-                    toggleBtn.textContent = 'Masquer METAR/TAF';
-                    fetchMetarTaf(icao, metarTafContainer);
+                    const container = createAirportSectionElement(icao, icao); display.appendChild(container);
+                    const mtoContainer = container.querySelector('.metar-taf-container'), btn = container.querySelector('.metar-taf-toggle-btn');
+                    mtoContainer.style.display = 'block'; btn.textContent = 'Masquer METAR/TAF'; fetchMetarTaf(icao, mtoContainer);
                 });
             };
-
             fetchBtn.addEventListener('click', handleFetch);
-            input.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    handleFetch();
-                }
-            });
+            input.addEventListener('keypress', (e) => { if (e.key === 'Enter') { e.preventDefault(); handleFetch(); } });
         }
 
         function initializePageTitle() {
             const titleElement = document.getElementById('main-title');
-            const today = new Date();
-            const options = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
-            const formattedDate = today.toLocaleDateString('fr-FR', options);
-            titleElement.textContent = `Briefing Fdf du ${formattedDate}`;
-            
-            let timeDisplay = document.getElementById('current-time-display');
-            if (!timeDisplay) {
-                timeDisplay = document.createElement('p');
-                timeDisplay.id = 'current-time-display';
-                titleElement.insertAdjacentElement('afterend', timeDisplay);
-            }
-
-            const updateTime = () => {
-                timeDisplay.textContent = new Date().toLocaleTimeString('fr-FR');
-            };
-
-            updateTime();
-            setInterval(updateTime, 1000);
+            titleElement.textContent = `Briefing Fdf du ${new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}`;
+            const timeDisplay = document.getElementById('current-time-display');
+            const updateTime = () => timeDisplay.textContent = new Date().toLocaleTimeString('fr-FR');
+            updateTime(); setInterval(updateTime, 1000);
         }
 
         function getLabelForDate(d){const a=new Date(Date.UTC((new Date).getUTCFullYear(),(new Date).getUTCMonth(),(new Date).getUTCDate())),t=new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate())),e=Math.round((t-a)/864e5);return 0===e?"Aujourd'hui":1===e?"Demain":-1===e?"Hier":e>1?`Dans ${e} jours`:`Il y a ${-e} jours`}
