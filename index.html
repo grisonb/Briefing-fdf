@@ -397,7 +397,7 @@
         <div class="page-header-background"></div>
         <h1 id="main-title">Briefing Fdf</h1>
         <p id="current-time-display"></p>
-        <p style="position: relative; z-index: 2; text-align: center; color: #333; font-size: 1em; margin-top: -25px; margin-bottom: 30px;">v1.192 beta</p>
+        <p style="position: relative; z-index: 2; text-align: center; color: #333; font-size: 1em; margin-top: -25px; margin-bottom: 30px;">v1.193 beta</p>
     </div>
 
     <div class="session-management"><h3>Gestion de la Session</h3><button id="save-session-btn" class="link-button" style="background-color: #28a745;">Sauvegarder la session</button><button id="clear-session-btn" class="link-button" style="background-color: var(--sc-red);">Effacer la sauvegarde</button><p id="session-status"></p></div>
@@ -1099,21 +1099,45 @@
 
             function updatePolygon(circuitIndex) {
                 const circuit = gaarDrawnCircuits[circuitIndex];
-                if (!circuit || circuit.markers.length < 2) return;
-                const latlngs = circuit.markers.map(m => m.getLatLng());
-                
-                if (circuit.polygon) {
-                    if (latlngs.length < 3 && circuit.polygon instanceof L.Polygon) {
+                if (!circuit) return;
+
+                // Si moins de 2 points, on supprime la forme et on sort
+                if (circuit.markers.length < 2) {
+                    if (circuit.polygon) {
                         gaarMap.removeLayer(circuit.polygon);
-                        circuit.polygon = L.polyline(latlngs, { color: circuit.color }).addTo(gaarMap);
-                    } else {
+                        circuit.polygon = null;
+                    }
+                    return;
+                }
+
+                const latlngs = circuit.markers.map(m => m.getLatLng());
+                const hasEnoughPointsForPolygon = latlngs.length >= 3;
+
+                // Si une forme existe déjà
+                if (circuit.polygon) {
+                    const isCurrentlyPolygon = circuit.polygon instanceof L.Polygon;
+
+                    // CAS 1: On a assez de points pour un polygone, mais la forme est une ligne -> ON MET A JOUR LA FORME
+                    if (hasEnoughPointsForPolygon && !isCurrentlyPolygon) {
+                        gaarMap.removeLayer(circuit.polygon); // Supprime l'ancienne ligne
+                        circuit.polygon = L.polygon(latlngs, { color: circuit.color }).addTo(gaarMap); // Crée un nouveau polygone
+                    }
+                    // CAS 2: On n'a plus assez de points, mais la forme est un polygone -> ON MET A JOUR LA FORME
+                    else if (!hasEnoughPointsForPolygon && isCurrentlyPolygon) {
+                        gaarMap.removeLayer(circuit.polygon); // Supprime l'ancien polygone
+                        circuit.polygon = L.polyline(latlngs, { color: circuit.color }).addTo(gaarMap); // Crée une nouvelle ligne
+                    }
+                    // CAS 3: Le type de forme est correct -> ON MET A JOUR LES POINTS
+                    else {
                         circuit.polygon.setLatLngs(latlngs);
                     }
-                } else {
-                    if (latlngs.length >= 3) {
-                         circuit.polygon = L.polygon(latlngs, { color: circuit.color }).addTo(gaarMap);
-                    } else {
-                         circuit.polygon = L.polyline(latlngs, { color: circuit.color }).addTo(gaarMap);
+                }
+                // Si aucune forme n'existe, on la crée
+                else {
+                    if (hasEnoughPointsForPolygon) {
+                        circuit.polygon = L.polygon(latlngs, { color: circuit.color }).addTo(gaarMap);
+                    } else { // Ceci ne s'appliquera que pour le 2ème point
+                        circuit.polygon = L.polyline(latlngs, { color: circuit.color }).addTo(gaarMap);
                     }
                 }
             }
