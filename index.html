@@ -299,11 +299,11 @@
             color: #555;
         }
         
-        .metar-taf-toggle-btn { background-color: var(--sc-blue); color: white; border: none; padding: 5px 10px; font-size: 0.8em; cursor: pointer; border-radius: 4px; margin-left: 10px; vertical-align: middle; }
+        .taf-toggle-btn { background-color: var(--sc-blue); color: white; border: none; padding: 5px 10px; font-size: 0.8em; cursor: pointer; border-radius: 4px; margin-left: 10px; vertical-align: middle; }
         .metar-taf-refresh-btn { margin-left: 10px; background: none; border: 1px solid #ccc; cursor: pointer; border-radius: 50%; width: 24px; height: 24px; font-size: 14px; line-height: 22px; vertical-align: middle; padding: 0; }
         .metar-taf-refresh-btn:hover { background-color: #e9ecef; }
         .metar-taf-container { border: 1px solid #e0e0e0; background-color: #fdfdfd; padding: 15px; margin-top: 10px; border-radius: 5px; font-size: 0.9em; }
-        .metar-taf-container h4 { margin: 10px 0 5px 0; color: var(--sc-blue); font-size: 1em; display: flex; align-items: center; }
+        .metar-taf-container h4 { margin: 0 0 5px 0; color: var(--sc-blue); font-size: 1em; display: flex; align-items: center; }
         .metar-taf-container pre { white-space: pre-wrap; word-wrap: break-word; font-family: monospace; background-color: #e9ecef; padding: 10px; border-radius: 4px; margin: 0; font-size: 1.1em; }
         .metar-taf-container .error-msg { color: var(--sc-red); font-style: italic; }
         
@@ -397,7 +397,7 @@
         <div class="page-header-background"></div>
         <h1 id="main-title">Briefing Fdf</h1>
         <p id="current-time-display"></p>
-        <p style="position: relative; z-index: 2; text-align: center; color: #333; font-size: 1em; margin-top: -25px; margin-bottom: 30px;">v1.197 beta</p>
+        <p style="position: relative; z-index: 2; text-align: center; color: #333; font-size: 1em; margin-top: -25px; margin-bottom: 30px;">v1.198 beta</p>
     </div>
 
     <div class="session-management"><h3>Gestion de la Session</h3><button id="save-session-btn" class="link-button" style="background-color: #28a745;">Sauvegarder la session</button><button id="clear-session-btn" class="link-button" style="background-color: var(--sc-red);">Effacer la sauvegarde</button><a href="https://cncasc-app.fr/" target="_blank" class="link-button" style="background-color: #3498db;">CNCASC Login</a><p id="session-status"></p></div>
@@ -702,20 +702,38 @@
             const airportContainer = document.createElement('div');
             airportContainer.id = `notam-container-${icao}`;
             airportContainer.className = 'airport-section-container';
+            airportContainer.dataset.icao = icao;
+
             const airportTitle = document.createElement('h3');
             airportTitle.textContent = `${fullName} `;
-            const metarTafToggleButton = document.createElement('button');
-            metarTafToggleButton.textContent = 'Afficher METAR/TAF';
-            metarTafToggleButton.className = 'metar-taf-toggle-btn';
-            metarTafToggleButton.dataset.icao = icao;
-            const metarTafContainer = document.createElement('div');
-            metarTafContainer.className = 'metar-taf-container';
-            metarTafContainer.style.display = 'none';
-            airportTitle.appendChild(metarTafToggleButton);
+
+            const tafToggleButton = document.createElement('button');
+            tafToggleButton.textContent = 'Afficher TAF';
+            tafToggleButton.className = 'taf-toggle-btn';
+            tafToggleButton.dataset.icao = icao;
+
+            const refreshButton = document.createElement('button');
+            refreshButton.className = 'metar-taf-refresh-btn';
+            refreshButton.dataset.icao = icao;
+            refreshButton.title = 'Rafraîchir';
+            refreshButton.innerHTML = '↻';
+
+            airportTitle.appendChild(tafToggleButton);
+            airportTitle.appendChild(refreshButton);
+
+            const metarContainer = document.createElement('div');
+            metarContainer.className = 'metar-container metar-taf-container';
+
+            const tafContainer = document.createElement('div');
+            tafContainer.className = 'taf-container metar-taf-container';
+            tafContainer.style.display = 'none';
+
             airportContainer.appendChild(airportTitle);
-            airportContainer.appendChild(metarTafContainer);
+            airportContainer.appendChild(metarContainer);
+            airportContainer.appendChild(tafContainer);
             return airportContainer;
         }
+
 
         function createNotamItemElement(notamText, icao) {
             const validity = parseNotamValidity(notamText);
@@ -772,25 +790,43 @@
             return { text: null, start: null, end: null };
         }
         
-        async function fetchMetarTaf(icao, container) {
-            container.innerHTML = '<p>Chargement des données MTO...</p>';
+        async function fetchAndDisplayWeather(icao, airportContainer) {
+            const metarContainer = airportContainer.querySelector('.metar-container');
+            const tafContainer = airportContainer.querySelector('.taf-container');
+
+            if (!metarContainer || !tafContainer) return;
+
+            metarContainer.innerHTML = '<h4>METAR</h4><p>Chargement...</p>';
+            tafContainer.innerHTML = '<h4>TAF</h4><p>Chargement...</p>';
+
             if (!CHECKWX_API_KEY) {
-                container.innerHTML = `<p class="error-msg">Erreur : Clé API non trouvée dans le script.</p>`;
+                const errorHtml = `<p class="error-msg">Erreur : Clé API non configurée.</p>`;
+                metarContainer.innerHTML = `<h4>METAR</h4>${errorHtml}`;
+                tafContainer.innerHTML = `<h4>TAF</h4>${errorHtml}`;
                 return;
             }
+
             const headers = { 'X-API-Key': CHECKWX_API_KEY };
             try {
                 const [metarResponse, tafResponse] = await Promise.all([
                     fetch(`https://api.checkwx.com/metar/${icao}`, { headers }),
                     fetch(`https://api.checkwx.com/taf/${icao}`, { headers })
                 ]);
+
                 const metarJson = await metarResponse.json();
                 const tafJson = await tafResponse.json();
+
                 const metarDisplay = (metarJson.results > 0) ? metarJson.data[0] : 'METAR non disponible.';
                 const tafDisplay = (tafJson.results > 0) ? tafJson.data[0] : 'TAF non disponible.';
-                container.innerHTML = `<h4>METAR <button class="metar-taf-refresh-btn" data-icao="${icao}" title="Rafraîchir">↻</button></h4><pre>${metarDisplay}</pre><h4>TAF</h4><pre>${tafDisplay}</pre>`;
+
+                metarContainer.innerHTML = `<h4>METAR</h4><pre>${metarDisplay}</pre>`;
+                tafContainer.innerHTML = `<h4>TAF</h4><pre>${tafDisplay}</pre>`;
+                airportContainer.dataset.loaded = 'true';
+
             } catch (error) {
-                container.innerHTML = `<p class="error-msg">Une erreur de réseau est survenue.</p>`;
+                const errorHtml = `<p class="error-msg">Une erreur de réseau est survenue.</p>`;
+                metarContainer.innerHTML = `<h4>METAR</h4>${errorHtml}`;
+                tafContainer.innerHTML = `<h4>TAF</h4>${errorHtml}`;
             }
         }
         
@@ -1192,6 +1228,23 @@
         function handleMapClickForManualAdd(e) {
             if (!isAddingManualCircuit) return;
 
+            // --- PROXIMITY CHECK LOGIC ---
+            const clickPoint = gaarMap.latLngToContainerPoint(e.latlng);
+            const proximityThreshold = 20; // Tolerance in pixels.
+
+            for (const circuit of gaarDrawnCircuits) {
+                for (const marker of circuit.markers) {
+                    const markerPoint = gaarMap.latLngToContainerPoint(marker.getLatLng());
+                    if (clickPoint.distanceTo(markerPoint) < proximityThreshold) {
+                        // The click is close to an existing marker. Open its popup and stop.
+                        marker.openPopup();
+                        return; // Exit the function to prevent creating a new point.
+                    }
+                }
+            }
+            // --- END OF PROXIMITY CHECK ---
+
+            // If the click was not near any existing marker, proceed to create a new one.
             let activeManualCircuit = gaarDrawnCircuits.find(c => c.isManual && c.isActive);
 
             if (!activeManualCircuit || activeManualCircuit.markers.length >= 3) {
@@ -1502,7 +1555,7 @@
                 const visibleItems = section.querySelectorAll('.notam-item:not(.hidden-by-filter):not(.hidden-by-prefilter)');
                 if (visibleItems.length === 0) return;
                 if (y > pageHeight - 20) { doc.addPage(); y = 15; }
-                const airportTitle = section.querySelector('h3').textContent.replace(/Afficher METAR\/TAF/g, '').trim();
+                const airportTitle = section.querySelector('h3').textContent.replace(/Afficher TAF/g, '').replace(/Masquer TAF/g, '').trim();
                 doc.setFont("helvetica", "bold").setFontSize(14).text(airportTitle, margin, y);
                 y += 8;
 
@@ -1583,9 +1636,11 @@
 
             function renderInitialAirportSections() {
                 notamDisplay.innerHTML = ''; 
-                predefinedIcaoOrder.forEach(icao => {
+                predefinedIcaoOrder.forEach(async (icao) => {
                     const fullName = icaoToFullName[icao] || `${icao} - INCONNU`;
-                    notamDisplay.appendChild(createAirportSectionElement(icao, fullName));
+                    const airportContainer = createAirportSectionElement(icao, fullName);
+                    notamDisplay.appendChild(airportContainer);
+                    await fetchAndDisplayWeather(icao, airportContainer);
                 });
             }
 
@@ -1630,17 +1685,24 @@
                     airportsData[header] = content.split(/(?=Q\))/g).filter(b => b.trim().startsWith('Q)')).map(b => b.trim().replace(/(\r\n|\n){2,}/g, '\n'));
                 });
                 
-                renderInitialAirportSections();
-
                 Object.keys(airportsData).forEach(airportName => {
                     const icao = airportName.split(' ')[0];
                     let container = document.getElementById(`notam-container-${icao}`);
                     if (!container) {
-                        container = createAirportSectionElement(icao, airportName);
+                        // This case is for airports from PDF not in predefined list. We create their section.
+                        const fullName = icaoToFullName[icao] || airportName;
+                        container = createAirportSectionElement(icao, fullName);
                         notamDisplay.appendChild(container);
+                        fetchAndDisplayWeather(icao, container); 
                     }
+                    // Clear only old notam items, not the whole container
                     container.querySelectorAll('.notam-item').forEach(item => item.remove());
-                    (airportsData[airportName] || []).forEach(notamText => container.appendChild(createNotamItemElement(notamText, icao)));
+                    // Add new notam items after the H3 title and weather containers
+                    const tafContainer = container.querySelector('.taf-container');
+                    (airportsData[airportName] || []).forEach(notamText => {
+                        const notamEl = createNotamItemElement(notamText, icao);
+                        tafContainer.insertAdjacentElement('afterend', notamEl);
+                    });
                 });
                 
                 applyLiveFilters();
@@ -1677,7 +1739,7 @@
             }
             
             setupKeywordFilterDropdown();
-            renderInitialAirportSections();
+            renderInitialAirportSections(); // This now fetches weather too.
             (document.getElementById('notam-parse-btn') || {}).addEventListener('click', () => window.parseAndDisplayNotams());
             filterButtons.forEach(b => b.addEventListener('click', applySelectionFilter));
             showAllButtons.forEach(b => b.addEventListener('click', resetSelectionFilter));
@@ -1687,8 +1749,21 @@
             notamSection.addEventListener('click', async (e) => {
                 const t = e.target;
                 if (t.matches('.sup-aip-link')) { e.preventDefault(); window.open(t.href, '_blank'); return; }
-                if (t.matches('.metar-taf-toggle-btn')) { const c = t.closest('.airport-section-container').querySelector('.metar-taf-container'); const h = c.style.display === 'none'; c.style.display = h ? 'block' : 'none'; t.textContent = h ? 'Masquer METAR/TAF' : 'Afficher METAR/TAF'; if (h && !c.dataset.loaded) { await fetchMetarTaf(t.dataset.icao, c); c.dataset.loaded = 'true'; } }
-                if (t.matches('.metar-taf-refresh-btn')) { await fetchMetarTaf(t.dataset.icao, t.closest('.metar-taf-container')); }
+                
+                if (t.matches('.taf-toggle-btn')) {
+                    const airportContainer = t.closest('.airport-section-container');
+                    const tafContainer = airportContainer.querySelector('.taf-container');
+                    const isHidden = tafContainer.style.display === 'none';
+                    tafContainer.style.display = isHidden ? 'block' : 'none';
+                    t.textContent = isHidden ? 'Masquer TAF' : 'Afficher TAF';
+                }
+
+                if (t.matches('.metar-taf-refresh-btn')) {
+                    const airportContainer = t.closest('.airport-section-container');
+                    const icao = airportContainer.dataset.icao;
+                    if(icao) await fetchAndDisplayWeather(icao, airportContainer);
+                }
+
                 const mark = t.closest('mark.highlighted-text'); if(mark && !window.getSelection().toString()) { const p = mark.parentNode; while(mark.firstChild) p.insertBefore(mark.firstChild, mark); p.removeChild(mark); p.normalize(); }
             });
 
@@ -1718,9 +1793,9 @@
                 const icaos = input.value.trim().toUpperCase().split(/\s+/).filter(Boolean); if (!icaos.length) return;
                 display.innerHTML = '';
                 icaos.forEach(icao => {
-                    const container = createAirportSectionElement(icao, icao); display.appendChild(container);
-                    const mtoContainer = container.querySelector('.metar-taf-container'), btn = container.querySelector('.metar-taf-toggle-btn');
-                    mtoContainer.style.display = 'block'; btn.textContent = 'Masquer METAR/TAF'; fetchMetarTaf(icao, mtoContainer);
+                    const airportContainer = createAirportSectionElement(icao, icao);
+                    display.appendChild(airportContainer);
+                    fetchAndDisplayWeather(icao, airportContainer);
                 });
             };
             fetchBtn.addEventListener('click', handleFetch);
