@@ -94,7 +94,7 @@
             border: 1px solid rgba(255, 255, 255, 0.2);
         }
         .session-management h3 { margin-top: 0; color: white; }
-        .session-management button { margin: 5px 10px; font-size: 1em; padding: 10px 20px; }
+        .session-management .link-button { margin: 5px 10px; font-size: 1em; padding: 10px 20px; }
         #session-status { font-style: italic; color: white; opacity: 0.9; margin-top: 15px; font-weight: bold; }
         
         .map-section, .pdf-section, .notam-section {
@@ -397,10 +397,10 @@
         <div class="page-header-background"></div>
         <h1 id="main-title">Briefing Fdf</h1>
         <p id="current-time-display"></p>
-        <p style="position: relative; z-index: 2; text-align: center; color: #333; font-size: 1em; margin-top: -25px; margin-bottom: 30px;">v1.195 beta</p>
+        <p style="position: relative; z-index: 2; text-align: center; color: #333; font-size: 1em; margin-top: -25px; margin-bottom: 30px;">v1.196 beta</p>
     </div>
 
-    <div class="session-management"><h3>Gestion de la Session</h3><button id="save-session-btn" class="link-button" style="background-color: #28a745;">Sauvegarder la session</button><button id="clear-session-btn" class="link-button" style="background-color: var(--sc-red);">Effacer la sauvegarde</button><p id="session-status"></p></div>
+    <div class="session-management"><h3>Gestion de la Session</h3><button id="save-session-btn" class="link-button" style="background-color: #28a745;">Sauvegarder la session</button><button id="clear-session-btn" class="link-button" style="background-color: var(--sc-red);">Effacer la sauvegarde</button><a href="https://cncasc-app.fr/pages/landing.php" target="_blank" class="link-button" style="background-color: #3498db;">CNCASC Login</a><p id="session-status"></p></div>
 
     <div id="fds-dropzone" class="pdf-section dropzone">
         <h2>Feuille de Service / Dispo Avions</h2>
@@ -572,6 +572,10 @@
             <a href="https://synergi2.dgscgc.interieur.gouv.fr/evenements?forInit=false&statusEvent=PUBLIC" target="_blank" class="link-button" style="background-color:#16a085;">Ouvrir SYNERGI</a>
             <a href="https://cncasc-app.fr/pages/landing.php" target="_blank" class="link-button" style="background-color:#3498db;">Ouvrir CNCASC</a>
         </div>
+    </div>
+    
+    <div style="text-align: center; margin: 40px 0 20px 0;">
+        <button id="save-session-btn-bottom" class="link-button" style="background-color: #28a745;">Sauvegarder la session</button>
     </div>
     
     <footer>Données : Météo-France, SIA, Windy.com, CheckWX.com. Page non commerciale, à usage personnel.</footer>
@@ -1389,6 +1393,7 @@
             }
 
             document.getElementById('save-session-btn').addEventListener('click', performSave);
+            document.getElementById('save-session-btn-bottom').addEventListener('click', performSave);
             document.getElementById('clear-session-btn').addEventListener('click', async () => {
                 if (confirm("Vraiment effacer la session sauvegardée ?")) {
                     try { if (!db) await openDB(); db.transaction([storeName], 'readwrite').objectStore(storeName).clear(); alert("Sauvegarde effacée. Rechargement..."); location.reload(); }
