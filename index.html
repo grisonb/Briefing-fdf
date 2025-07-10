@@ -259,13 +259,8 @@
         
         .dropzone.drag-over { background-color: #fff8e1; border-color: var(--sc-yellow); border-style: dashed; }
         
-        .interactive-pdf-viewer { border: 1px solid var(--border-color); border-radius: 8px; background-color: #e9ecef; overflow: hidden; position: relative; }
-        .pdf-canvas-wrapper { width: 100%; height: 90vh; overflow: auto; cursor: grab; position: relative; }
-        .pdf-canvas { display: block; }
-        .pdf-highlight-layer { position: absolute; top: 0; left: 0; pointer-events: none; }
-        .pdf-interaction-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; cursor: text; }
-        .pdf-highlight { position: absolute; background-color: rgba(255, 255, 0, 0.4); border-radius: 2px; }
-
+        .interactive-pdf-viewer { border: 1px solid var(--border-color); border-radius: 8px; background-color: #e9ecef; overflow: hidden; }
+        .pdf-canvas-wrapper { width: 100%; height: 90vh; overflow: auto; cursor: grab; }
 
         .interactive-pdf-controls {
             display: flex;
@@ -402,7 +397,7 @@
         <div class="page-header-background"></div>
         <h1 id="main-title">Briefing Fdf</h1>
         <p id="current-time-display"></p>
-        <p style="position: relative; z-index: 2; text-align: center; color: #333; font-size: 1em; margin-top: -25px; margin-bottom: 30px;">v1.199 beta</p>
+        <p style="position: relative; z-index: 2; text-align: center; color: #333; font-size: 1em; margin-top: -25px; margin-bottom: 30px;">v1.198 beta</p>
     </div>
 
     <div class="session-management"><h3>Gestion de la Session</h3><button id="save-session-btn" class="link-button" style="background-color: #28a745;">Sauvegarder la session</button><button id="clear-session-btn" class="link-button" style="background-color: var(--sc-red);">Effacer la sauvegarde</button><a href="https://cncasc-app.fr/" target="_blank" class="link-button" style="background-color: #3498db;">CNCASC Login</a><p id="session-status"></p></div>
@@ -416,12 +411,7 @@
         </div>
         <div id="pdf-interactive-container-fds" class="interactive-pdf-viewer" style="display: none;">
             <div class="interactive-pdf-controls"><button class="pdf-nav-btn" data-action="prev">Page Préc.</button><span>Page <span class="page-num">1</span> / <span class="page-count">1</span></span><button class="pdf-nav-btn" data-action="next">Page Suiv.</button><div class="zoom-controls"><button class="pdf-nav-btn" data-action="zoom-out">-</button><span>Zoom</span><button class="pdf-nav-btn" data-action="zoom-in">+</button></div></div>
-            <div class="pdf-canvas-wrapper">
-                <canvas id="pdf-canvas-fds" class="pdf-canvas"></canvas>
-                <!-- Layers for highlighting -->
-                <div class="pdf-highlight-layer"></div>
-                <div class="pdf-interaction-layer"></div>
-            </div>
+            <div class="pdf-canvas-wrapper"><canvas id="pdf-canvas-fds" class="pdf-canvas"></canvas></div>
         </div>
         <p id="pdf-info-fds" class="pdf-info"></p>
     </div>
@@ -623,7 +613,6 @@
         let fdsFileObject = null;
         let gaarFileObject = null;
         let supAipFileObjects = [];
-        let fdsHighlights = {}; // Store FDS highlights
         let gaarMap = null;
         let gaarDrawnCircuits = [];
         let isAddingManualCircuit = false;
@@ -896,59 +885,31 @@
             populateTemsi();
         }
 
-        function createInteractivePdfHandler(viewerId, file, options = {}) {
-            const { callback, initialScale = 1.5, enableHighlighting = false } = options;
-            const viewerContainer = document.getElementById(viewerId);
+        function createInteractivePdfHandler(viewerContainer, file, callback, initialScale = 1.5) {
             const canvas = viewerContainer.querySelector('.pdf-canvas');
             const controls = viewerContainer.querySelector('.interactive-pdf-controls');
             const wrapper = viewerContainer.querySelector('.pdf-canvas-wrapper');
             const ctx = canvas.getContext('2d');
             let pdfDoc = null, pageNum = 1, pageRendering = false, pageNumPending = null, scale = initialScale;
-            let textLayerData = {};
-            
-            // Panning logic
             let isPanning = false, panStart = { x: 0, y: 0 };
-            
-            // Highlighting logic
-            const highlightContainer = enableHighlighting ? viewerContainer.querySelector('.pdf-highlight-layer') : null;
-            const interactionLayer = enableHighlighting ? viewerContainer.querySelector('.pdf-interaction-layer') : null;
-            let isSelecting = false, selectionStart = null;
-            let currentSelectionDiv = null;
+            let initialPinchDistance = null, startScale = null;
 
-            async function renderPage(num) {
+            function getDistance(t1, t2) { const dx = t1.clientX - t2.clientX, dy = t1.clientY - t2.clientY; return Math.sqrt(dx * dx + dy * dy); }
+            function renderPage(num) {
                 pageRendering = true;
-                const page = await pdfDoc.getPage(num);
-                const pixelRatio = Math.max(window.devicePixelRatio || 1, 2);
-                const viewport = page.getViewport({ scale: scale * pixelRatio });
-                canvas.height = viewport.height;
-                canvas.width = viewport.width;
-                canvas.style.height = `${viewport.height / pixelRatio}px`;
-                canvas.style.width = `${viewport.width / pixelRatio}px`;
-
-                await page.render({ canvasContext: ctx, viewport: viewport }).promise;
-
-                if (enableHighlighting) {
-                    textLayerData[num] = await page.getTextContent();
-                    resizeInteractionLayer(viewport.width / pixelRatio, viewport.height / pixelRatio);
-                    drawHighlights(num);
-                }
-                
-                pageRendering = false;
-                if (pageNumPending !== null) {
-                    renderPage(pageNumPending);
-                    pageNumPending = null;
-                }
+                pdfDoc.getPage(num).then(page => {
+                    const pixelRatio = Math.max(window.devicePixelRatio || 1, 2);
+                    const viewport = page.getViewport({ scale: scale * pixelRatio });
+                    canvas.height = viewport.height; canvas.width = viewport.width;
+                    canvas.style.height = `${viewport.height / pixelRatio}px`; canvas.style.width = `${viewport.width / pixelRatio}px`;
+                    page.render({ canvasContext: ctx, viewport: viewport }).promise.then(() => {
+                        pageRendering = false;
+                        if (pageNumPending !== null) { renderPage(pageNumPending); pageNumPending = null; }
+                    });
+                });
                 controls.querySelector('.page-num').textContent = num;
             }
-
-            function queueRenderPage(num) {
-                if (pageRendering) {
-                    pageNumPending = num;
-                } else {
-                    renderPage(num);
-                }
-            }
-
+            function queueRenderPage(num) { if (pageRendering) pageNumPending = num; else renderPage(num); }
             controls.addEventListener('click', e => {
                 if (!pdfDoc || !e.target.dataset.action) return;
                 const action = e.target.dataset.action;
@@ -957,117 +918,20 @@
                 else if (action === 'zoom-in') { scale = Math.min(5.0, scale + 0.2); queueRenderPage(pageNum); }
                 else if (action === 'zoom-out') { scale = Math.max(0.3, scale - 0.2); queueRenderPage(pageNum); }
             });
-
             wrapper.addEventListener('wheel', e => { e.preventDefault(); scale = e.deltaY < 0 ? Math.min(5.0, scale + 0.1) : Math.max(0.3, scale - 0.1); queueRenderPage(pageNum); });
-            wrapper.addEventListener('mousedown', e => { if (e.target !== interactionLayer) { isPanning = true; panStart = { x: e.clientX + wrapper.scrollLeft, y: e.clientY + wrapper.scrollTop }; }});
+            wrapper.addEventListener('mousedown', e => { isPanning = true; panStart = { x: e.clientX + wrapper.scrollLeft, y: e.clientY + wrapper.scrollTop }; });
             wrapper.addEventListener('mouseup', () => isPanning = false);
             wrapper.addEventListener('mouseleave', () => isPanning = false);
             wrapper.addEventListener('mousemove', e => { if (isPanning) { e.preventDefault(); wrapper.scrollLeft = panStart.x - e.clientX; wrapper.scrollTop = panStart.y - e.clientY; } });
-           
-            if (enableHighlighting) {
-                function resizeInteractionLayer(width, height) {
-                    highlightContainer.style.width = `${width}px`;
-                    highlightContainer.style.height = `${height}px`;
-                    interactionLayer.style.width = `${width}px`;
-                    interactionLayer.style.height = `${height}px`;
-                }
-
-                function drawHighlights(pageNumber) {
-                    highlightContainer.innerHTML = '';
-                    if (!fdsHighlights[pageNumber]) return;
-                    fdsHighlights[pageNumber].forEach((rect, index) => {
-                        const div = document.createElement('div');
-                        div.className = 'pdf-highlight';
-                        div.style.left = `${rect.x * scale}px`;
-                        div.style.top = `${rect.y * scale}px`;
-                        div.style.width = `${rect.width * scale}px`;
-                        div.style.height = `${rect.height * scale}px`;
-                        div.dataset.highlightIndex = index;
-                        highlightContainer.appendChild(div);
-                    });
-                }
-                
-                function getPointerPosition(e) {
-                    const rect = interactionLayer.getBoundingClientRect();
-                    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-                    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-                    return { x: clientX - rect.left, y: clientY - rect.top };
-                }
-
-                function handleInteractionStart(e) {
-                    e.preventDefault();
-                    isPanning = false; // Prevent panning when interacting with this layer
-                    
-                    const pos = getPointerPosition(e);
-                    
-                    // Check if clicking on an existing highlight to remove it
-                    const clickedHighlight = document.elementFromPoint(e.clientX, e.clientY);
-                    if (clickedHighlight && clickedHighlight.classList.contains('pdf-highlight')) {
-                        const index = parseInt(clickedHighlight.dataset.highlightIndex, 10);
-                        if (!isNaN(index)) {
-                            fdsHighlights[pageNum].splice(index, 1);
-                            drawHighlights(pageNum);
-                        }
-                        return;
-                    }
-                    
-                    // Start a new selection
-                    isSelecting = true;
-                    selectionStart = pos;
-                    currentSelectionDiv = document.createElement('div');
-                    currentSelectionDiv.style.position = 'absolute';
-                    currentSelectionDiv.style.border = '1px dashed #000';
-                    currentSelectionDiv.style.backgroundColor = 'rgba(0, 100, 255, 0.1)';
-                    currentSelectionDiv.style.left = `${pos.x}px`;
-                    currentSelectionDiv.style.top = `${pos.y}px`;
-                    interactionLayer.appendChild(currentSelectionDiv);
-                }
-
-                function handleInteractionMove(e) {
-                    if (!isSelecting) return;
-                    e.preventDefault();
-                    const pos = getPointerPosition(e);
-                    const x = Math.min(pos.x, selectionStart.x);
-                    const y = Math.min(pos.y, selectionStart.y);
-                    const width = Math.abs(pos.x - selectionStart.x);
-                    const height = Math.abs(pos.y - selectionStart.y);
-                    currentSelectionDiv.style.left = `${x}px`;
-                    currentSelectionDiv.style.top = `${y}px`;
-                    currentSelectionDiv.style.width = `${width}px`;
-                    currentSelectionDiv.style.height = `${height}px`;
-                }
-
-                function handleInteractionEnd(e) {
-                    if (!isSelecting) return;
-                    isSelecting = false;
-                    const pos = getPointerPosition(e.changedTouches ? e.changedTouches[0] : e);
-                    
-                    const selectionRect = {
-                        x: Math.min(pos.x, selectionStart.x) / scale,
-                        y: Math.min(pos.y, selectionStart.y) / scale,
-                        width: Math.abs(pos.x - selectionStart.x) / scale,
-                        height: Math.abs(pos.y - selectionStart.y) / scale
-                    };
-                    
-                    if (selectionRect.width > 2 && selectionRect.height > 2) {
-                        if (!fdsHighlights[pageNum]) fdsHighlights[pageNum] = [];
-                        fdsHighlights[pageNum].push(selectionRect);
-                        drawHighlights(pageNum);
-                    }
-                    
-                    interactionLayer.removeChild(currentSelectionDiv);
-                    currentSelectionDiv = null;
-                }
-
-                interactionLayer.addEventListener('mousedown', handleInteractionStart);
-                interactionLayer.addEventListener('mousemove', handleInteractionMove);
-                interactionLayer.addEventListener('mouseup', handleInteractionEnd);
-                interactionLayer.addEventListener('mouseleave', () => { if (isSelecting) handleInteractionEnd(new MouseEvent('mouseup')); });
-                interactionLayer.addEventListener('touchstart', handleInteractionStart, { passive: false });
-                interactionLayer.addEventListener('touchmove', handleInteractionMove, { passive: false });
-                interactionLayer.addEventListener('touchend', handleInteractionEnd, { passive: false });
-            }
-
+            wrapper.addEventListener('touchstart', e => {
+                if (e.touches.length === 2) { e.preventDefault(); isPanning = false; initialPinchDistance = getDistance(e.touches[0], e.touches[1]); startScale = scale; }
+                else if (e.touches.length === 1) { isPanning = true; panStart = { x: e.touches[0].clientX + wrapper.scrollLeft, y: e.touches[0].clientY + wrapper.scrollTop }; }
+            }, { passive: false });
+            wrapper.addEventListener('touchmove', e => {
+                if (e.touches.length === 2 && initialPinchDistance) { e.preventDefault(); scale = Math.max(0.3, Math.min(startScale * (getDistance(e.touches[0], e.touches[1]) / initialPinchDistance), 5.0)); queueRenderPage(pageNum); }
+                else if (e.touches.length === 1 && isPanning) { e.preventDefault(); wrapper.scrollLeft = panStart.x - e.touches[0].clientX; wrapper.scrollTop = panStart.y - e.touches[0].clientY; }
+            }, { passive: false });
+            wrapper.addEventListener('touchend', () => { isPanning = false; initialPinchDistance = null; startScale = null; });
             const fileReader = new FileReader();
             fileReader.onload = function() {
                 pdfjsLib.getDocument(new Uint8Array(this.result)).promise.then(pdfDoc_ => {
@@ -1458,24 +1322,20 @@
         }
             
         function initializeInteractivePdfViewers() {
-            const createFileHandler = (fileObjectSetter, infoId, viewerId, options) => (files) => {
+            const createFileHandler = (fileObjectSetter, infoId, viewerId, mapInitFn, initialScale = 1.5) => (files) => {
                 const file = files[0];
                 if (!file || file.type !== 'application/pdf') return;
                 fileObjectSetter(file);
                 document.getElementById(infoId).textContent = `Document chargé : ${file.name}`;
-                createInteractivePdfHandler(viewerId, file, options);
-                
+                createInteractivePdfHandler(document.getElementById(viewerId), file, mapInitFn, initialScale);
                 if (viewerId === 'pdf-interactive-container-gaar') {
                     document.getElementById('gaar-map-section').style.display = 'block';
                     document.getElementById('pdf-load-gaar-btn').style.display = 'none';
                     document.getElementById('pdf-reset-gaar-btn').style.display = 'inline-block';
-                    if (options.callback) options.callback();
                 }
             };
-            
-            const fdsHandler = createFileHandler(f => fdsFileObject = f, 'pdf-info-fds', 'pdf-interactive-container-fds', { initialScale: 1.65, enableHighlighting: true });
-            const gaarHandler = createFileHandler(f => gaarFileObject = f, 'pdf-info-gaar', 'pdf-interactive-container-gaar', { callback: initializeGaarMapFromFile, initialScale: 1.3 });
-            
+            const fdsHandler = createFileHandler(f => fdsFileObject = f, 'pdf-info-fds', 'pdf-interactive-container-fds', null, 1.65);
+            const gaarHandler = createFileHandler(f => gaarFileObject = f, 'pdf-info-gaar', 'pdf-interactive-container-gaar', initializeGaarMapFromFile, 1.3);
             const notamHandler = (files) => {
                 const file = files[0]; if (!file || file.type !== 'application/pdf') return;
                 document.getElementById('pdf-info-notam').textContent = `Document chargé : ${file.name}`;
@@ -1495,6 +1355,7 @@
                 initGaarMap(); 
                 document.getElementById('gaar-status').textContent = 'Prêt pour l\'ajout manuel de circuits.';
                 mapSection.scrollIntoView({ behavior: 'smooth' });
+                // Afficher le bouton de suppression
                 document.getElementById('pdf-reset-gaar-btn').style.display = 'inline-block';
                 document.getElementById('pdf-load-gaar-btn').style.display = 'none';
             });
@@ -1507,34 +1368,28 @@
         function initializeSupAipLoader() {
             const loadBtn = document.getElementById('pdf-load-sup-aip-btn'), addBtn = document.getElementById('pdf-add-sup-aip-btn');
             const fileInput = document.getElementById('pdf-input-sup-aip'), container = document.getElementById('sup-aip-container');
-            
-            const addSupAipFiles = (files) => {
-                if (!files.length) return;
-                for (const file of files) {
-                    if (file.type !== 'application/pdf' || supAipFileObjects.some(f => f.name === file.name)) continue;
-                    supAipFileObjects.push(file);
-                    const viewerId = `sup-aip-viewer-${supAipFileObjects.length}`;
-                    const item = document.createElement('div');
-                    item.className = 'sup-aip-item'; item.dataset.fileName = file.name;
-                    item.innerHTML = `<h3>${file.name}<button class="sup-aip-delete-btn" title="Supprimer">×</button></h3><div id="${viewerId}" class="interactive-pdf-viewer"><div class="interactive-pdf-controls"><button class="pdf-nav-btn" data-action="prev">Préc.</button><span>Page <span class="page-num">1</span>/<span class="page-count">1</span></span><button class="pdf-nav-btn" data-action="next">Suiv.</button><div class="zoom-controls"><button class="pdf-nav-btn" data-action="zoom-out">-</button><span>Zoom</span><button class="pdf-nav-btn" data-action="zoom-in">+</button></div></div><div class="pdf-canvas-wrapper"><canvas class="pdf-canvas"></canvas></div></div>`;
-                    container.appendChild(item);
-                    createInteractivePdfHandler(viewerId, file);
-                }
-                loadBtn.style.display = 'none'; addBtn.style.display = 'inline-block';
-            };
-
-            loadBtn.addEventListener('click', () => fileInput.click()); 
-            addBtn.addEventListener('click', () => fileInput.click());
-            fileInput.addEventListener('change', (e) => addSupAipFiles(e.target.files));
-            setupDropzone('sup-aip-dropzone', addSupAipFiles); 
-            window.addSupAipFiles = addSupAipFiles;
-
+            loadBtn.addEventListener('click', () => fileInput.click()); addBtn.addEventListener('click', () => fileInput.click());
             container.addEventListener('click', (e) => {
                 if (e.target && e.target.matches('.sup-aip-delete-btn')) {
                     const itemToRemove = e.target.closest('.sup-aip-item'), fileName = itemToRemove.dataset.fileName;
                     supAipFileObjects = supAipFileObjects.filter(f => f.name !== fileName); itemToRemove.remove();
                 }
             });
+            const addSupAipFiles = (files) => {
+                if (!files.length) return;
+                for (const file of files) {
+                    if (file.type !== 'application/pdf' || supAipFileObjects.some(f => f.name === file.name)) continue;
+                    supAipFileObjects.push(file);
+                    const item = document.createElement('div');
+                    item.className = 'sup-aip-item'; item.dataset.fileName = file.name;
+                    item.innerHTML = `<h3>${file.name}<button class="sup-aip-delete-btn" title="Supprimer">×</button></h3><div class="interactive-pdf-viewer"><div class="interactive-pdf-controls"><button class="pdf-nav-btn" data-action="prev">Préc.</button><span>Page <span class="page-num">1</span>/<span class="page-count">1</span></span><button class="pdf-nav-btn" data-action="next">Suiv.</button><div class="zoom-controls"><button class="pdf-nav-btn" data-action="zoom-out">-</button><span>Zoom</span><button class="pdf-nav-btn" data-action="zoom-in">+</button></div></div><div class="pdf-canvas-wrapper"><canvas class="pdf-canvas"></canvas></div></div>`;
+                    container.appendChild(item);
+                    createInteractivePdfHandler(item.querySelector('.interactive-pdf-viewer'), file);
+                }
+                loadBtn.style.display = 'none'; addBtn.style.display = 'inline-block';
+            };
+            fileInput.addEventListener('change', (e) => addSupAipFiles(e.target.files));
+            setupDropzone('sup-aip-dropzone', addSupAipFiles); window.addSupAipFiles = addSupAipFiles;
         }
 
         function initializeForeFlightButton() { document.getElementById('foreflight-btn').href = 'foreflightmobile://'; }
@@ -1573,7 +1428,6 @@
                     const dataToSave = {
                         id: 'currentSession',
                         fds: await fileToSavable(fdsFileObject),
-                        fds_highlights: fdsHighlights,
                         gaar: await fileToSavable(gaarFileObject),
                         supAips: await Promise.all(supAipFileObjects.map(f => fileToSavable(f))),
                         notamText: document.getElementById('notam-input').value,
@@ -1607,17 +1461,16 @@
                         const data = e.target.result;
                         if (data) {
                             if (data.fds) {
-                                if (data.fds_highlights) fdsHighlights = data.fds_highlights;
                                 const file = savableToFile(data.fds);
                                 fdsFileObject = file;
                                 document.getElementById('pdf-info-fds').textContent = `Document chargé : ${file.name}`;
-                                createInteractivePdfHandler('pdf-interactive-container-fds', file, { initialScale: 1.65, enableHighlighting: true });
+                                createInteractivePdfHandler(document.getElementById('pdf-interactive-container-fds'), file, null, 1.65);
                             }
                             if (data.gaar) {
                                 const file = savableToFile(data.gaar);
                                 gaarFileObject = file;
                                 document.getElementById('pdf-info-gaar').textContent = `Document chargé : ${file.name}`;
-                                createInteractivePdfHandler('pdf-interactive-container-gaar', file, { callback: initializeGaarMapFromFile, initialScale: 1.3 });
+                                createInteractivePdfHandler(document.getElementById('pdf-interactive-container-gaar'), file, initializeGaarMapFromFile, 1.3);
                                 document.getElementById('gaar-map-section').style.display = 'block';
                                 document.getElementById('pdf-load-gaar-btn').style.display = 'none';
                                 document.getElementById('pdf-reset-gaar-btn').style.display = 'inline-block';
