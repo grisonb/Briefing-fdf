@@ -428,6 +428,7 @@
         <h2>Diagramme GAAR</h2>
         <div class="pdf-controls">
             <button id="pdf-load-gaar-btn" class="link-button" style="background-color: #16a085;">Charger le Diagramme GAAR</button>
+            <button id="show-gaar-map-btn" class="link-button" style="background-color: #27ae60;">Carte GAAR</button>
             <button id="pdf-reset-gaar-btn" class="link-button" style="background-color: var(--sc-red); display: none;">Supprimer GAAR</button>
             <input type="file" id="pdf-input-gaar" accept="application/pdf">
         </div>
@@ -563,13 +564,13 @@
         </div>
     </div>
 
-    <div class="map-section"><h2>Pélicandromes</h2><div style="text-align:center;"><a href="http://cncasc-app.fr/" target="_blank" class="link-button" style="background-color:#3498db;">Ouvrir Pélicandromes</a></div></div>
+    <div class="map-section"><h2>Pélicandromes</h2><div style="text-align:center;"><a href="https://cncasc-app.fr/pages/pelicandrome.php" target="_blank" class="link-button" style="background-color:#3498db;">Ouvrir Pélicandromes</a></div></div>
     
     <div class="map-section">
         <h2>SYNERGI / CNCASC</h2>
         <div class="controles">
             <a href="https://synergi2.dgscgc.interieur.gouv.fr/evenements?forInit=false&statusEvent=PUBLIC" target="_blank" class="link-button" style="background-color:#16a085;">Ouvrir SYNERGI</a>
-            <a href="http://cncasc-app.fr/" target="_blank" class="link-button" style="background-color:#3498db;">Ouvrir CNCASC</a>
+            <a href="https://cncasc-app.fr/pages/landing.php" target="_blank" class="link-button" style="background-color:#3498db;">Ouvrir CNCASC</a>
         </div>
     </div>
     
@@ -635,6 +636,7 @@
             initializeSessionManagement();
             initializeHelpTooltips();
             initializeTdfViewer();
+            document.getElementById('add-manual-circuit-btn').addEventListener('click', toggleManualCircuitMode);
         }
 
         function initializeTdfViewer() {
@@ -902,15 +904,18 @@
         }
 
         // --- GAAR MAP LOGIC ---
+        function initGaarMap() {
+            if (gaarMap) return; 
+
+            const mapDisplay = document.getElementById('gaar-map-display');
+            gaarMap = L.map(mapDisplay).setView([46.2276, 2.2137], 6);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(gaarMap);
+            gaarMap.on('click', handleMapClickForManualAdd);
+        }
+
         function initializeGaarMapFromFile(gaarPdfFile) {
             const statusDiv = document.getElementById('gaar-status');
-            const mapDisplay = document.getElementById('gaar-map-display');
-            
-            if (!gaarMap) {
-                gaarMap = L.map(mapDisplay).setView([46.2276, 2.2137], 6);
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(gaarMap);
-                gaarMap.on('click', handleMapClickForManualAdd);
-            }
+            initGaarMap(); 
             
             async function handlePdfFile(file) {
                 if (!file || file.type !== 'application/pdf') { statusDiv.textContent = "Erreur: Fichier PDF requis."; return; }
@@ -942,7 +947,6 @@
                     const text = item.str.trim();
                     const upperText = text.toUpperCase();
 
-                    // Exclure les faux positifs communs
                     if (upperText.includes('SOLEIL') || upperText.includes('GUET') || upperText === 'TRANSIT' || text.length < 8) {
                         continue;
                     }
@@ -952,12 +956,10 @@
                     
                     let cities = [];
 
-                    // Stratégie A: pour les circuits avec tirets (ex: "GAAR SUPP: AVIGNON – FREJUS - AIX")
                     if (dashRegex.test(text)) {
                         const contentAfterColon = text.includes(':') ? text.split(':')[1] : text;
                         cities = contentAfterColon.trim().split(/\s*[–-]\s*/).map(s => s.trim()).filter(Boolean);
                     } 
-                    // Stratégie B: pour les circuits avec espaces seulement (ex: "AVIGNON ISTRES AIX")
                     else if (spaceOnlyRegex.test(text)) {
                         cities = text.split(/\s+/).filter(Boolean);
                     }
@@ -966,13 +968,12 @@
                         const finalCities = [];
                         for (let i = 0; i < cities.length; i++) {
                             const city = cities[i].toUpperCase();
-                            if (city === 'AIX') {
-                                finalCities.push('AIX EN PROVENCE');
-                            } else if (city === 'MRS') {
-                                finalCities.push('MARSEILLE');
-                            } else if (city === 'SAINT' && cities[i + 1]?.toUpperCase() === 'FLORENT') {
+                            if (city === 'AIX') finalCities.push('AIX EN PROVENCE');
+                            else if (city === 'MRS') finalCities.push('MARSEILLE');
+                            else if (city === 'VITROLLES') finalCities.push('Vitrolles, Bouches-du-Rhône'); // Correction pour Vitrolles
+                            else if (city === 'SAINT' && cities[i + 1]?.toUpperCase() === 'FLORENT') {
                                 finalCities.push('SAINT FLORENT');
-                                i++; // On saute le "FLORENT" qui a déjà été traité
+                                i++; 
                             } else {
                                 finalCities.push(cities[i]);
                             }
@@ -1010,222 +1011,217 @@
                     throw new Error("Géocodage impossible pour les circuits trouvés.");
                 }
             }
-
-            function createGaarMarker(coord, name, circuitIndex, cityIndex, color) {
-                const marker = L.circleMarker(coord, { 
-                    radius: 8,
-                    fillColor: color,
-                    color: '#000',
-                    weight: 1,
-                    opacity: 1,
-                    fillOpacity: 0.8
-                }).addTo(gaarMap);
-
-                marker.options.circuitIndex = circuitIndex;
-                marker.options.cityIndex = cityIndex;
-                marker.bindTooltip(name, { permanent: true, direction: 'top', className: 'gaar-city-label' }).openTooltip();
-                marker.bindPopup(() => createPopupContent(name, circuitIndex, cityIndex));
-                return marker;
-            }
-
-            window.handleGaarPointUpdate = async function(circuitIndex, cityIndex) {
-                const input = document.getElementById(`gaar-input-${circuitIndex}-${cityIndex}`);
-                const newName = input.value.trim(); if (!newName) return;
-                statusDiv.textContent = `Recherche de "${newName}"...`;
-                const geo = await geocodeCity(newName, 1);
-                if (geo) {
-                    const circuit = gaarDrawnCircuits[circuitIndex], marker = circuit.markers[cityIndex];
-                    marker.setLatLng(geo[0].latlon);
-                    circuit.cityNames[cityIndex] = newName;
-                    marker.setTooltipContent(newName);
-                    marker.closePopup();
-                    updatePolygon(circuitIndex);
-                    statusDiv.textContent = `Point mis à jour.`;
-                } else {
-                    statusDiv.textContent = `Coordonnées introuvables pour "${newName}".`;
-                }
-            };
-            
-            window.handleGaarPointDelete = function(circuitIndex, cityIndex) {
-                const circuit = gaarDrawnCircuits[circuitIndex];
-                if (!circuit) return;
-
-                const markerToRemove = circuit.markers[cityIndex];
-                if (markerToRemove) gaarMap.removeLayer(markerToRemove);
-                
-                circuit.markers.splice(cityIndex, 1);
-                circuit.cityNames.splice(cityIndex, 1);
-
-                circuit.markers.forEach((marker, newIndex) => {
-                    marker.options.cityIndex = newIndex;
-                    marker.bindPopup(() => createPopupContent(circuit.cityNames[newIndex], circuitIndex, newIndex));
-                });
-
-                if (circuit.markers.length < 2) {
-                    if (circuit.polygon) gaarMap.removeLayer(circuit.polygon);
-                    circuit.polygon = null;
-                    if (circuit.markers.length === 0) {
-                         gaarDrawnCircuits[circuitIndex] = null;
-                    }
-                } else {
-                    updatePolygon(circuitIndex);
-                }
-                
-                const wasCircuitDeleted = gaarDrawnCircuits[circuitIndex] === null;
-                if (wasCircuitDeleted) {
-                    gaarDrawnCircuits = gaarDrawnCircuits.filter(Boolean);
-                    gaarDrawnCircuits.forEach((c, newCIndex) => {
-                         c.markers.forEach(m => {
-                            m.options.circuitIndex = newCIndex;
-                            m.bindPopup(() => createPopupContent(m.getTooltip().getContent(), newCIndex, m.options.cityIndex));
-                        });
-                    });
-                }
-
-                statusDiv.textContent = `Point supprimé.`;
-            };
-
-            function createPopupContent(name, cIdx, cityIdx) {
-                const form = document.createElement('div');
-                form.className = 'gaar-popup-form';
-                form.innerHTML = `
-                    <label>Modifier le nom :</label>
-                    <input type="text" id="gaar-input-${cIdx}-${cityIdx}" value="${name}">
-                    <button onclick="handleGaarPointUpdate(${cIdx}, ${cityIdx})">OK</button>
-                    <button class="delete-point-btn" onclick="handleGaarPointDelete(${cIdx}, ${cityIdx})">Supprimer ce point</button>
-                `;
-                return form;
-            }
-
-            function updatePolygon(circuitIndex) {
-                const circuit = gaarDrawnCircuits[circuitIndex];
-                if (!circuit) return;
-
-                // Si moins de 2 points, on supprime la forme et on sort
-                if (circuit.markers.length < 2) {
-                    if (circuit.polygon) {
-                        gaarMap.removeLayer(circuit.polygon);
-                        circuit.polygon = null;
-                    }
-                    return;
-                }
-
-                const latlngs = circuit.markers.map(m => m.getLatLng());
-                const hasEnoughPointsForPolygon = latlngs.length >= 3;
-
-                // Si une forme existe déjà
-                if (circuit.polygon) {
-                    const isCurrentlyPolygon = circuit.polygon instanceof L.Polygon;
-
-                    // CAS 1: On a assez de points pour un polygone, mais la forme est une ligne -> ON MET A JOUR LA FORME
-                    if (hasEnoughPointsForPolygon && !isCurrentlyPolygon) {
-                        gaarMap.removeLayer(circuit.polygon); // Supprime l'ancienne ligne
-                        circuit.polygon = L.polygon(latlngs, { color: circuit.color }).addTo(gaarMap); // Crée un nouveau polygone
-                    }
-                    // CAS 2: On n'a plus assez de points, mais la forme est un polygone -> ON MET A JOUR LA FORME
-                    else if (!hasEnoughPointsForPolygon && isCurrentlyPolygon) {
-                        gaarMap.removeLayer(circuit.polygon); // Supprime l'ancien polygone
-                        circuit.polygon = L.polyline(latlngs, { color: circuit.color }).addTo(gaarMap); // Crée une nouvelle ligne
-                    }
-                    // CAS 3: Le type de forme est correct -> ON MET A JOUR LES POINTS
-                    else {
-                        circuit.polygon.setLatLngs(latlngs);
-                    }
-                }
-                // Si aucune forme n'existe, on la crée
-                else {
-                    if (hasEnoughPointsForPolygon) {
-                        circuit.polygon = L.polygon(latlngs, { color: circuit.color }).addTo(gaarMap);
-                    } else { // Ceci ne s'appliquera que pour le 2ème point
-                        circuit.polygon = L.polyline(latlngs, { color: circuit.color }).addTo(gaarMap);
-                    }
-                }
-            }
-
-            async function geocodeAndDisambiguate(names) {
-                const map = new Map(), resolved = [...names], ambigNames = ['AIX', 'LEZIGNAN'];
-                const isCorsicanCircuit = names.some(n => ['CALVI', 'SAINT FLORENT'].includes(n.toUpperCase()));
-                
-                for (const [i, name] of names.entries()) {
-                    if (ambigNames.includes(name.toUpperCase())) {
-                        const refCities = names.filter((_, idx) => i !== idx);
-                        const refCoords = (await Promise.all(refCities.map(c => geocodeCity(c, 1)))).filter(Boolean).map(c => c[0].latlon);
-                        
-                        if (refCoords.length > 0) {
-                            const searchQuery = name.toUpperCase() === 'LEZIGNAN' ? 'Lézignan-Corbières' : name;
-                            const cands = await geocodeCity(searchQuery, 5);
-                            
-                            if (cands) {
-                                const best = cands.reduce((b, cur) => {
-                                    const dist = refCoords.reduce((s, r) => s + getDistance(r, cur.latlon), 0);
-                                    return dist < b.dist ? {cand: cur, dist} : {...b};
-                                }, {cand: null, dist: Infinity}).cand;
-                                
-                                if (best) {
-                                    resolved[i] = best.name.split(',')[0];
-                                    map.set(resolved[i], best.latlon);
-                                }
-                            }
-                        }
-                    }
-                }
-
-                for (const name of resolved) {
-                    if (!map.has(name)) {
-                        const query = isCorsicanCircuit ? `${name}, Corse` : `${name}, France`;
-                        const g = await geocodeCity(query, 1);
-                        if (g) map.set(name, g[0].latlon);
-                    }
-                }
-                return {coordMap: map, resolvedNames: resolved};
-            }
-
-            async function geocodeCity(name, limit = 1) { try { const r = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(name)}&limit=${limit}`); const d=await r.json(); return (d&&d.length>0)?d.map(i=>({name:i.display_name,latlon:[parseFloat(i.lat),parseFloat(i.lon)]})):null;}catch(e){return null;}}
-            function getDistance(c1, c2) {const R=6371,dLat=(c2[0]-c1[0])*Math.PI/180,dLon=(c2[1]-c1[1])*Math.PI/180,a=Math.sin(dLat/2)**2+Math.cos(c1[0]*Math.PI/180)*Math.cos(c2[0]*Math.PI/180)*Math.sin(dLon/2)**2;return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));}
-            
-            function handleMapClickForManualAdd(e) {
-                if (!isAddingManualCircuit) return;
-
-                let activeManualCircuit = gaarDrawnCircuits.find(c => c.isManual && c.isActive);
-
-                if (!activeManualCircuit || activeManualCircuit.markers.length >= 3) {
-                    if (activeManualCircuit) {
-                        activeManualCircuit.isActive = false;
-                    }
-                    
-                    // Déterminer la couleur du nouveau circuit
-                    const manualCircuitsCount = gaarDrawnCircuits.filter(c => c.isManual).length;
-                    const newCircuitColor = manualCircuitColors[manualCircuitsCount % manualCircuitColors.length];
-                    
-                    activeManualCircuit = {
-                        polygon: null,
-                        markers: [],
-                        cityNames: [],
-                        color: newCircuitColor, // Utiliser la nouvelle couleur
-                        isManual: true,
-                        isActive: true 
-                    };
-                    gaarDrawnCircuits.push(activeManualCircuit);
-                }
-
-                const circuitIndex = gaarDrawnCircuits.indexOf(activeManualCircuit);
-                const cityIndex = activeManualCircuit.markers.length;
-                const pointName = `Point ${cityIndex + 1}`;
-                // Utiliser la couleur stockée dans le circuit pour créer le marqueur
-                const newMarker = createGaarMarker(e.latlng, pointName, circuitIndex, cityIndex, activeManualCircuit.color);
-                
-                activeManualCircuit.markers.push(newMarker);
-                activeManualCircuit.cityNames.push(pointName);
-                
-                updatePolygon(circuitIndex);
-            }
-
-            document.getElementById('add-manual-circuit-btn').addEventListener('click', toggleManualCircuitMode);
             
             handlePdfFile(gaarPdfFile);
         }
 
+        function createGaarMarker(coord, name, circuitIndex, cityIndex, color) {
+            const marker = L.circleMarker(coord, { 
+                radius: 8,
+                fillColor: color,
+                color: '#000',
+                weight: 1,
+                opacity: 1,
+                fillOpacity: 0.8
+            }).addTo(gaarMap);
+
+            marker.options.circuitIndex = circuitIndex;
+            marker.options.cityIndex = cityIndex;
+            marker.bindTooltip(name.split(',')[0], { permanent: true, direction: 'top', className: 'gaar-city-label' }).openTooltip();
+            marker.bindPopup(() => createPopupContent(name, circuitIndex, cityIndex));
+            return marker;
+        }
+
+        window.handleGaarPointUpdate = async function(circuitIndex, cityIndex) {
+            const input = document.getElementById(`gaar-input-${circuitIndex}-${cityIndex}`);
+            const newName = input.value.trim(); if (!newName) return;
+            const statusDiv = document.getElementById('gaar-status');
+            statusDiv.textContent = `Recherche de "${newName}"...`;
+            const geo = await geocodeCity(newName, 1);
+            if (geo) {
+                const circuit = gaarDrawnCircuits[circuitIndex], marker = circuit.markers[cityIndex];
+                marker.setLatLng(geo[0].latlon);
+                circuit.cityNames[cityIndex] = newName;
+                marker.setTooltipContent(newName.split(',')[0]);
+                marker.closePopup();
+                updatePolygon(circuitIndex);
+                statusDiv.textContent = `Point mis à jour.`;
+            } else {
+                statusDiv.textContent = `Coordonnées introuvables pour "${newName}".`;
+            }
+        };
+        
+        window.handleGaarPointDelete = function(circuitIndex, cityIndex) {
+            const circuit = gaarDrawnCircuits[circuitIndex];
+            if (!circuit) return;
+
+            const markerToRemove = circuit.markers[cityIndex];
+            if (markerToRemove) gaarMap.removeLayer(markerToRemove);
+            
+            circuit.markers.splice(cityIndex, 1);
+            circuit.cityNames.splice(cityIndex, 1);
+
+            circuit.markers.forEach((marker, newIndex) => {
+                marker.options.cityIndex = newIndex;
+                marker.bindPopup(() => createPopupContent(circuit.cityNames[newIndex], circuitIndex, newIndex));
+            });
+
+            if (circuit.markers.length < 2) {
+                if (circuit.polygon) gaarMap.removeLayer(circuit.polygon);
+                circuit.polygon = null;
+                if (circuit.markers.length === 0) {
+                     gaarDrawnCircuits[circuitIndex] = null;
+                }
+            } else {
+                updatePolygon(circuitIndex);
+            }
+            
+            const wasCircuitDeleted = gaarDrawnCircuits[circuitIndex] === null;
+            if (wasCircuitDeleted) {
+                gaarDrawnCircuits = gaarDrawnCircuits.filter(Boolean);
+                gaarDrawnCircuits.forEach((c, newCIndex) => {
+                     c.markers.forEach(m => {
+                        m.options.circuitIndex = newCIndex;
+                        m.bindPopup(() => createPopupContent(m.getTooltip().getContent(), newCIndex, m.options.cityIndex));
+                    });
+                });
+            }
+
+            document.getElementById('gaar-status').textContent = `Point supprimé.`;
+        };
+
+        function createPopupContent(name, cIdx, cityIdx) {
+            const form = document.createElement('div');
+            form.className = 'gaar-popup-form';
+            form.innerHTML = `
+                <label>Modifier le nom :</label>
+                <input type="text" id="gaar-input-${cIdx}-${cityIdx}" value="${name}">
+                <button onclick="handleGaarPointUpdate(${cIdx}, ${cityIdx})">OK</button>
+                <button class="delete-point-btn" onclick="handleGaarPointDelete(${cIdx}, ${cityIdx})">Supprimer ce point</button>
+            `;
+            return form;
+        }
+
+        function updatePolygon(circuitIndex) {
+            const circuit = gaarDrawnCircuits[circuitIndex];
+            if (!circuit) return;
+
+            if (circuit.markers.length < 2) {
+                if (circuit.polygon) {
+                    gaarMap.removeLayer(circuit.polygon);
+                    circuit.polygon = null;
+                }
+                return;
+            }
+
+            const latlngs = circuit.markers.map(m => m.getLatLng());
+            const hasEnoughPointsForPolygon = latlngs.length >= 3;
+
+            if (circuit.polygon) {
+                const isCurrentlyPolygon = circuit.polygon instanceof L.Polygon;
+
+                if (hasEnoughPointsForPolygon && !isCurrentlyPolygon) {
+                    gaarMap.removeLayer(circuit.polygon);
+                    circuit.polygon = L.polygon(latlngs, { color: circuit.color }).addTo(gaarMap);
+                }
+                else if (!hasEnoughPointsForPolygon && isCurrentlyPolygon) {
+                    gaarMap.removeLayer(circuit.polygon);
+                    circuit.polygon = L.polyline(latlngs, { color: circuit.color }).addTo(gaarMap);
+                }
+                else {
+                    circuit.polygon.setLatLngs(latlngs);
+                }
+            }
+            else {
+                if (hasEnoughPointsForPolygon) {
+                    circuit.polygon = L.polygon(latlngs, { color: circuit.color }).addTo(gaarMap);
+                } else {
+                    circuit.polygon = L.polyline(latlngs, { color: circuit.color }).addTo(gaarMap);
+                }
+            }
+        }
+
+        async function geocodeAndDisambiguate(names) {
+            const map = new Map(), resolved = [...names], ambigNames = ['AIX', 'LEZIGNAN'];
+            const isCorsicanCircuit = names.some(n => ['CALVI', 'SAINT FLORENT'].includes(n.toUpperCase()));
+            
+            for (const [i, name] of names.entries()) {
+                if (ambigNames.includes(name.toUpperCase())) {
+                    const refCities = names.filter((_, idx) => i !== idx);
+                    const refCoords = (await Promise.all(refCities.map(c => geocodeCity(c, 1)))).filter(Boolean).map(c => c[0].latlon);
+                    
+                    if (refCoords.length > 0) {
+                        const searchQuery = name.toUpperCase() === 'LEZIGNAN' ? 'Lézignan-Corbières' : name;
+                        const cands = await geocodeCity(searchQuery, 5);
+                        
+                        if (cands) {
+                            const best = cands.reduce((b, cur) => {
+                                const dist = refCoords.reduce((s, r) => s + getDistance(r, cur.latlon), 0);
+                                return dist < b.dist ? {cand: cur, dist} : {...b};
+                            }, {cand: null, dist: Infinity}).cand;
+                            
+                            if (best) {
+                                resolved[i] = best.name;
+                                map.set(resolved[i], best.latlon);
+                            }
+                        }
+                    }
+                }
+            }
+
+            for (const name of resolved) {
+                if (!map.has(name)) {
+                    let query = name;
+                    if (!name.includes(',')) {
+                       query = isCorsicanCircuit ? `${name}, Corse` : `${name}, France`;
+                    }
+                    const g = await geocodeCity(query, 1);
+                    if (g) map.set(name, g[0].latlon);
+                }
+            }
+            return {coordMap: map, resolvedNames: resolved};
+        }
+
+        async function geocodeCity(name, limit = 1) { try { const r = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(name)}&limit=${limit}`); const d=await r.json(); return (d&&d.length>0)?d.map(i=>({name:i.display_name,latlon:[parseFloat(i.lat),parseFloat(i.lon)]})):null;}catch(e){return null;}}
+        function getDistance(c1, c2) {const R=6371,dLat=(c2[0]-c1[0])*Math.PI/180,dLon=(c2[1]-c1[1])*Math.PI/180,a=Math.sin(dLat/2)**2+Math.cos(c1[0]*Math.PI/180)*Math.cos(c2[0]*Math.PI/180)*Math.sin(dLon/2)**2;return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));}
+        
+        function handleMapClickForManualAdd(e) {
+            if (!isAddingManualCircuit) return;
+
+            let activeManualCircuit = gaarDrawnCircuits.find(c => c.isManual && c.isActive);
+
+            if (!activeManualCircuit || activeManualCircuit.markers.length >= 3) {
+                if (activeManualCircuit) {
+                    activeManualCircuit.isActive = false;
+                }
+                
+                const manualCircuitsCount = gaarDrawnCircuits.filter(c => c.isManual).length;
+                const newCircuitColor = manualCircuitColors[manualCircuitsCount % manualCircuitColors.length];
+                
+                activeManualCircuit = {
+                    polygon: null,
+                    markers: [],
+                    cityNames: [],
+                    color: newCircuitColor,
+                    isManual: true,
+                    isActive: true 
+                };
+                gaarDrawnCircuits.push(activeManualCircuit);
+            }
+
+            const circuitIndex = gaarDrawnCircuits.indexOf(activeManualCircuit);
+            const cityIndex = activeManualCircuit.markers.length;
+            const pointName = `Point ${cityIndex + 1}`;
+            const newMarker = createGaarMarker(e.latlng, pointName, circuitIndex, cityIndex, activeManualCircuit.color);
+            
+            activeManualCircuit.markers.push(newMarker);
+            activeManualCircuit.cityNames.push(pointName);
+            
+            updatePolygon(circuitIndex);
+        }
+
         function clearAllCircuits() {
+            if (!gaarMap) return;
             gaarDrawnCircuits.forEach(({ polygon, markers }) => {
                 if (polygon) gaarMap.removeLayer(polygon);
                 if (markers) markers.forEach(m => gaarMap.removeLayer(m));
@@ -1295,6 +1291,18 @@
             document.getElementById('pdf-input-gaar').addEventListener('change', (e) => gaarHandler(e.target.files));
             setupDropzone('gaar-dropzone', gaarHandler);
             document.getElementById('pdf-reset-gaar-btn').addEventListener('click', resetGaarSection);
+            
+            document.getElementById('show-gaar-map-btn').addEventListener('click', () => {
+                const mapSection = document.getElementById('gaar-map-section');
+                mapSection.style.display = 'block';
+                initGaarMap(); 
+                document.getElementById('gaar-status').textContent = 'Prêt pour l\'ajout manuel de circuits.';
+                mapSection.scrollIntoView({ behavior: 'smooth' });
+                // Afficher le bouton de suppression
+                document.getElementById('pdf-reset-gaar-btn').style.display = 'inline-block';
+                document.getElementById('pdf-load-gaar-btn').style.display = 'none';
+            });
+
             document.getElementById('pdf-load-notam-btn').addEventListener('click', () => document.getElementById('pdf-input-notam').click());
             document.getElementById('pdf-input-notam').addEventListener('change', (e) => notamHandler(e.target.files));
             setupDropzone('notam-pdf-dropzone', notamHandler);
@@ -1648,7 +1656,14 @@
                 filterButtons.forEach(btn => btn.style.display = 'none');
                 showAllButtons.forEach(btn => btn.style.display = 'inline-block');
                 savePdfButtons.forEach(btn => btn.style.display = 'inline-block');
+                
+                const visibleNotams = document.querySelectorAll('#notam-display .notam-item:not(.hidden-by-filter):not(.hidden-by-prefilter)');
+                if (visibleNotams.length > 0) {
+                    const lastVisibleNotam = visibleNotams[visibleNotams.length - 1];
+                    lastVisibleNotam.scrollIntoView({ behavior: 'smooth', block: 'end', inline: 'nearest' });
+                }
             }
+
             function resetSelectionFilter() {
                 document.querySelectorAll('.hidden-by-filter').forEach(item => item.classList.remove('hidden-by-filter'));
                 showAllButtons.forEach(btn => btn.style.display = 'none');
