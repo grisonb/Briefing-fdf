@@ -397,7 +397,7 @@
         <div class="page-header-background"></div>
         <h1 id="main-title">Briefing Fdf</h1>
         <p id="current-time-display"></p>
-        <p style="position: relative; z-index: 2; text-align: center; color: #333; font-size: 1em; margin-top: -25px; margin-bottom: 30px;">v1.1</p>
+        <p style="position: relative; z-index: 2; text-align: center; color: #333; font-size: 1em; margin-top: -25px; margin-bottom: 30px;">v1.2</p>
     </div>
 
     <div class="session-management"><h3>Gestion de la Session</h3><button id="save-session-btn" class="link-button" style="background-color: #28a745;">Sauvegarder la session</button><button id="clear-session-btn" class="link-button" style="background-color: var(--sc-red);">Effacer la sauvegarde</button><a href="https://cncasc-app.fr/" target="_blank" class="link-button" style="background-color: #3498db;">CNCASC Login</a><p id="session-status"></p></div>
@@ -790,46 +790,176 @@
             return { text: null, start: null, end: null };
         }
         
-        async function fetchAndDisplayWeather(icao, airportContainer) {
+        // --- NOUVEAU BLOC DE CODE POUR LA MÉTÉO OPTIMISÉE (V1.2) ---
+
+        /**
+         * Fonction principale pour récupérer et afficher toutes les données météo.
+         * Elle récupère tous les OACI de la page, fait 2 appels groupés,
+         * puis distribue les données aux bonnes sections.
+         */
+        async function fetchAndDisplayAllWeather() {
+            const airportContainers = document.querySelectorAll('.airport-section-container');
+            const icaos = Array.from(airportContainers).map(container => container.dataset.icao).filter(Boolean);
+
+            if (icaos.length === 0) return;
+            if (!CHECKWX_API_KEY) {
+                 const errorHtml = `<p class="error-msg">Erreur : Clé API non configurée.</p>`;
+                 airportContainers.forEach(container => {
+                    container.querySelector('.metar-container').innerHTML = `<h4>METAR</h4>${errorHtml}`;
+                    container.querySelector('.taf-container').innerHTML = `<h4>TAF</h4>${errorHtml}`;
+                 });
+                 return;
+            }
+
+            const icaosString = icaos.join(',');
+            const headers = { 'X-API-Key': CHECKWX_API_KEY };
+
+            // Affiche "Chargement..." partout
+            airportContainers.forEach(container => {
+                container.querySelector('.metar-container').innerHTML = '<h4>METAR</h4><p>Chargement...</p>';
+                container.querySelector('.taf-container').innerHTML = '<h4>TAF</h4><p>Chargement...</p>';
+            });
+
+            try {
+                // Fait les 2 appels groupés
+                const [metarResponse, tafResponse] = await Promise.all([
+                    fetch(`https://api.checkwx.com/metar/${icaosString}`, { headers }),
+                    fetch(`https://api.checkwx.com/taf/${icaosString}`, { headers })
+                ]);
+
+                // Traite les réponses et les stocke dans des objets pour un accès facile
+                const metarsData = await processBatchResponse(metarResponse, icaos);
+                const tafsData = await processBatchResponse(tafResponse, icaos);
+
+                // Distribue les données à chaque section d'aéroport
+                airportContainers.forEach(container => {
+                    const icao = container.dataset.icao;
+                    const metarContainer = container.querySelector('.metar-container');
+                    const tafContainer = container.querySelector('.taf-container');
+
+                    metarContainer.innerHTML = `<h4>METAR</h4>${metarsData[icao] || '<p class="error-msg">Données non disponibles.</p>'}`;
+                    tafContainer.innerHTML = `<h4>TAF</h4>${tafsData[icao] || '<p class="error-msg">Données non disponibles.</p>'}`;
+                    container.dataset.loaded = 'true';
+                });
+
+            } catch (error) {
+                console.error("Erreur globale de fetch météo:", error);
+                const errorHtml = `<p class="error-msg">Erreur de réseau. Vérifiez votre connexion.</p>`;
+                airportContainers.forEach(container => {
+                    container.querySelector('.metar-container').innerHTML = `<h4>METAR</h4>${errorHtml}`;
+                    container.querySelector('.taf-container').innerHTML = `<h4>TAF</h4>${errorHtml}`;
+                });
+            }
+        }
+
+        /**
+         * Fonction utilitaire pour traiter la réponse d'un appel groupé (batch).
+         * @param {Response} response - L'objet réponse du fetch.
+         * @param {string[]} allIcaos - La liste de tous les OACI demandés.
+         * @returns {Object} Un objet où les clés sont les OACI et les valeurs le HTML à afficher.
+         */
+        async function processBatchResponse(response, allIcaos) {
+            const results = {};
+            if (!response.ok) {
+                let errorMessage = `<p class="error-msg">Erreur HTTP ${response.status}</p>`;
+                if (response.status === 429) errorMessage = `<p class="error-msg">Limite de requêtes atteinte (Erreur 429)</p>`;
+                else if (response.status === 401) errorMessage = `<p class="error-msg">Clé API invalide (Erreur 401)</p>`;
+                
+                // Si erreur globale, on l'applique à toutes les clés
+                allIcaos.forEach(icao => results[icao] = errorMessage);
+                return results;
+            }
+            const json = await response.json();
+            if (json.results > 0) {
+                json.data.forEach(item => {
+                    // L'API peut renvoyer 'raw_text' pour METAR/TAF ou juste 'raw' pour d'autres endpoints. On vérifie les deux.
+                    const rawText = item.raw_text || item.raw;
+                    if(rawText) results[item.icao] = `<pre>${rawText}</pre>`;
+                });
+            }
+            return results;
+        }
+
+        /**
+         * Fonction pour rafraîchir la météo d'UN SEUL OACI (pour le bouton individuel).
+         * C'est la solution "hybride".
+         */
+        async function fetchAndDisplaySingleWeather(icao) {
+            const airportContainer = document.getElementById(`notam-container-${icao}`) || document.querySelector(`.airport-section-container[data-icao="${icao}"]`);
+            if (!airportContainer) return;
+            
             const metarContainer = airportContainer.querySelector('.metar-container');
             const tafContainer = airportContainer.querySelector('.taf-container');
-
-            if (!metarContainer || !tafContainer) return;
-
+            
             metarContainer.innerHTML = '<h4>METAR</h4><p>Chargement...</p>';
             tafContainer.innerHTML = '<h4>TAF</h4><p>Chargement...</p>';
-
+            
             if (!CHECKWX_API_KEY) {
-                const errorHtml = `<p class="error-msg">Erreur : Clé API non configurée.</p>`;
+                const errorHtml = `<p class="error-msg">Clé API non configurée.</p>`;
                 metarContainer.innerHTML = `<h4>METAR</h4>${errorHtml}`;
                 tafContainer.innerHTML = `<h4>TAF</h4>${errorHtml}`;
                 return;
             }
-
+            
             const headers = { 'X-API-Key': CHECKWX_API_KEY };
+            
             try {
                 const [metarResponse, tafResponse] = await Promise.all([
                     fetch(`https://api.checkwx.com/metar/${icao}`, { headers }),
                     fetch(`https://api.checkwx.com/taf/${icao}`, { headers })
                 ]);
+                
+                if (metarResponse.ok) {
+                    const metarJson = await metarResponse.json();
+                    metarContainer.innerHTML = `<h4>METAR</h4><pre>${metarJson.results > 0 ? metarJson.data[0] : 'Non disponible.'}</pre>`;
+                } else {
+                     metarContainer.innerHTML = `<h4>METAR</h4><p class="error-msg">Erreur ${metarResponse.status}</p>`;
+                }
 
-                const metarJson = await metarResponse.json();
-                const tafJson = await tafResponse.json();
-
-                const metarDisplay = (metarJson.results > 0) ? metarJson.data[0] : 'METAR non disponible.';
-                const tafDisplay = (tafJson.results > 0) ? tafJson.data[0] : 'TAF non disponible.';
-
-                metarContainer.innerHTML = `<h4>METAR</h4><pre>${metarDisplay}</pre>`;
-                tafContainer.innerHTML = `<h4>TAF</h4><pre>${tafDisplay}</pre>`;
-                airportContainer.dataset.loaded = 'true';
+                if (tafResponse.ok) {
+                    const tafJson = await tafResponse.json();
+                    tafContainer.innerHTML = `<h4>TAF</h4><pre>${tafJson.results > 0 ? tafJson.data[0] : 'Non disponible.'}</pre>`;
+                } else {
+                     tafContainer.innerHTML = `<h4>TAF</h4><p class="error-msg">Erreur ${tafResponse.status}</p>`;
+                }
 
             } catch (error) {
-                const errorHtml = `<p class="error-msg">Une erreur de réseau est survenue.</p>`;
+                console.error("Erreur de fetch pour l'OACI", icao, error);
+                const errorHtml = `<p class="error-msg">Erreur réseau.</p>`;
                 metarContainer.innerHTML = `<h4>METAR</h4>${errorHtml}`;
                 tafContainer.innerHTML = `<h4>TAF</h4>${errorHtml}`;
             }
         }
         
+        /**
+         * Nouvelle fonction pour créer les sections d'aéroports et lancer la récupération groupée.
+         */
+        function renderInitialAirportSections() {
+            const notamDisplay = document.getElementById('notam-display');
+            const predefinedIcaoOrder = ['LFTW', 'LFML', 'LFTH', 'LFMD', 'LFHO', 'LFLU', 'LFMH', 'LFMU', 'LFMP', 'LFMK', 'LFCC', 'LFBD', 'LFBL', 'LFBM', 'LFBP', 'LFKC', 'LFKB', 'LFKJ', 'LFKF', 'LFJR', 'LFAQ', 'LFLX', 'LFSG', 'LFRV'];
+            const icaoToFullName = {
+                'LFTW':'LFTW - NIMES GARONS', 'LFML':'LFML - MARSEILLE PROVENCE', 'LFTH':'LFTH - TOULON HYERES', 
+                'LFMD':'LFMD - CANNES MANDELIEU', 'LFHO':'LFHO - AUBENAS ARDECHE MERIDIONALE', 'LFLU':'LFLU - VALENCE CHABEUIL', 
+                'LFMH':'LFMH - ST ETIENNE BOUTHEON', 'LFMU':'LFMU - BEZIERS VIAS', 'LFMP':'LFMP - PERPIGNAN RIVESALTES', 
+                'LFMK':'LFMK - CARCASSONNE SALVAZA', 'LFCC':'LFCC - CAHORS LALBENQUE', 'LFBD':'LFBD - BORDEAUX MERIGNAC', 
+                'LFBL':'LFBL - LIMOGES BELLEGARDE', 'LFBM':'LFBM - MONT DE MARSAN', 'LFBP':'LFBP - PAU PYRENEES', 
+                'LFKC':'LFKC - CALVI STE CATHERINE', 'LFKB':'LFKB - BASTIA PORETTA', 'LFKJ':'LFKJ - AJACCIO NAPOLEON BONAPARTE', 
+                'LFKF':'LFKF - FIGARI SUD CORSE', 'LFJR':'LFJR - ANGERS LOIRE', 
+                'LFAQ':'LFAQ - ALBERT BRAY', 
+                'LFLX':'LFLX - CHATEAUROUX DEOLS', 'LFSG':'LFSG - EPINAL MIRECOURT', 'LFRV':'LFRV - VANNES GOLFE DU MORBIHAN'
+            };
+            notamDisplay.innerHTML = ''; 
+            predefinedIcaoOrder.forEach((icao) => {
+                const fullName = icaoToFullName[icao] || `${icao} - INCONNU`;
+                const airportContainer = createAirportSectionElement(icao, fullName);
+                notamDisplay.appendChild(airportContainer);
+            });
+            // Lance la récupération groupée pour tous les aéroports qui viennent d'être créés.
+            fetchAndDisplayAllWeather();
+        }
+
+        // --- FIN DU NOUVEAU BLOC DE CODE ---
+
         function setupDropzone(zoneId, fileHandlerFunction) {
             const dropzone = document.getElementById(zoneId);
             if (!dropzone) return;
@@ -1227,34 +1357,24 @@
         
         function handleMapClickForManualAdd(e) {
             if (!isAddingManualCircuit) return;
-
-            // --- PROXIMITY CHECK LOGIC ---
             const clickPoint = gaarMap.latLngToContainerPoint(e.latlng);
-            const proximityThreshold = 20; // Tolerance in pixels.
-
+            const proximityThreshold = 20; 
             for (const circuit of gaarDrawnCircuits) {
                 for (const marker of circuit.markers) {
                     const markerPoint = gaarMap.latLngToContainerPoint(marker.getLatLng());
                     if (clickPoint.distanceTo(markerPoint) < proximityThreshold) {
-                        // The click is close to an existing marker. Open its popup and stop.
                         marker.openPopup();
-                        return; // Exit the function to prevent creating a new point.
+                        return; 
                     }
                 }
             }
-            // --- END OF PROXIMITY CHECK ---
-
-            // If the click was not near any existing marker, proceed to create a new one.
             let activeManualCircuit = gaarDrawnCircuits.find(c => c.isManual && c.isActive);
-
             if (!activeManualCircuit || activeManualCircuit.markers.length >= 3) {
                 if (activeManualCircuit) {
                     activeManualCircuit.isActive = false;
                 }
-                
                 const manualCircuitsCount = gaarDrawnCircuits.filter(c => c.isManual).length;
                 const newCircuitColor = manualCircuitColors[manualCircuitsCount % manualCircuitColors.length];
-                
                 activeManualCircuit = {
                     polygon: null,
                     markers: [],
@@ -1265,15 +1385,12 @@
                 };
                 gaarDrawnCircuits.push(activeManualCircuit);
             }
-
             const circuitIndex = gaarDrawnCircuits.indexOf(activeManualCircuit);
             const cityIndex = activeManualCircuit.markers.length;
             const pointName = `Point ${cityIndex + 1}`;
             const newMarker = createGaarMarker(e.latlng, pointName, circuitIndex, cityIndex, activeManualCircuit.color);
-            
             activeManualCircuit.markers.push(newMarker);
             activeManualCircuit.cityNames.push(pointName);
-            
             updatePolygon(circuitIndex);
         }
 
@@ -1294,7 +1411,6 @@
             document.getElementById('gaar-map-section').style.display = 'none';
             document.getElementById('pdf-load-gaar-btn').style.display = 'inline-block';
             document.getElementById('pdf-reset-gaar-btn').style.display = 'none';
-            
             if (gaarMap) {
                 clearAllCircuits();
                 document.getElementById('gaar-status').textContent = 'En attente du chargement du diagramme GAAR...';
@@ -1308,7 +1424,6 @@
             const btn = document.getElementById('add-manual-circuit-btn');
             const mapContainer = document.getElementById('gaar-map-display');
             isAddingManualCircuit = !isAddingManualCircuit;
-
             if (isAddingManualCircuit) {
                 btn.classList.add('active');
                 btn.textContent = "Terminer l'ajout (cliquez ici)";
@@ -1355,7 +1470,6 @@
                 initGaarMap(); 
                 document.getElementById('gaar-status').textContent = 'Prêt pour l\'ajout manuel de circuits.';
                 mapSection.scrollIntoView({ behavior: 'smooth' });
-                // Afficher le bouton de suppression
                 document.getElementById('pdf-reset-gaar-btn').style.display = 'inline-block';
                 document.getElementById('pdf-load-gaar-btn').style.display = 'none';
             });
@@ -1581,18 +1695,6 @@
         function initializeNotamParser() { 
             const notamInput = document.getElementById('notam-input'), notamDisplay = document.getElementById('notam-display'), notamSection = document.querySelector('.notam-section');
             const filterButtons = document.querySelectorAll('.filter-action'), showAllButtons = document.querySelectorAll('.show-all-action'), savePdfButtons = document.querySelectorAll('.save-pdf-action');
-            const predefinedIcaoOrder = ['LFTW', 'LFML', 'LFTH', 'LFMD', 'LFHO', 'LFLU', 'LFMH', 'LFMU', 'LFMP', 'LFMK', 'LFCC', 'LFBD', 'LFBL', 'LFBM', 'LFBP', 'LFKC', 'LFKB', 'LFKJ', 'LFKF', 'LFJR', 'LFAQ', 'LFLX', 'LFSG', 'LFRV'];
-            const icaoToFullName = {
-                'LFTW':'LFTW - NIMES GARONS', 'LFML':'LFML - MARSEILLE PROVENCE', 'LFTH':'LFTH - TOULON HYERES', 
-                'LFMD':'LFMD - CANNES MANDELIEU', 'LFHO':'LFHO - AUBENAS ARDECHE MERIDIONALE', 'LFLU':'LFLU - VALENCE CHABEUIL', 
-                'LFMH':'LFMH - ST ETIENNE BOUTHEON', 'LFMU':'LFMU - BEZIERS VIAS', 'LFMP':'LFMP - PERPIGNAN RIVESALTES', 
-                'LFMK':'LFMK - CARCASSONNE SALVAZA', 'LFCC':'LFCC - CAHORS LALBENQUE', 'LFBD':'LFBD - BORDEAUX MERIGNAC', 
-                'LFBL':'LFBL - LIMOGES BELLEGARDE', 'LFBM':'LFBM - MONT DE MARSAN', 'LFBP':'LFBP - PAU PYRENEES', 
-                'LFKC':'LFKC - CALVI STE CATHERINE', 'LFKB':'LFKB - BASTIA PORETTA', 'LFKJ':'LFKJ - AJACCIO NAPOLEON BONAPARTE', 
-                'LFKF':'LFKF - FIGARI SUD CORSE', 'LFJR':'LFJR - ANGERS LOIRE', 
-                'LFAQ':'LFAQ - ALBERT BRAY', 
-                'LFLX':'LFLX - CHATEAUROUX DEOLS', 'LFSG':'LFSG - EPINAL MIRECOURT', 'LFRV':'LFRV - VANNES GOLFE DU MORBIHAN'
-            };
             const keywordsToFilter = [
                 'aerodrome administration', 'animal', 'avgas 100ll', 'crane', 'dme', 'drill', 
                 'fato', 'grf', 'handling', 'lights', 'model flying', 'night parachuting', 
@@ -1634,16 +1736,6 @@
                 });
             }
 
-            function renderInitialAirportSections() {
-                notamDisplay.innerHTML = ''; 
-                predefinedIcaoOrder.forEach(async (icao) => {
-                    const fullName = icaoToFullName[icao] || `${icao} - INCONNU`;
-                    const airportContainer = createAirportSectionElement(icao, fullName);
-                    notamDisplay.appendChild(airportContainer);
-                    await fetchAndDisplayWeather(icao, airportContainer);
-                });
-            }
-
             function applyLiveFilters() {
                 const isDateFilterActive = document.getElementById('notam-date-filter-cb').checked;
                 const activeKeywords = Array.from(document.querySelectorAll('#keyword-filter-list input:checked')).map(cb => cb.dataset.keyword);
@@ -1675,6 +1767,17 @@
 
             window.parseAndDisplayNotams = function(savedState = null) {
                 const rawText = notamInput.value; if (!rawText.trim()) return;
+                const icaoToFullName = {
+                    'LFTW':'LFTW - NIMES GARONS', 'LFML':'LFML - MARSEILLE PROVENCE', 'LFTH':'LFTH - TOULON HYERES', 
+                    'LFMD':'LFMD - CANNES MANDELIEU', 'LFHO':'LFHO - AUBENAS ARDECHE MERIDIONALE', 'LFLU':'LFLU - VALENCE CHABEUIL', 
+                    'LFMH':'LFMH - ST ETIENNE BOUTHEON', 'LFMU':'LFMU - BEZIERS VIAS', 'LFMP':'LFMP - PERPIGNAN RIVESALTES', 
+                    'LFMK':'LFMK - CARCASSONNE SALVAZA', 'LFCC':'LFCC - CAHORS LALBENQUE', 'LFBD':'LFBD - BORDEAUX MERIGNAC', 
+                    'LFBL':'LFBL - LIMOGES BELLEGARDE', 'LFBM':'LFBM - MONT DE MARSAN', 'LFBP':'LFBP - PAU PYRENEES', 
+                    'LFKC':'LFKC - CALVI STE CATHERINE', 'LFKB':'LFKB - BASTIA PORETTA', 'LFKJ':'LFKJ - AJACCIO NAPOLEON BONAPARTE', 
+                    'LFKF':'LFKF - FIGARI SUD CORSE', 'LFJR':'LFJR - ANGERS LOIRE', 
+                    'LFAQ':'LFAQ - ALBERT BRAY', 
+                    'LFLX':'LFLX - CHATEAUROUX DEOLS', 'LFSG':'LFSG - EPINAL MIRECOURT', 'LFRV':'LFRV - VANNES GOLFE DU MORBIHAN'
+                };
                 const airportSections = rawText.split(/\n\s*(?=LF[A-Z]{2}\s+-\s+)/);
                 const airportsData = {};
                 airportSections.forEach(section => {
@@ -1689,15 +1792,12 @@
                     const icao = airportName.split(' ')[0];
                     let container = document.getElementById(`notam-container-${icao}`);
                     if (!container) {
-                        // This case is for airports from PDF not in predefined list. We create their section.
                         const fullName = icaoToFullName[icao] || airportName;
                         container = createAirportSectionElement(icao, fullName);
                         notamDisplay.appendChild(container);
-                        fetchAndDisplayWeather(icao, container); 
+                        fetchAndDisplaySingleWeather(icao); 
                     }
-                    // Clear only old notam items, not the whole container
                     container.querySelectorAll('.notam-item').forEach(item => item.remove());
-                    // Add new notam items after the H3 title and weather containers
                     const tafContainer = container.querySelector('.taf-container');
                     (airportsData[airportName] || []).forEach(notamText => {
                         const notamEl = createNotamItemElement(notamText, icao);
@@ -1739,7 +1839,7 @@
             }
             
             setupKeywordFilterDropdown();
-            renderInitialAirportSections(); // This now fetches weather too.
+            renderInitialAirportSections(); // This now creates containers and calls the batch weather fetch.
             (document.getElementById('notam-parse-btn') || {}).addEventListener('click', () => window.parseAndDisplayNotams());
             filterButtons.forEach(b => b.addEventListener('click', applySelectionFilter));
             showAllButtons.forEach(b => b.addEventListener('click', resetSelectionFilter));
@@ -1761,7 +1861,7 @@
                 if (t.matches('.metar-taf-refresh-btn')) {
                     const airportContainer = t.closest('.airport-section-container');
                     const icao = airportContainer.dataset.icao;
-                    if(icao) await fetchAndDisplayWeather(icao, airportContainer);
+                    if(icao) await fetchAndDisplaySingleWeather(icao);
                 }
 
                 const mark = t.closest('mark.highlighted-text'); if(mark && !window.getSelection().toString()) { const p = mark.parentNode; while(mark.firstChild) p.insertBefore(mark.firstChild, mark); p.removeChild(mark); p.normalize(); }
@@ -1795,7 +1895,7 @@
                 icaos.forEach(icao => {
                     const airportContainer = createAirportSectionElement(icao, icao);
                     display.appendChild(airportContainer);
-                    fetchAndDisplayWeather(icao, airportContainer);
+                    fetchAndDisplaySingleWeather(icao);
                 });
             };
             fetchBtn.addEventListener('click', handleFetch);
