@@ -140,6 +140,13 @@
         }
 
         .controles, .pdf-controls { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; margin-bottom: 20px; gap: 15px; }
+        
+        .controls-panel { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; margin-bottom: 20px; gap: 10px; }
+        .control-group { display: flex; gap: 10px; padding: 10px; background-color: #e4e6eb; border-radius: 12px; }
+        .control-btn { padding: 12px 20px; font-size: 1em; font-weight: 600; border: none; border-radius: 8px; background-color: #ffffff; color: #333; cursor: pointer; transition: background-color 0.2s, color 0.2s, transform 0.1s; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .control-btn:hover { background-color: #dcdfe4; }
+        .control-btn.active { background-color: #007aff; color: white; transform: scale(1.05); }
+
         select, textarea, button, input { font-size: 1em; padding: 10px; border-radius: 5px; border: 1px solid #ccc; }
         textarea { width: 100%; min-height: 200px; box-sizing: border-box; font-family: monospace; }
         .info-carte, .pdf-info { margin-bottom: 20px; font-size: 1.1em; font-weight: bold; text-align: center; }
@@ -397,7 +404,7 @@
         <div class="page-header-background"></div>
         <h1 id="main-title">Briefing Fdf</h1>
         <p id="current-time-display"></p>
-        <p style="position: relative; z-index: 2; text-align: center; color: #333; font-size: 1em; margin-top: -25px; margin-bottom: 30px;">v1.1</p>
+        <p style="position: relative; z-index: 2; text-align: center; color: #333; font-size: 1em; margin-top: -25px; margin-bottom: 30px;">v1.2</p>
     </div>
 
     <div class="session-management"><h3>Gestion de la Session</h3><button id="save-session-btn" class="link-button" style="background-color: #28a745;">Sauvegarder la session</button><button id="clear-session-btn" class="link-button" style="background-color: var(--sc-red);">Effacer la sauvegarde</button><a href="https://cncasc-app.fr/" target="_blank" class="link-button" style="background-color: #3498db;">CNCASC Login</a><p id="session-status"></p></div>
@@ -452,7 +459,24 @@
     
     <div class="map-section"><h2>Carte SIGWX France (TEMSI)</h2><div class="controles"><label for="temsi-select">Choisir une échéance :</label><select id="temsi-select"></select></div><p class="info-carte" id="temsi-info-carte">Chargement...</p><div class="carte-container"><iframe id="temsi-frame" title="Carte SIGWX France"></iframe></div></div>
     
-    <div class="map-section"><h2>Météo Dynamique (Windy)</h2><div class="carte-container"><iframe title="Carte Windy" width="100%" height="100%" src="https://embed.windy.com/embed2.html?lat=46.756&lon=2.49&detailLat=43.530&detailLon=4.912&width=900&height=750&zoom=5&level=surface&overlay=wind&product=ecmwf&menu=&message=&marker=&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=kt&metricTemp=%C2%B0C&radarRange=-1" frameborder="0" allowfullscreen></iframe></div></div>
+    <div class="map-section">
+        <h2>Windy</h2>
+        <div class="controls-panel">
+            <div class="control-group">
+                <button class="control-btn model-btn active" data-model="arome">AROME (France)</button>
+                <button class="control-btn model-btn" data-model="ecmwf">ECMWF (Europe)</button>
+            </div>
+            <div class="control-group">
+                <button class="control-btn overlay-btn active" data-overlay="wind" data-product-source="model">Vent</button>
+                <button class="control-btn overlay-btn" data-overlay="drought40" data-product="drought">Sécheresse</button>
+                <button class="control-btn overlay-btn" data-overlay="radar" data-product="radar">Radar météo</button>
+                <button class="control-btn overlay-btn" data-overlay="satellite" data-product="satellite">Satellite</button>
+            </div>
+        </div>
+        <div class="carte-container">
+            <iframe id="windy-iframe" title="Carte Windy" src="https://embed.windy.com/embed.html?type=map&location=coordinates&metricRain=mm&metricTemp=°C&metricWind=kt&zoom=6&overlay=wind&product=arome&level=surface&lat=46.934&lon=2.49&message=true" frameborder="0"></iframe>
+        </div>
+    </div>
 
     <div id="notam-pdf-dropzone" class="pdf-section dropzone">
         <h2>Extraire les NOTAMs d'un PDF</h2>
@@ -632,6 +656,7 @@
             window.scrollTo(0, 0);
             initializePageTitle();
             initializeTemsi();
+            initializeWindy();
             initializeInteractivePdfViewers();
             initializeSupAipLoader();
             initializeNotamParser(); 
@@ -641,6 +666,57 @@
             initializeHelpTooltips();
             initializeTdfViewer();
             document.getElementById('add-manual-circuit-btn').addEventListener('click', toggleManualCircuitMode);
+        }
+
+        function initializeWindy() {
+            const iframe = document.getElementById('windy-iframe');
+            if (!iframe) return; 
+
+            const modelButtons = document.querySelectorAll('.model-btn');
+            const overlayButtons = document.querySelectorAll('.overlay-btn');
+
+            function updateIframeParams(paramsToUpdate) {
+                let currentSrc = iframe.src;
+                for (const param in paramsToUpdate) {
+                    const value = paramsToUpdate[param];
+                    const regex = new RegExp(`(&${param}=)[^&]*`);
+                    if (currentSrc.match(regex)) {
+                        currentSrc = currentSrc.replace(regex, `$1${value}`);
+                    } else {
+                        currentSrc = `${currentSrc}&${param}=${value}`;
+                    }
+                }
+                iframe.src = currentSrc;
+            }
+
+            modelButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    modelButtons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                    updateIframeParams({
+                        product: this.dataset.model,
+                        overlay: 'wind'
+                    });
+                    overlayButtons.forEach(btn => btn.classList.remove('active'));
+                    document.querySelector('.overlay-btn[data-overlay="wind"]').classList.add('active');
+                });
+            });
+
+            overlayButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    overlayButtons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                    const newOverlay = this.dataset.overlay;
+                    let newProduct = this.dataset.product;
+                    if (this.dataset.productSource === 'model') {
+                        newProduct = document.querySelector('.model-btn.active').dataset.model;
+                    }
+                    updateIframeParams({
+                        overlay: newOverlay,
+                        product: newProduct
+                    });
+                });
+            });
         }
 
         function initializeTdfViewer() {
@@ -1008,9 +1084,11 @@
                         const finalCities = [];
                         for (let i = 0; i < cities.length; i++) {
                             const city = cities[i].toUpperCase();
+                            // MODIFICATION ICI POUR CORRIGER SALON
                             if (city === 'AIX') finalCities.push('AIX EN PROVENCE');
+                            else if (city === 'SALON') finalCities.push('SALON DE PROVENCE');
                             else if (city === 'MRS') finalCities.push('MARSEILLE');
-                            else if (city === 'VITROLLES') finalCities.push('Vitrolles, Bouches-du-Rhône'); // Correction pour Vitrolles
+                            else if (city === 'VITROLLES') finalCities.push('Vitrolles, Bouches-du-Rhône');
                             else if (city === 'SAINT' && cities[i + 1]?.toUpperCase() === 'FLORENT') {
                                 finalCities.push('SAINT FLORENT');
                                 i++; 
