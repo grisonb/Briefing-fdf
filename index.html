@@ -20,6 +20,12 @@
             --light-bg: #f4f6f9;
             --dark-text: #333;
             --border-color: #e0e0e0;
+            --nav-height: 40px;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            scroll-padding-top: var(--nav-height); 
         }
 
         body {
@@ -32,7 +38,113 @@
             color: var(--dark-text);
             background-color: var(--light-bg);
         }
+
+        .main-nav {
+            background-color: var(--sc-blue);
+            color: white;
+            padding: 0 20px;
+            width: 100%;
+            height: var(--nav-height);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 2px solid #ccc;
+            border-top: none;
+            border-radius: 0 0 10px 10px;
+        }
+
+        .nav-links {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            overflow-x: auto; 
+        }
+
+        .nav-links li a {
+            display: block;
+            color: white;
+            text-decoration: none;
+            padding: 10px 12px;
+            font-weight: 600;
+            font-size: 0.85em;
+            transition: opacity 0.2s;
+            white-space: nowrap;
+            opacity: 0.8;
+        }
+
+        .nav-links li a:hover {
+            opacity: 1;
+        }
         
+        #gaar-map-nav-link {
+            display: none;
+        }
+        
+        .nav-toggle { display: none; }
+
+        @media (max-width: 980px) {
+            .nav-toggle {
+                display: block;
+                background: none;
+                border: none;
+                color: white;
+                font-size: 1.8em;
+                cursor: pointer;
+                position: absolute;
+                right: 15px;
+            }
+            .nav-links {
+                display: none;
+                position: absolute;
+                top: var(--nav-height);
+                left: 0;
+                width: 100%;
+                background-color: var(--sc-blue);
+                flex-direction: column;
+                padding: 10px 0;
+            }
+            .main-nav.nav-open .nav-links {
+                display: flex;
+            }
+            .nav-links li a {
+                padding: 12px 20px;
+                border-bottom: 1px solid rgba(255,255,255,0.1);
+            }
+        }
+
+        #back-to-top-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: none;
+            width: 50px;
+            height: 50px;
+            background-color: var(--sc-red);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 24px;
+            line-height: 50px;
+            text-align: center;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            z-index: 999;
+            opacity: 0;
+            transition: opacity 0.3s, transform 0.3s;
+        }
+        #back-to-top-btn.visible {
+            display: block;
+            opacity: 1;
+        }
+        #back-to-top-btn:hover {
+            transform: scale(1.1);
+        }
+
         .page-header {
             width: 100%;
             padding: 20px 0 50px 0;
@@ -95,6 +207,7 @@
         }
         .session-management h3 { margin-top: 0; color: white; }
         .session-management .link-button { margin: 5px 10px; font-size: 1em; padding: 10px 20px; }
+        .session-management .link-button:disabled { background-color: #95a5a6; cursor: not-allowed; opacity: 0.7; }
         #session-status { font-style: italic; color: white; opacity: 0.9; margin-top: 15px; font-weight: bold; }
         
         .map-section, .pdf-section, .notam-section {
@@ -141,11 +254,71 @@
 
         .controles, .pdf-controls { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; margin-bottom: 20px; gap: 15px; }
         
-        .controls-panel { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; margin-bottom: 20px; gap: 10px; }
-        .control-group { display: flex; gap: 10px; padding: 10px; background-color: #e4e6eb; border-radius: 12px; }
-        .control-btn { padding: 12px 20px; font-size: 1em; font-weight: 600; border: none; border-radius: 8px; background-color: #ffffff; color: #333; cursor: pointer; transition: background-color 0.2s, color 0.2s, transform 0.1s; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .control-btn:hover { background-color: #dcdfe4; }
+        .windy-controls-container {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 401;
+        }
+        #windy-controls-toggle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--sc-red);
+            color: white;
+            border: none;
+            font-size: 1.5em;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .controls-panel { 
+            display: none;
+            position: absolute;
+            top: 50px;
+            left: 0;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 8px;
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 10px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            width: max-content;
+        }
+        .windy-controls-container.open .controls-panel {
+            display: flex;
+        }
+        
+        .control-group { 
+            display: flex; 
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center; 
+            gap: 6px; 
+            padding: 6px; 
+            background-color: #e4e6eb; 
+            border-radius: 8px; 
+        }
+        .control-btn { 
+            padding: 6px 12px;
+            font-size: 0.85em;
+            font-weight: 600; 
+            border: none; 
+            border-radius: 6px; 
+            background-color: #ffffff; 
+            color: #333; 
+            cursor: pointer; 
+            transition: all 0.2s ease; 
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1); 
+        }
+        .control-btn:hover:not(:disabled) { background-color: #dcdfe4; }
         .control-btn.active { background-color: #007aff; color: white; transform: scale(1.05); }
+        .control-btn:disabled { background-color: #f4f4f4; color: #aaa; cursor: not-allowed; border-color: #e0e0e0; }
+        .control-label { font-size: 1em; font-weight: bold; color: var(--sc-blue); padding-right: 5px; }
+
 
         select, textarea, button, input { font-size: 1em; padding: 10px; border-radius: 5px; border: 1px solid #ccc; }
         textarea { width: 100%; min-height: 200px; box-sizing: border-box; font-family: monospace; }
@@ -400,16 +573,38 @@
     </style>
 </head>
 <body>
+    <nav class="main-nav" id="main-nav">
+        <button class="nav-toggle" id="nav-toggle" aria-label="Menu">&#9776;</button>
+        <ul class="nav-links" id="nav-links">
+            <li><a href="#fds-section">FDS</a></li>
+            <li><a href="#gaar-section">GAAR</a></li>
+            <li id="gaar-map-nav-link"><a href="#gaar-map-section">Carte GAAR</a></li>
+            <li><a href="#temsi-section">TEMSI</a></li>
+            <li><a href="#windy-section">WINDY</a></li>
+            <li><a href="#notam-section">NOTAMs</a></li>
+            <li><a href="#sup-aip-section">SUP AIP</a></li>
+            <li><a href="#tdf-section">TDF 2025</a></li>
+            <li><a href="#pelican-section">Pélicandromes</a></li>
+            <li><a href="#synergi-section">SYNERGI</a></li>
+        </ul>
+    </nav>
+
     <div class="page-header">
         <div class="page-header-background"></div>
         <h1 id="main-title">Briefing Fdf</h1>
         <p id="current-time-display"></p>
-        <p style="position: relative; z-index: 2; text-align: center; color: #333; font-size: 1em; margin-top: -25px; margin-bottom: 30px;">v1.2</p>
+        <p style="position: relative; z-index: 2; text-align: center; color: #333; font-size: 1em; margin-top: -25px; margin-bottom: 30px;">v2.0</p>
     </div>
 
-    <div class="session-management"><h3>Gestion de la Session</h3><button id="save-session-btn" class="link-button" style="background-color: #28a745;">Sauvegarder la session</button><button id="clear-session-btn" class="link-button" style="background-color: var(--sc-red);">Effacer la sauvegarde</button><a href="https://cncasc-app.fr/" target="_blank" class="link-button" style="background-color: #3498db;">CNCASC Login</a><p id="session-status"></p></div>
+    <div class="session-management" id="session-section">
+        <h3>Gestion de la Session</h3>
+        <button id="save-session-btn" class="link-button" style="background-color: #28a745;">Sauvegarder</button>
+        <button id="clear-session-btn" class="link-button" style="background-color: var(--sc-red);">Effacer</button>
+        <a href="https://cncasc-app.fr/" target="_blank" class="link-button" style="background-color: #3498db;">CNCASC</a>
+        <p id="session-status"></p>
+    </div>
 
-    <div id="fds-dropzone" class="pdf-section dropzone">
+    <div id="fds-section" class="pdf-section dropzone">
         <h2>Feuille de Service / Dispo Avions</h2>
         <div class="pdf-controls">
             <button id="pdf-load-fds-btn" class="link-button" style="background-color: #2980b9;">Charger la Feuille de Service</button>
@@ -431,7 +626,7 @@
         </div>
     </div>
 
-    <div id="gaar-dropzone" class="pdf-section dropzone">
+    <div id="gaar-section" class="pdf-section dropzone">
         <h2>Diagramme GAAR</h2>
         <div class="pdf-controls">
             <button id="pdf-load-gaar-btn" class="link-button" style="background-color: #16a085;">Charger le Diagramme GAAR</button>
@@ -457,24 +652,35 @@
         </div>
     </div>
     
-    <div class="map-section"><h2>Carte SIGWX France (TEMSI)</h2><div class="controles"><label for="temsi-select">Choisir une échéance :</label><select id="temsi-select"></select></div><p class="info-carte" id="temsi-info-carte">Chargement...</p><div class="carte-container"><iframe id="temsi-frame" title="Carte SIGWX France"></iframe></div></div>
+    <div class="map-section" id="temsi-section"><h2>Carte SIGWX France (TEMSI)</h2><div class="controles"><label for="temsi-select">Choisir une échéance :</label><select id="temsi-select"></select></div><p class="info-carte" id="temsi-info-carte">Chargement...</p><div class="carte-container"><iframe id="temsi-frame" title="Carte SIGWX France"></iframe></div></div>
     
-    <div class="map-section">
-        <h2>Windy</h2>
-        <div class="controls-panel">
-            <div class="control-group">
-                <button class="control-btn model-btn active" data-model="arome">AROME (France)</button>
-                <button class="control-btn model-btn" data-model="ecmwf">ECMWF (Europe)</button>
+    <div class="map-section" id="windy-section">
+        <h2>WINDY</h2>
+        <div id="windy-container" class="carte-container">
+            <div class="windy-controls-container" id="windy-controls-container">
+                <button id="windy-controls-toggle" title="Afficher les contrôles Windy">&#9881;</button>
+                <div class="controls-panel">
+                    <div class="control-group">
+                        <button class="control-btn overlay-btn" data-overlay="drought40" data-product="drought">Sécheresse</button>
+                        <button class="control-btn overlay-btn" data-overlay="radar" data-product="radar">Radar</button>
+                        <button class="control-btn overlay-btn" data-overlay="satellite" data-product="satellite">Satellite</button>
+                        <button class="control-btn overlay-btn" data-overlay="thunder" data-product="ecmwf">Orages</button>
+                    </div>
+                    <div class="control-group">
+                        <button class="control-btn model-btn active" data-model="arome">AROME</button>
+                        <button class="control-btn model-btn" data-model="ecmwf">ECMWF</button>
+                    </div>
+                    <div class="control-group">
+                        <span class="control-label">Vent:</span>
+                        <button class="control-btn altitude-btn active" data-level="surface">SFC</button>
+                        <button class="control-btn altitude-btn" data-level="100m">330ft</button>
+                        <button class="control-btn altitude-btn" data-level="925h">2500ft</button>
+                        <button class="control-btn altitude-btn" data-level="850h">5000ft</button>
+                        <button class="control-btn altitude-btn" data-level="700h">FL100</button>
+                    </div>
+                </div>
             </div>
-            <div class="control-group">
-                <button class="control-btn overlay-btn active" data-overlay="wind" data-product-source="model">Vent</button>
-                <button class="control-btn overlay-btn" data-overlay="drought40" data-product="drought">Sécheresse</button>
-                <button class="control-btn overlay-btn" data-overlay="radar" data-product="radar">Radar météo</button>
-                <button class="control-btn overlay-btn" data-overlay="satellite" data-product="satellite">Satellite</button>
-            </div>
-        </div>
-        <div class="carte-container">
-            <iframe id="windy-iframe" title="Carte Windy" src="https://embed.windy.com/embed.html?type=map&location=coordinates&metricRain=mm&metricTemp=°C&metricWind=kt&zoom=6&overlay=wind&product=arome&level=surface&lat=46.934&lon=2.49&message=true" frameborder="0"></iframe>
+            <!-- L'iframe sera insérée ici par JavaScript -->
         </div>
     </div>
 
@@ -512,7 +718,7 @@
         <p id="pdf-info-notam" class="pdf-info"></p>
     </div>
     
-    <div class="notam-section">
+    <div class="notam-section" id="notam-section">
         <h2>Analyse des NOTAMs et Météo</h2>
         <div id="notam-input-area" style="display: none;">
             <p style="text-align:center; margin-bottom:15px;">Chargez un PDF de NOTAMs pour extraire automatiquement le texte, ou collez un bulletin manuellement.</p>
@@ -562,7 +768,7 @@
         </div>
     </div>
     
-    <div id="sup-aip-dropzone" class="pdf-section dropzone">
+    <div id="sup-aip-section" class="pdf-section dropzone">
         <h2>SUP AIP</h2>
         <div id="sup-aip-controls" class="pdf-controls">
             <a id="foreflight-btn" href="foreflightmobile://" class="link-button" style="background-color: #007aff;">Ouvrir ForeFlight</a>
@@ -573,7 +779,7 @@
         <input type="file" id="pdf-input-sup-aip" accept="application/pdf" multiple>
     </div>
 
-    <div class="map-section">
+    <div class="map-section" id="tdf-section">
         <h2>Tour de France 2025</h2>
         <div class="controles" style="justify-content: center; gap: 15px;">
             <label for="tdf-stage-selector" style="font-weight: bold;">Choisir une étape :</label>
@@ -588,9 +794,14 @@
         </div>
     </div>
 
-    <div class="map-section"><h2>Pélicandromes</h2><div style="text-align:center;"><a href="https://cncasc-app.fr/pages/pelicandrome.php" target="_blank" class="link-button" style="background-color:#3498db;">Ouvrir Pélicandromes</a></div></div>
+    <div class="map-section" id="pelican-section">
+        <h2>Pélicandromes</h2>
+        <div style="text-align:center;">
+            <a href="https://cncasc-app.fr/pages/pelicandrome.php" target="_blank" class="link-button" style="background-color:#3498db;">Ouvrir Pélicandromes</a>
+        </div>
+    </div>
     
-    <div class="map-section">
+    <div class="map-section" id="synergi-section">
         <h2>SYNERGI / CNCASC</h2>
         <div class="controles">
             <a href="https://synergi2.dgscgc.interieur.gouv.fr/evenements?forInit=false&statusEvent=PUBLIC" target="_blank" class="link-button" style="background-color:#16a085;">Ouvrir SYNERGI</a>
@@ -602,6 +813,8 @@
         <button id="save-session-btn-bottom" class="link-button" style="background-color: #28a745;">Sauvegarder la session</button>
     </div>
     
+    <button id="back-to-top-btn" title="Retour en haut">&#8679;</button>
+
     <footer>Données : Météo-France, SIA, Windy.com, CheckWX.com. Page non commerciale, à usage personnel.</footer>
     
     <script>
@@ -640,7 +853,8 @@
         let gaarMap = null;
         let gaarDrawnCircuits = [];
         let isAddingManualCircuit = false;
-        const manualCircuitColors = ['#ff00ff', '#00ffff', '#ff8c00', '#00ff00', '#ff1493']; // Magenta, Cyan, Orange, Vert, Rose
+        let isSavingSession = false;
+        const manualCircuitColors = ['#ff00ff', '#00ffff', '#ff8c00', '#00ff00', '#ff1493'];
 
         // --- CORE INITIALIZATION ---
         function waitForPdfJsAndInitialize() {
@@ -654,6 +868,7 @@
         
         function initializePage() {
             window.scrollTo(0, 0);
+            initializeNavigation(); 
             initializePageTitle();
             initializeTemsi();
             initializeWindy();
@@ -667,56 +882,192 @@
             initializeTdfViewer();
             document.getElementById('add-manual-circuit-btn').addEventListener('click', toggleManualCircuitMode);
         }
+        
+        function initializeNavigation() {
+            const nav = document.getElementById('main-nav');
+            const navToggle = document.getElementById('nav-toggle');
+            const navLinksContainer = document.getElementById('nav-links');
+            const navLinks = navLinksContainer.querySelectorAll('a');
+            const backToTopBtn = document.getElementById('back-to-top-btn');
+
+            navToggle.addEventListener('click', () => {
+                nav.classList.toggle('nav-open');
+            });
+
+            navLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    nav.classList.remove('nav-open');
+                    
+                    const targetId = link.getAttribute('href').substring(1);
+                    const targetSection = document.getElementById(targetId);
+                    if (!targetSection) return;
+
+                    let customTarget = targetSection;
+                    if (targetId === 'windy-section' || targetId === 'temsi-section') {
+                        customTarget = document.getElementById(targetId).querySelector('.carte-container');
+                    } else if (targetId === 'fds-section') {
+                        const pdfContainer = document.getElementById('pdf-interactive-container-fds');
+                        if (pdfContainer.style.display !== 'none') customTarget = pdfContainer;
+                    } else if (targetId === 'gaar-section') {
+                        const pdfContainer = document.getElementById('pdf-interactive-container-gaar');
+                        if (pdfContainer.style.display !== 'none') customTarget = pdfContainer;
+                    }
+
+                    if (customTarget) {
+                        e.preventDefault();
+                        const targetPosition = customTarget.getBoundingClientRect().top + window.pageYOffset - (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--nav-height')) || 40);
+                        window.scrollTo({ top: targetPosition, behavior: 'smooth' });
+                    }
+                });
+            });
+
+            backToTopBtn.addEventListener('click', () => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > 300) {
+                    backToTopBtn.classList.add('visible');
+                } else {
+                    backToTopBtn.classList.remove('visible');
+                }
+            }, { passive: true });
+        }
 
         function initializeWindy() {
-            const iframe = document.getElementById('windy-iframe');
-            if (!iframe) return; 
+            const container = document.getElementById('windy-container');
+            const controlsContainer = document.getElementById('windy-controls-container');
+            const controlsToggle = document.getElementById('windy-controls-toggle');
+            const controlsPanel = controlsContainer.querySelector('.controls-panel');
+            
+            const modelButtons = controlsPanel.querySelectorAll('.model-btn');
+            const altitudeButtons = controlsPanel.querySelectorAll('.altitude-btn');
+            const overlayButtons = controlsPanel.querySelectorAll('.overlay-btn');
 
-            const modelButtons = document.querySelectorAll('.model-btn');
-            const overlayButtons = document.querySelectorAll('.overlay-btn');
+            controlsToggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                controlsContainer.classList.toggle('open');
+            });
 
-            function updateIframeParams(paramsToUpdate) {
-                let currentSrc = iframe.src;
-                for (const param in paramsToUpdate) {
-                    const value = paramsToUpdate[param];
-                    const regex = new RegExp(`(&${param}=)[^&]*`);
-                    if (currentSrc.match(regex)) {
-                        currentSrc = currentSrc.replace(regex, `$1${value}`);
-                    } else {
-                        currentSrc = `${currentSrc}&${param}=${value}`;
-                    }
+            document.addEventListener('click', (e) => {
+                if (!controlsContainer.contains(e.target)) {
+                    controlsContainer.classList.remove('open');
                 }
-                iframe.src = currentSrc;
+            });
+
+            controlsPanel.addEventListener('click', (e) => {
+                if (e.target.matches('.overlay-btn')) {
+                    setTimeout(() => controlsContainer.classList.remove('open'), 150);
+                }
+            });
+
+            function renderWindyMap() {
+                const activeModel = controlsPanel.querySelector('.model-btn.active').dataset.model;
+                const activeAltitudeBtn = controlsPanel.querySelector('.altitude-btn.active');
+                const activeOverlayBtn = controlsPanel.querySelector('.overlay-btn.active');
+                
+                const baseURL = "https://embed.windy.com/embed.html?type=map&location=coordinates&metricRain=mm&metricTemp=°C&metricWind=kt&zoom=6&lat=46.934&lon=2.49";
+                let params = "";
+
+                if (activeAltitudeBtn) {
+                    params = `&overlay=wind&product=${activeModel}&level=${activeAltitudeBtn.dataset.level}`;
+                } else if (activeOverlayBtn) {
+                    const product = activeOverlayBtn.dataset.product || activeModel;
+                    params = `&overlay=${activeOverlayBtn.dataset.overlay}&product=${product}`;
+                }
+                
+                const newSrc = baseURL + params;
+                
+                let iframe = container.querySelector('iframe');
+                if (!iframe) {
+                    iframe = document.createElement('iframe');
+                    iframe.title = "Carte Windy";
+                    container.appendChild(iframe);
+                }
+                iframe.src = newSrc;
+            }
+
+            function manageAltitudeButtonsState(selectedModel) {
+                const isArome = selectedModel === 'arome';
+                let needsReset = false;
+
+                altitudeButtons.forEach(btn => {
+                    const isInvalidForArome = isArome && btn.dataset.level !== 'surface';
+                    btn.disabled = isInvalidForArome;
+                    if (btn.classList.contains('active') && btn.disabled) {
+                        btn.classList.remove('active');
+                        needsReset = true;
+                    }
+                });
+
+                if (needsReset) {
+                    const surfaceBtn = controlsPanel.querySelector('.altitude-btn[data-level="surface"]');
+                    if(surfaceBtn) surfaceBtn.classList.add('active');
+                }
             }
 
             modelButtons.forEach(button => {
-                button.addEventListener('click', function() {
+                button.addEventListener('click', () => {
+                    if (button.classList.contains('active')) return;
                     modelButtons.forEach(btn => btn.classList.remove('active'));
-                    this.classList.add('active');
-                    updateIframeParams({
-                        product: this.dataset.model,
-                        overlay: 'wind'
-                    });
+                    button.classList.add('active');
+                    manageAltitudeButtonsState(button.dataset.model);
+                    renderWindyMap();
+                });
+            });
+
+            altitudeButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    if (button.classList.contains('active') || button.disabled) return;
+
                     overlayButtons.forEach(btn => btn.classList.remove('active'));
-                    document.querySelector('.overlay-btn[data-overlay="wind"]').classList.add('active');
+                    altitudeButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+
+                    const selectedLevel = button.dataset.level;
+                    const activeModelBtn = controlsPanel.querySelector('.model-btn.active');
+                    let activeModel = activeModelBtn.dataset.model;
+
+                    if (selectedLevel !== 'surface' && activeModel === 'arome') {
+                        activeModelBtn.classList.remove('active');
+                        const ecmwfBtn = controlsPanel.querySelector('.model-btn[data-model="ecmwf"]');
+                        if (ecmwfBtn) {
+                            ecmwfBtn.classList.add('active');
+                            activeModel = 'ecmwf';
+                        }
+                    }
+                    
+                    manageAltitudeButtonsState(activeModel);
+                    renderWindyMap();
                 });
             });
 
             overlayButtons.forEach(button => {
-                button.addEventListener('click', function() {
+                button.addEventListener('click', () => {
+                    if (button.classList.contains('active')) return;
+                    
+                    altitudeButtons.forEach(btn => btn.classList.remove('active'));
                     overlayButtons.forEach(btn => btn.classList.remove('active'));
-                    this.classList.add('active');
-                    const newOverlay = this.dataset.overlay;
-                    let newProduct = this.dataset.product;
-                    if (this.dataset.productSource === 'model') {
-                        newProduct = document.querySelector('.model-btn.active').dataset.model;
+                    button.classList.add('active');
+
+                    const requiredModel = button.dataset.product;
+                    const isModelSpecific = ['ecmwf', 'arome'].includes(requiredModel);
+
+                    if (isModelSpecific) {
+                        modelButtons.forEach(btn => btn.classList.remove('active'));
+                        const modelToActivate = controlsPanel.querySelector(`.model-btn[data-model="${requiredModel}"]`);
+                        if (modelToActivate) {
+                            modelToActivate.classList.add('active');
+                            manageAltitudeButtonsState(requiredModel);
+                        }
                     }
-                    updateIframeParams({
-                        overlay: newOverlay,
-                        product: newProduct
-                    });
+                    
+                    renderWindyMap();
                 });
             });
+
+            manageAltitudeButtonsState(controlsPanel.querySelector('.model-btn.active').dataset.model);
+            renderWindyMap();
         }
 
         function initializeTdfViewer() {
@@ -888,6 +1239,13 @@
                     fetch(`https://api.checkwx.com/metar/${icao}`, { headers }),
                     fetch(`https://api.checkwx.com/taf/${icao}`, { headers })
                 ]);
+                
+                if (metarResponse.status === 429 || tafResponse.status === 429) {
+                    const errorHtml = `<p class="error-msg">Limite de requêtes API Météo atteinte. Réessayez plus tard.</p>`;
+                    metarContainer.innerHTML = `<h4>METAR</h4>${errorHtml}`;
+                    tafContainer.innerHTML = `<h4>TAF</h4>${errorHtml}`;
+                    return;
+                }
 
                 const metarJson = await metarResponse.json();
                 const tafJson = await tafResponse.json();
@@ -1084,7 +1442,6 @@
                         const finalCities = [];
                         for (let i = 0; i < cities.length; i++) {
                             const city = cities[i].toUpperCase();
-                            // MODIFICATION ICI POUR CORRIGER SALON
                             if (city === 'AIX') finalCities.push('AIX EN PROVENCE');
                             else if (city === 'SALON') finalCities.push('SALON DE PROVENCE');
                             else if (city === 'MRS') finalCities.push('MARSEILLE');
@@ -1131,6 +1488,41 @@
             }
             
             handlePdfFile(gaarPdfFile);
+        }
+
+        function recreateGaarCircuitsFromState(savedCircuits) {
+            if (!gaarMap || !savedCircuits || savedCircuits.length === 0) return;
+            clearAllCircuits();
+
+            savedCircuits.forEach(savedCircuit => {
+                const newCircuit = {
+                    polygon: null,
+                    markers: [],
+                    cityNames: [],
+                    color: savedCircuit.color,
+                    isManual: savedCircuit.isManual,
+                    isActive: false
+                };
+                const circuitIndex = gaarDrawnCircuits.length;
+
+                savedCircuit.points.forEach((point, cityIndex) => {
+                    const coord = [point.lat, point.lng];
+                    const name = point.name;
+                    const marker = createGaarMarker(coord, name, circuitIndex, cityIndex, newCircuit.color);
+                    newCircuit.markers.push(marker);
+                    newCircuit.cityNames.push(name);
+                });
+
+                gaarDrawnCircuits.push(newCircuit);
+                updatePolygon(circuitIndex);
+            });
+            if (gaarDrawnCircuits.length > 0) {
+                const allMarkers = gaarDrawnCircuits.flatMap(c => c.markers);
+                if (allMarkers.length > 0) {
+                    gaarMap.fitBounds(L.featureGroup(allMarkers).getBounds().pad(0.2));
+                }
+                document.getElementById('gaar-status').textContent = `Affichage de ${gaarDrawnCircuits.length} circuit(s) restauré(s).`;
+            }
         }
 
         function createGaarMarker(coord, name, circuitIndex, cityIndex, color) {
@@ -1306,23 +1698,19 @@
         function handleMapClickForManualAdd(e) {
             if (!isAddingManualCircuit) return;
 
-            // --- PROXIMITY CHECK LOGIC ---
             const clickPoint = gaarMap.latLngToContainerPoint(e.latlng);
-            const proximityThreshold = 20; // Tolerance in pixels.
+            const proximityThreshold = 20;
 
             for (const circuit of gaarDrawnCircuits) {
                 for (const marker of circuit.markers) {
                     const markerPoint = gaarMap.latLngToContainerPoint(marker.getLatLng());
                     if (clickPoint.distanceTo(markerPoint) < proximityThreshold) {
-                        // The click is close to an existing marker. Open its popup and stop.
                         marker.openPopup();
-                        return; // Exit the function to prevent creating a new point.
+                        return;
                     }
                 }
             }
-            // --- END OF PROXIMITY CHECK ---
 
-            // If the click was not near any existing marker, proceed to create a new one.
             let activeManualCircuit = gaarDrawnCircuits.find(c => c.isManual && c.isActive);
 
             if (!activeManualCircuit || activeManualCircuit.markers.length >= 3) {
@@ -1372,6 +1760,7 @@
             document.getElementById('gaar-map-section').style.display = 'none';
             document.getElementById('pdf-load-gaar-btn').style.display = 'inline-block';
             document.getElementById('pdf-reset-gaar-btn').style.display = 'none';
+            document.getElementById('gaar-map-nav-link').style.display = 'none';
             
             if (gaarMap) {
                 clearAllCircuits();
@@ -1410,6 +1799,7 @@
                     document.getElementById('gaar-map-section').style.display = 'block';
                     document.getElementById('pdf-load-gaar-btn').style.display = 'none';
                     document.getElementById('pdf-reset-gaar-btn').style.display = 'inline-block';
+                    document.getElementById('gaar-map-nav-link').style.display = 'block';
                 }
             };
             const fdsHandler = createFileHandler(f => fdsFileObject = f, 'pdf-info-fds', 'pdf-interactive-container-fds', null, 1.65);
@@ -1421,10 +1811,10 @@
             };
             document.getElementById('pdf-load-fds-btn').addEventListener('click', () => document.getElementById('pdf-input-fds').click());
             document.getElementById('pdf-input-fds').addEventListener('change', (e) => fdsHandler(e.target.files));
-            setupDropzone('fds-dropzone', fdsHandler);
+            setupDropzone('fds-section', fdsHandler);
             document.getElementById('pdf-load-gaar-btn').addEventListener('click', () => document.getElementById('pdf-input-gaar').click());
             document.getElementById('pdf-input-gaar').addEventListener('change', (e) => gaarHandler(e.target.files));
-            setupDropzone('gaar-dropzone', gaarHandler);
+            setupDropzone('gaar-section', gaarHandler);
             document.getElementById('pdf-reset-gaar-btn').addEventListener('click', resetGaarSection);
             
             document.getElementById('show-gaar-map-btn').addEventListener('click', () => {
@@ -1433,9 +1823,9 @@
                 initGaarMap(); 
                 document.getElementById('gaar-status').textContent = 'Prêt pour l\'ajout manuel de circuits.';
                 mapSection.scrollIntoView({ behavior: 'smooth' });
-                // Afficher le bouton de suppression
                 document.getElementById('pdf-reset-gaar-btn').style.display = 'inline-block';
                 document.getElementById('pdf-load-gaar-btn').style.display = 'none';
+                document.getElementById('gaar-map-nav-link').style.display = 'block';
             });
 
             document.getElementById('pdf-load-notam-btn').addEventListener('click', () => document.getElementById('pdf-input-notam').click());
@@ -1467,7 +1857,7 @@
                 loadBtn.style.display = 'none'; addBtn.style.display = 'inline-block';
             };
             fileInput.addEventListener('change', (e) => addSupAipFiles(e.target.files));
-            setupDropzone('sup-aip-dropzone', addSupAipFiles); window.addSupAipFiles = addSupAipFiles;
+            setupDropzone('sup-aip-section', addSupAipFiles); window.addSupAipFiles = addSupAipFiles;
         }
 
         function initializeForeFlightButton() { document.getElementById('foreflight-btn').href = 'foreflightmobile://'; }
@@ -1488,12 +1878,21 @@
 
         function initializeSessionManagement() {
             const dbName = 'briefingSessionDB', storeName = 'sessionStore', sessionStatus = document.getElementById('session-status');
+            const saveBtnTop = document.getElementById('save-session-btn');
+            const saveBtnBottom = document.getElementById('save-session-btn-bottom');
             let db;
+            
             function openDB() { return new Promise((resolve, reject) => { const r = indexedDB.open(dbName, 1); r.onerror = () => reject("Erreur DB."); r.onsuccess = e => { db = e.target.result; resolve(); }; r.onupgradeneeded = e => e.target.result.createObjectStore(storeName, { keyPath: 'id' }); }); }
             
             async function performSave() {
+                if (isSavingSession) return;
+                isSavingSession = true;
+                saveBtnTop.disabled = true;
+                saveBtnBottom.disabled = true;
+
                 if (!db) await openDB();
                 sessionStatus.textContent = "Sauvegarde en cours...";
+                
                 const checkedNotamIds = [], highlightedNotams = {};
                 document.querySelectorAll('#notam-display .notam-item').forEach(item => {
                     const id = item.dataset.notamId; if (!id) return;
@@ -1502,11 +1901,24 @@
                     if (content.includes('<mark')) highlightedNotams[id] = content;
                 });
                 
+                const gaarMapState = gaarDrawnCircuits.map(circuit => {
+                    return {
+                        color: circuit.color,
+                        isManual: circuit.isManual,
+                        points: circuit.markers.map((marker, index) => ({
+                            lat: marker.getLatLng().lat,
+                            lng: marker.getLatLng().lng,
+                            name: circuit.cityNames[index]
+                        }))
+                    };
+                });
+                
                 try {
                     const dataToSave = {
                         id: 'currentSession',
                         fds: await fileToSavable(fdsFileObject),
                         gaar: await fileToSavable(gaarFileObject),
+                        gaarMapState: gaarMapState,
                         supAips: await Promise.all(supAipFileObjects.map(f => fileToSavable(f))),
                         notamText: document.getElementById('notam-input').value,
                         notamState: { checkedIds: checkedNotamIds, highlights: highlightedNotams },
@@ -1520,11 +1932,15 @@
                 } catch (error) {
                     sessionStatus.textContent = `Erreur de préparation des fichiers: ${error.message}`;
                     console.error("Erreur de préparation avant sauvegarde :", error);
+                } finally {
+                    isSavingSession = false;
+                    saveBtnTop.disabled = false;
+                    saveBtnBottom.disabled = false;
                 }
             }
 
-            document.getElementById('save-session-btn').addEventListener('click', performSave);
-            document.getElementById('save-session-btn-bottom').addEventListener('click', performSave);
+            saveBtnTop.addEventListener('click', performSave);
+            saveBtnBottom.addEventListener('click', performSave);
             document.getElementById('clear-session-btn').addEventListener('click', async () => {
                 if (confirm("Vraiment effacer la session sauvegardée ?")) {
                     try { if (!db) await openDB(); db.transaction([storeName], 'readwrite').objectStore(storeName).clear(); alert("Sauvegarde effacée. Rechargement..."); location.reload(); }
@@ -1544,15 +1960,30 @@
                                 document.getElementById('pdf-info-fds').textContent = `Document chargé : ${file.name}`;
                                 createInteractivePdfHandler(document.getElementById('pdf-interactive-container-fds'), file, null, 1.65);
                             }
-                            if (data.gaar) {
+                            
+                            const hasGaarPdf = !!data.gaar;
+                            const hasGaarMapState = data.gaarMapState && data.gaarMapState.length > 0;
+
+                            if (hasGaarPdf || hasGaarMapState) {
+                                document.getElementById('gaar-map-section').style.display = 'block';
+                                initGaarMap();
+                                document.getElementById('pdf-load-gaar-btn').style.display = 'none';
+                                document.getElementById('pdf-reset-gaar-btn').style.display = 'inline-block';
+                                document.getElementById('gaar-map-nav-link').style.display = 'block';
+                            }
+                            
+                            if (hasGaarPdf) {
                                 const file = savableToFile(data.gaar);
                                 gaarFileObject = file;
                                 document.getElementById('pdf-info-gaar').textContent = `Document chargé : ${file.name}`;
-                                createInteractivePdfHandler(document.getElementById('pdf-interactive-container-gaar'), file, initializeGaarMapFromFile, 1.3);
-                                document.getElementById('gaar-map-section').style.display = 'block';
-                                document.getElementById('pdf-load-gaar-btn').style.display = 'none';
-                                document.getElementById('pdf-reset-gaar-btn').style.display = 'inline-block';
+                                const callback = hasGaarMapState ? null : initializeGaarMapFromFile;
+                                createInteractivePdfHandler(document.getElementById('pdf-interactive-container-gaar'), file, callback, 1.3);
                             }
+                            
+                            if (hasGaarMapState) {
+                                recreateGaarCircuitsFromState(data.gaarMapState);
+                            }
+
                             if (data.supAips && data.supAips.length > 0) {
                                 const files = data.supAips.map(s => savableToFile(s)).filter(Boolean);
                                 if (files.length > 0) window.addSupAipFiles(files);
@@ -1767,15 +2198,12 @@
                     const icao = airportName.split(' ')[0];
                     let container = document.getElementById(`notam-container-${icao}`);
                     if (!container) {
-                        // This case is for airports from PDF not in predefined list. We create their section.
                         const fullName = icaoToFullName[icao] || airportName;
                         container = createAirportSectionElement(icao, fullName);
                         notamDisplay.appendChild(container);
                         fetchAndDisplayWeather(icao, container); 
                     }
-                    // Clear only old notam items, not the whole container
                     container.querySelectorAll('.notam-item').forEach(item => item.remove());
-                    // Add new notam items after the H3 title and weather containers
                     const tafContainer = container.querySelector('.taf-container');
                     (airportsData[airportName] || []).forEach(notamText => {
                         const notamEl = createNotamItemElement(notamText, icao);
@@ -1817,7 +2245,7 @@
             }
             
             setupKeywordFilterDropdown();
-            renderInitialAirportSections(); // This now fetches weather too.
+            renderInitialAirportSections();
             (document.getElementById('notam-parse-btn') || {}).addEventListener('click', () => window.parseAndDisplayNotams());
             filterButtons.forEach(b => b.addEventListener('click', applySelectionFilter));
             showAllButtons.forEach(b => b.addEventListener('click', resetSelectionFilter));
