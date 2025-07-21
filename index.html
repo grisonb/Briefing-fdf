@@ -44,6 +44,8 @@
             color: white;
             padding: 0 20px;
             width: 100%;
+            max-width: 1100px; /* Largeur de la barre de navigation */
+            box-sizing: border-box;
             height: var(--nav-height);
             position: sticky;
             top: 0;
@@ -72,13 +74,11 @@
             padding: 10px 12px;
             font-weight: 600;
             font-size: 0.85em;
-            transition: opacity 0.2s;
             white-space: nowrap;
-            opacity: 0.8;
         }
 
         .nav-links li a:hover {
-            opacity: 1;
+            /* Effet de survol supprimé */
         }
         
         #gaar-map-nav-link {
@@ -87,7 +87,11 @@
         
         .nav-toggle { display: none; }
 
-        @media (max-width: 980px) {
+        /* CORRECTION : Le menu hamburger n'apparaît que sur les écrans très étroits (< 900px) */
+        @media (max-width: 900px) {
+            .main-nav {
+                justify-content: flex-start; /* Aligne les éléments au début pour le menu */
+            }
             .nav-toggle {
                 display: block;
                 background: none;
@@ -193,7 +197,7 @@
 
         .session-management {
             width: 100%;
-            max-width: 980px;
+            max-width: 980px; /* Largeur du contenu */
             margin: 0 auto 40px auto;
             position: relative;
             z-index: 2;
@@ -212,7 +216,7 @@
         
         .map-section, .pdf-section, .notam-section {
             width: 100%;
-            max-width: 980px;
+            max-width: 980px; /* Largeur du contenu */
             margin-bottom: 40px;
             padding: 25px;
             border-radius: 12px;
@@ -333,7 +337,7 @@
         
         #notam-controls-bottom { 
             width: 100%; 
-            max-width: 980px; 
+            max-width: 980px; /* Largeur du contenu */
             margin-top: 20px;
             margin-bottom: 0;
             padding: 0 20px; 
@@ -577,6 +581,7 @@
         <button class="nav-toggle" id="nav-toggle" aria-label="Menu">&#9776;</button>
         <ul class="nav-links" id="nav-links">
             <li><a href="#fds-section">FDS</a></li>
+            <li><a href="#risk-maps-section">RISQUES</a></li>
             <li><a href="#gaar-section">GAAR</a></li>
             <li id="gaar-map-nav-link"><a href="#gaar-map-section">Carte GAAR</a></li>
             <li><a href="#temsi-section">TEMSI</a></li>
@@ -584,8 +589,9 @@
             <li><a href="#notam-section">NOTAMs</a></li>
             <li><a href="#sup-aip-section">SUP AIP</a></li>
             <li><a href="#tdf-section">TDF 2025</a></li>
-            <li><a href="#pelican-section">Pélicandromes</a></li>
+            <li><a href="#pelican-section">PELIC.</a></li>
             <li><a href="#synergi-section">SYNERGI</a></li>
+            <li><a href="#google-earth-section">GOOGLE EARTH</a></li>
         </ul>
     </nav>
 
@@ -593,7 +599,7 @@
         <div class="page-header-background"></div>
         <h1 id="main-title">Briefing Fdf</h1>
         <p id="current-time-display"></p>
-        <p style="position: relative; z-index: 2; text-align: center; color: #333; font-size: 1em; margin-top: -25px; margin-bottom: 30px;">v2.0</p>
+        <p style="position: relative; z-index: 2; text-align: center; color: #333; font-size: 1em; margin-top: -25px; margin-bottom: 30px;">v2.1</p>
     </div>
 
     <div class="session-management" id="session-section">
@@ -618,7 +624,7 @@
         <p id="pdf-info-fds" class="pdf-info"></p>
     </div>
 
-    <div class="map-section">
+    <div class="map-section" id="risk-maps-section">
         <h2>Cartes des Risques Météo-France</h2>
         <div class="controles" style="gap: 20px;">
             <a href="http://www.meteo.fr/extranets/proxy/index/affiche/id/298186" target="_blank" class="link-button" style="background-color: #f39c12;">Carte des Risques / National</a>
@@ -737,6 +743,7 @@
                     <!-- Rempli dynamiquement par JS -->
                 </div>
             </div>
+            <button id="manual-load-weather-btn" class="link-button" style="background-color: #16a085; padding: 8px 15px; font-size: 1em;">Charger Météo</button>
         </div>
         
         <div id="notam-controls-top" class="notam-controls">
@@ -806,6 +813,13 @@
         <div class="controles">
             <a href="https://synergi2.dgscgc.interieur.gouv.fr/evenements?forInit=false&statusEvent=PUBLIC" target="_blank" class="link-button" style="background-color:#16a085;">Ouvrir SYNERGI</a>
             <a href="https://cncasc-app.fr/pages/landing.php" target="_blank" class="link-button" style="background-color:#3498db;">Ouvrir CNCASC</a>
+        </div>
+    </div>
+
+    <div class="map-section" id="google-earth-section">
+        <h2>Google Earth</h2>
+        <div style="text-align:center;">
+            <a href="googleearth://" class="link-button" style="background-color: #4285F4;">Ouvrir Google Earth</a>
         </div>
     </div>
     
@@ -1150,10 +1164,12 @@
 
             const metarContainer = document.createElement('div');
             metarContainer.className = 'metar-container metar-taf-container';
+            metarContainer.innerHTML = '<h4>METAR</h4><p><i>En attente du chargement manuel.</i></p>';
 
             const tafContainer = document.createElement('div');
             tafContainer.className = 'taf-container metar-taf-container';
             tafContainer.style.display = 'none';
+            tafContainer.innerHTML = '<h4>TAF</h4><p><i>En attente du chargement manuel.</i></p>';
 
             airportContainer.appendChild(airportTitle);
             airportContainer.appendChild(metarContainer);
@@ -1695,7 +1711,30 @@
         async function geocodeCity(name, limit = 1) { try { const r = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(name)}&limit=${limit}`); const d=await r.json(); return (d&&d.length>0)?d.map(i=>({name:i.display_name,latlon:[parseFloat(i.lat),parseFloat(i.lon)]})):null;}catch(e){return null;}}
         function getDistance(c1, c2) {const R=6371,dLat=(c2[0]-c1[0])*Math.PI/180,dLon=(c2[1]-c1[1])*Math.PI/180,a=Math.sin(dLat/2)**2+Math.cos(c1[0]*Math.PI/180)*Math.cos(c2[0]*Math.PI/180)*Math.sin(dLon/2)**2;return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));}
         
-        function handleMapClickForManualAdd(e) {
+        async function reverseGeocode(latlng) {
+            const statusDiv = document.getElementById('gaar-status');
+            statusDiv.textContent = 'Recherche du nom de la ville...';
+            try {
+                const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latlng.lat}&lon=${latlng.lng}&zoom=10`;
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('Réponse réseau non OK');
+                const data = await response.json();
+                const cityName = data.address.city || data.address.town || data.address.village;
+                if (cityName) {
+                    statusDiv.textContent = `Point ajouté à ${cityName}.`;
+                    return cityName;
+                } else {
+                    statusDiv.textContent = 'Impossible de trouver le nom de la ville, utilisation d\'un nom générique.';
+                    return data.display_name ? data.display_name.split(',')[0] : null;
+                }
+            } catch (error) {
+                console.error("Erreur de géocodage inversé:", error);
+                statusDiv.textContent = 'Erreur lors de la recherche du nom de la ville.';
+                return null;
+            }
+        }
+        
+        async function handleMapClickForManualAdd(e) {
             if (!isAddingManualCircuit) return;
 
             const clickPoint = gaarMap.latLngToContainerPoint(e.latlng);
@@ -1734,7 +1773,7 @@
 
             const circuitIndex = gaarDrawnCircuits.indexOf(activeManualCircuit);
             const cityIndex = activeManualCircuit.markers.length;
-            const pointName = `Point ${cityIndex + 1}`;
+            const pointName = (await reverseGeocode(e.latlng)) || `Point ${cityIndex + 1}`;
             const newMarker = createGaarMarker(e.latlng, pointName, circuitIndex, cityIndex, activeManualCircuit.color);
             
             activeManualCircuit.markers.push(newMarker);
@@ -2109,6 +2148,21 @@
                 'unpaved', 'vor', 'wig wag'
             ];
 
+            const manualLoadWeatherBtn = document.getElementById('manual-load-weather-btn');
+            if (manualLoadWeatherBtn) {
+                manualLoadWeatherBtn.addEventListener('click', () => {
+                    const airportContainers = document.querySelectorAll('#notam-display .airport-section-container');
+                    airportContainers.forEach(container => {
+                        if (!container.dataset.loaded) {
+                             const icao = container.dataset.icao;
+                             if (icao) {
+                                 fetchAndDisplayWeather(icao, container);
+                             }
+                        }
+                    });
+                });
+            }
+
             function setupKeywordFilterDropdown() {
                 const filterListContainer = document.getElementById('keyword-filter-list');
                 const toggleBtn = document.getElementById('keyword-filter-toggle-btn');
@@ -2145,11 +2199,10 @@
 
             function renderInitialAirportSections() {
                 notamDisplay.innerHTML = ''; 
-                predefinedIcaoOrder.forEach(async (icao) => {
+                predefinedIcaoOrder.forEach(icao => {
                     const fullName = icaoToFullName[icao] || `${icao} - INCONNU`;
                     const airportContainer = createAirportSectionElement(icao, fullName);
                     notamDisplay.appendChild(airportContainer);
-                    await fetchAndDisplayWeather(icao, airportContainer);
                 });
             }
 
@@ -2201,7 +2254,6 @@
                         const fullName = icaoToFullName[icao] || airportName;
                         container = createAirportSectionElement(icao, fullName);
                         notamDisplay.appendChild(container);
-                        fetchAndDisplayWeather(icao, container); 
                     }
                     container.querySelectorAll('.notam-item').forEach(item => item.remove());
                     const tafContainer = container.querySelector('.taf-container');
