@@ -488,7 +488,7 @@
         .metar-taf-refresh-btn:hover { background-color: #e9ecef; }
         .metar-taf-container { border: 1px solid #e0e0e0; background-color: #fdfdfd; padding: 15px; margin-top: 10px; border-radius: 5px; font-size: 0.9em; }
         .metar-taf-container h4 { margin: 0 0 5px 0; color: var(--sc-blue); font-size: 1em; display: flex; align-items: center; }
-        .metar-taf-container pre { white-space: pre-wrap; word-wrap: break-word; font-family: monospace; background-color: #e9ecef; padding: 10px; border-radius: 4px; margin: 0; font-size: 1.1em; }
+        .metar-taf-container pre { white-space: pre-wrap; word-wrap: break-word; font-family: monospace; background-color: #e9ecef; padding: 10px; border-radius: 4px; margin: 0; font-size: 1.2em; }
         .metar-taf-container .error-msg { color: var(--sc-red); font-style: italic; }
         
         #manual-metar-section { margin-top: 40px; padding-top: 20px; border-top: 2px solid var(--sc-blue); }
@@ -599,7 +599,7 @@
         <div class="page-header-background"></div>
         <h1 id="main-title">Briefing Fdf</h1>
         <p id="current-time-display"></p>
-        <p style="position: relative; z-index: 2; text-align: center; color: #333; font-size: 1em; margin-top: -25px; margin-bottom: 30px;">v2.1</p>
+        <p style="position: relative; z-index: 2; text-align: center; color: #333; font-size: 1em; margin-top: -25px; margin-bottom: 30px;">v2.2</p>
     </div>
 
     <div class="session-management" id="session-section">
@@ -1428,30 +1428,37 @@
                 } catch (error) { statusDiv.textContent = `Erreur : ${error.message}`; }
             }
             
+            // --- LOGIQUE GAAR v1.3.1 MODIFIÉE POUR "LITTORAL" ---
             function extractAllCircuits(items) {
                 const circuits = [];
                 const dashRegex = /[–-]/;
                 const spaceOnlyRegex = /^[A-ZÀ-ÿ\s]+$/;
 
                 for (const item of items) {
-                    const text = item.str.trim();
+                    let text = item.str.trim();
                     const upperText = text.toUpperCase();
 
-                    if (upperText.includes('SOLEIL') || upperText.includes('GUET') || upperText === 'TRANSIT' || text.length < 8) {
+                    if (upperText.startsWith('CIRCUIT') || upperText.includes('SOLEIL') || upperText.includes('GUET') || upperText.startsWith('TRANSIT') || text.length < 5 || !isNaN(text) || upperText.endsWith(' H')) {
                         continue;
                     }
                     if (upperText === 'GAAR SUPP' || upperText === 'GAAR LITTORAL') {
                         continue;
                     }
-                    
+
+                    const content = text.includes(':') ? text.split(':')[1].trim() : text;
+                    const upperContent = content.toUpperCase();
                     let cities = [];
 
-                    if (dashRegex.test(text)) {
-                        const contentAfterColon = text.includes(':') ? text.split(':')[1] : text;
-                        cities = contentAfterColon.trim().split(/\s*[–-]\s*/).map(s => s.trim()).filter(Boolean);
-                    } 
-                    else if (spaceOnlyRegex.test(text)) {
-                        cities = text.split(/\s+/).filter(Boolean);
+                    if (upperContent.includes('LITTORAL') || upperContent.includes('COTE BLEUE')) {
+                        cities = content.replace(/LITTORAL|:|COTE BLEUE/gi, '')
+                                        .split(dashRegex)
+                                        .map(s => s.trim())
+                                        .filter(Boolean);
+                        cities.push("CARRY LE ROUET");
+                    } else if (dashRegex.test(content)) {
+                        cities = content.split(dashRegex).map(s => s.trim()).filter(Boolean);
+                    } else {
+                        cities = content.split(/\s+/).filter(Boolean);
                     }
 
                     if (cities.length >= 2) {
@@ -1462,14 +1469,20 @@
                             else if (city === 'SALON') finalCities.push('SALON DE PROVENCE');
                             else if (city === 'MRS') finalCities.push('MARSEILLE');
                             else if (city === 'VITROLLES') finalCities.push('Vitrolles, Bouches-du-Rhône');
-                            else if (city === 'SAINT' && cities[i + 1]?.toUpperCase() === 'FLORENT') {
-                                finalCities.push('SAINT FLORENT');
-                                i++; 
+                            else if ((city === 'ST' || city === 'SAINT') && cities[i + 1]?.toUpperCase() === 'FLORENT') {
+                                finalCities.push('SAINT FLORENT'); i++; 
+                            } else if ((city === 'LE') && cities[i + 1]?.toUpperCase() === 'LUC') {
+                                finalCities.push('LE LUC'); i++; 
+                            } else if ((city === 'LA') && cities[i + 1]?.toUpperCase() === 'CIOTAT') {
+                                finalCities.push('LA CIOTAT'); i++; 
                             } else {
                                 finalCities.push(cities[i]);
                             }
                         }
-                        circuits.push(finalCities);
+                        
+                        if (finalCities.length >= 2 && finalCities.length <= 3) {
+                            circuits.push(finalCities);
+                        }
                     }
                 }
                 return circuits;
