@@ -599,7 +599,7 @@
         <div class="page-header-background"></div>
         <h1 id="main-title">Briefing Fdf</h1>
         <p id="current-time-display"></p>
-        <p style="position: relative; z-index: 2; text-align: center; color: #333; font-size: 1em; margin-top: -25px; margin-bottom: 30px;">v2.2</p>
+        <p style="position: relative; z-index: 2; text-align: center; color: #333; font-size: 1em; margin-top: -25px; margin-bottom: 30px;">v2.3</p>
     </div>
 
     <div class="session-management" id="session-section">
@@ -2136,7 +2136,14 @@
                     y += notamLines.length * 4 + 5;
                 });
             });
-            doc.save(`selection_notams_${today.toISOString().split('T')[0]}.pdf`);
+            
+            // --- CORRECTION ---
+            // Génère un Blob (objet fichier) à partir du document PDF.
+            const pdfBlob = doc.output('blob');
+            // Crée une URL temporaire pour ce Blob.
+            const pdfUrl = URL.createObjectURL(pdfBlob);
+            // Ouvre cette URL dans un nouvel onglet.
+            window.open(pdfUrl, '_blank');
         }
 
         function initializeNotamParser() { 
