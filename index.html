@@ -490,6 +490,16 @@
         .metar-taf-container h4 { margin: 0 0 5px 0; color: var(--sc-blue); font-size: 1em; display: flex; align-items: center; }
         .metar-taf-container pre { white-space: pre-wrap; word-wrap: break-word; font-family: monospace; background-color: #e9ecef; padding: 10px; border-radius: 4px; margin: 0; font-size: 1.2em; }
         .metar-taf-container .error-msg { color: var(--sc-red); font-style: italic; }
+        
+        .metar-age-display {
+            font-size: 0.8em;
+            font-weight: bold;
+            margin-left: 10px;
+            padding: 2px 6px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            vertical-align: middle;
+        }
         .weather-validity-warning {
             color: var(--sc-red);
             font-size: 0.8em;
@@ -607,7 +617,7 @@
         <div class="page-header-background"></div>
         <h1 id="main-title">Briefing Fdf</h1>
         <p id="current-time-display"></p>
-        <p style="position: relative; z-index: 2; text-align: center; color: #333; font-size: 1em; margin-top: -25px; margin-bottom: 30px;">v2.4</p>
+        <p style="position: relative; z-index: 2; text-align: center; color: #333; font-size: 1em; margin-top: -25px; margin-bottom: 30px;">v2.5</p>
     </div>
 
     <div class="session-management" id="session-section">
@@ -1348,7 +1358,6 @@
                     cityNames: [],
                     color: savedCircuit.color,
                     isManual: savedCircuit.isManual,
-                    isActive: false
                 };
                 const circuitIndex = gaarDrawnCircuits.length;
 
@@ -1539,34 +1548,33 @@
                 }
             }
 
-            let activeManualCircuit = gaarDrawnCircuits.find(c => c.isManual && c.isActive);
+            // --- REVISED LOGIC ---
+            // Find an existing, incomplete manual circuit first.
+            let targetCircuit = gaarDrawnCircuits.find(c => c.isManual && c.markers.length < 3);
 
-            if (!activeManualCircuit || activeManualCircuit.markers.length === 3) {
-                if (activeManualCircuit) {
-                    activeManualCircuit.isActive = false;
-                }
-                
+            // If no incomplete circuit is found, create a new one.
+            if (!targetCircuit) {
                 const manualCircuitsCount = gaarDrawnCircuits.filter(c => c.isManual).length;
                 const newCircuitColor = manualCircuitColors[manualCircuitsCount % manualCircuitColors.length];
                 
-                activeManualCircuit = {
+                targetCircuit = {
                     polygon: null,
                     markers: [],
                     cityNames: [],
                     color: newCircuitColor,
                     isManual: true,
-                    isActive: true 
                 };
-                gaarDrawnCircuits.push(activeManualCircuit);
+                gaarDrawnCircuits.push(targetCircuit);
             }
-
-            const circuitIndex = gaarDrawnCircuits.indexOf(activeManualCircuit);
-            const cityIndex = activeManualCircuit.markers.length;
-            const pointName = (await reverseGeocode(e.latlng)) || `Point ${cityIndex + 1}`;
-            const newMarker = createGaarMarker(e.latlng, pointName, circuitIndex, cityIndex, activeManualCircuit.color);
             
-            activeManualCircuit.markers.push(newMarker);
-            activeManualCircuit.cityNames.push(pointName);
+            // Now, add the new point to the identified targetCircuit
+            const circuitIndex = gaarDrawnCircuits.indexOf(targetCircuit);
+            const cityIndex = targetCircuit.markers.length;
+            const pointName = (await reverseGeocode(e.latlng)) || `Point ${cityIndex + 1}`;
+            const newMarker = createGaarMarker(e.latlng, pointName, circuitIndex, cityIndex, targetCircuit.color);
+            
+            targetCircuit.markers.push(newMarker);
+            targetCircuit.cityNames.push(pointName);
             
             updatePolygon(circuitIndex);
         }
@@ -1609,7 +1617,6 @@
                 btn.textContent = "Terminer l'ajout (cliquez ici)";
                 mapContainer.classList.add('crosshair-cursor');
             } else {
-                gaarDrawnCircuits.forEach(c => c.isActive = false);
                 btn.classList.remove('active');
                 btn.textContent = 'Ajout manuel circuit(s) GAAR';
                 mapContainer.classList.remove('crosshair-cursor');
@@ -1652,7 +1659,6 @@
                 document.getElementById('gaar-status').textContent = 'Prêt pour l\'ajout manuel de circuits.';
                 mapSection.scrollIntoView({ behavior: 'smooth' });
                 document.getElementById('pdf-reset-gaar-btn').style.display = 'inline-block';
-                document.getElementById('pdf-load-gaar-btn').style.display = 'none';
                 document.getElementById('gaar-map-nav-link').style.display = 'block';
             });
 
@@ -1767,7 +1773,11 @@
 
                     const store = db.transaction([storeName], 'readwrite').objectStore(storeName);
                     const request = store.put(dataToSave);
-                    request.onsuccess = () => { sessionStatus.textContent = `Session sauvegardée à ${new Date().toLocaleTimeString()}.`; };
+                    request.onsuccess = () => { 
+                        const now = new Date();
+                        const formattedTime = `${String(now.getHours()).padStart(2, '0')}h${String(now.getMinutes()).padStart(2, '0')}`;
+                        sessionStatus.textContent = `Session sauvegardée à ${formattedTime}`; 
+                    };
                     request.onerror = (e) => { sessionStatus.textContent = `Erreur de sauvegarde: ${e.target.error}`; console.error("Erreur IndexedDB:", e.target.error);};
                 } catch (error) {
                     sessionStatus.textContent = `Erreur de préparation des fichiers: ${error.message}`;
@@ -1807,7 +1817,9 @@
                             if (hasGaarPdf || hasGaarMapState) {
                                 document.getElementById('gaar-map-section').style.display = 'block';
                                 initGaarMap();
-                                document.getElementById('pdf-load-gaar-btn').style.display = 'none';
+                                if (hasGaarPdf) {
+                                   document.getElementById('pdf-load-gaar-btn').style.display = 'none';
+                                }
                                 document.getElementById('pdf-reset-gaar-btn').style.display = 'inline-block';
                                 document.getElementById('gaar-map-nav-link').style.display = 'block';
                             }
@@ -1943,22 +1955,6 @@
             window.open(pdfUrl, '_blank');
         }
 
-        function updateWeatherWarning(h4, isExpired, type) {
-            let warningSpan = h4.querySelector('.weather-validity-warning');
-            if (isExpired) {
-                if (!warningSpan) {
-                    warningSpan = document.createElement('span');
-                    warningSpan.className = 'weather-validity-warning';
-                    h4.appendChild(warningSpan);
-                }
-                warningSpan.textContent = `${type} non à jour`;
-            } else {
-                if (warningSpan) {
-                    warningSpan.remove();
-                }
-            }
-        }
-
         function checkWeatherValidity() {
             const now = new Date();
 
@@ -1967,24 +1963,38 @@
                 const pre = container.querySelector('pre');
                 if (!pre) return;
                 const metarText = pre.textContent;
-                const timeMatch = metarText.match(/(\d{2})(\d{2})(\d{2})Z/);
                 const h4 = container.querySelector('h4');
+
+                let ageSpan = h4.querySelector('.metar-age-display');
+                if (!ageSpan) {
+                    ageSpan = document.createElement('span');
+                    ageSpan.className = 'metar-age-display';
+                    h4.appendChild(ageSpan);
+                }
+                
+                const oldWarning = h4.querySelector('.weather-validity-warning');
+                if (oldWarning) oldWarning.remove();
+
+                const timeMatch = metarText.match(/(\d{2})(\d{2})(\d{2})Z/);
 
                 if (timeMatch) {
                     const day = parseInt(timeMatch[1], 10);
                     const hour = parseInt(timeMatch[2], 10);
                     const minute = parseInt(timeMatch[3], 10);
                     const metarDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), day, hour, minute));
-                    if (metarDate > now) { 
+                    if (metarDate > now) {
                         metarDate.setUTCMonth(metarDate.getUTCMonth() - 1);
                         if (metarDate > now) {
                            metarDate.setUTCFullYear(metarDate.getUTCFullYear() - 1);
                         }
                     }
                     const ageInMinutes = (now.getTime() - metarDate.getTime()) / 60000;
-                    updateWeatherWarning(h4, ageInMinutes > 30, 'METAR');
+                    
+                    ageSpan.textContent = `${Math.round(ageInMinutes)} min`;
+                    ageSpan.style.color = (ageInMinutes <= 35) ? '#28a745' : 'var(--sc-red)';
+
                 } else {
-                    updateWeatherWarning(h4, false, 'METAR');
+                    ageSpan.textContent = '';
                 }
             });
 
@@ -1995,6 +2005,7 @@
                 const tafText = pre.textContent;
                 const validityMatch = tafText.match(/(\d{2})\d{4}Z\s+\d{2}(\d{2})\/(\d{2})(\d{2})/);
                 const h4 = container.querySelector('h4');
+                let warningSpan = h4.querySelector('.weather-validity-warning');
 
                 if (validityMatch) {
                     const issueDay = parseInt(validityMatch[1], 10);
@@ -2007,9 +2018,19 @@
                         expiryDate.setUTCMonth(expiryDate.getUTCMonth() + 1);
                     }
                     
-                    updateWeatherWarning(h4, now > expiryDate, 'TAF');
-                } else {
-                    updateWeatherWarning(h4, false, 'TAF');
+                    const isExpired = now > expiryDate;
+                    if (isExpired) {
+                        if (!warningSpan) {
+                            warningSpan = document.createElement('span');
+                            warningSpan.className = 'weather-validity-warning';
+                            h4.appendChild(warningSpan);
+                        }
+                        warningSpan.textContent = `TAF non à jour`;
+                    } else if (warningSpan) {
+                        warningSpan.remove();
+                    }
+                } else if (warningSpan) {
+                    warningSpan.remove();
                 }
             });
         }
@@ -2041,11 +2062,9 @@
                 manualLoadWeatherBtn.addEventListener('click', () => {
                     const airportContainers = document.querySelectorAll('#notam-display .airport-section-container');
                     airportContainers.forEach(container => {
-                        if (!container.dataset.loaded) {
-                             const icao = container.dataset.icao;
-                             if (icao) {
-                                 fetchAndDisplayWeather(icao, container);
-                             }
+                        const icao = container.dataset.icao;
+                        if (icao) {
+                            fetchAndDisplayWeather(icao, container);
                         }
                     });
                 });
@@ -2115,7 +2134,10 @@
 
                     if (activeKeywords.length > 0 && !shouldBeHidden) {
                         const itemText = item.textContent.toLowerCase();
-                        if (activeKeywords.some(k => itemText.includes(k))) {
+                        if (activeKeywords.some(k => {
+                            const regex = new RegExp(`\\b${k.replace(/ /g, '\\s')}\\b`, 'i');
+                            return regex.test(itemText);
+                        })) {
                             shouldBeHidden = true;
                         }
                     }
