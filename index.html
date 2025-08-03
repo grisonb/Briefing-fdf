@@ -73,7 +73,7 @@
             text-decoration: none;
             padding: 10px 12px;
             font-weight: 600;
-            font-size: 0.85em;
+            font-size: 0.95em;
             white-space: nowrap;
         }
 
@@ -527,6 +527,9 @@
         }
         #gaar-map-controls {
             margin-bottom: 15px;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
         }
         #add-manual-circuit-btn.active {
             background-color: #c0392b;
@@ -605,7 +608,7 @@
             <li id="gaar-map-nav-link"><a href="#gaar-map-section">Carte GAAR</a></li>
             <li><a href="#temsi-section">TEMSI</a></li>
             <li><a href="#windy-section">WINDY</a></li>
-            <li><a href="#notam-section">NOTAMs</a></li>
+            <li><a href="#notam-section">NOTAMs/METAR</a></li>
             <li><a href="#sup-aip-section">SUP AIP</a></li>
             <li><a href="#pelican-section">PELIC.</a></li>
             <li><a href="#synergi-section">SYNERGI</a></li>
@@ -617,7 +620,7 @@
         <div class="page-header-background"></div>
         <h1 id="main-title">Briefing Fdf</h1>
         <p id="current-time-display"></p>
-        <p style="position: relative; z-index: 2; text-align: center; color: #333; font-size: 1em; margin-top: -25px; margin-bottom: 30px;">v2.5</p>
+        <p style="position: relative; z-index: 2; text-align: center; color: #333; font-size: 1em; margin-top: -25px; margin-bottom: 30px;">v2.6</p>
     </div>
 
     <div class="session-management" id="session-section">
@@ -655,7 +658,7 @@
         <div class="pdf-controls">
             <button id="pdf-load-gaar-btn" class="link-button" style="background-color: #16a085;">Charger le Diagramme GAAR</button>
             <button id="show-gaar-map-btn" class="link-button" style="background-color: #27ae60;">Carte GAAR</button>
-            <button id="pdf-reset-gaar-btn" class="link-button" style="background-color: var(--sc-red); display: none;">Supprimer GAAR</button>
+            <button id="pdf-reset-gaar-btn" class="link-button" style="background-color: var(--sc-red); display: none;">Supprimer diagramme GAAR</button>
             <input type="file" id="pdf-input-gaar" accept="application/pdf">
         </div>
         <div id="pdf-interactive-container-gaar" class="interactive-pdf-viewer" style="display: none;">
@@ -670,9 +673,10 @@
         <div id="gaar-map-container">
             <div id="gaar-map-controls">
                 <button id="add-manual-circuit-btn" class="link-button" style="background-color: #27ae60;">Ajout manuel circuit(s) GAAR</button>
+                <button id="delete-circuits-btn" class="link-button" style="background-color: var(--sc-red); display: none;">Supprimer circuit(s) GAAR</button>
             </div>
             <div id="gaar-map-display"></div>
-            <div id="gaar-status">En attente du chargement du diagramme GAAR...</div>
+            <div id="gaar-status">Préparez vos circuits sur la carte</div>
         </div>
     </div>
     
@@ -712,11 +716,11 @@
     </div>
 
     <div id="notam-pdf-dropzone" class="pdf-section dropzone">
-        <h2>Extraire les NOTAMs d'un PDF</h2>
+        <h2>Importation NOTAMs</h2>
         <div class="pdf-controls">
             <span id="nats-help-icon" class="help-icon" title="Comment utiliser NATS ?">?</span>
             <a href="https://nats-uk.ead-it.com/fwf-nats/restricted/user/ino/brief_aerodrome.faces?menuId=C920E9BB76441A9AE05341741DC25BDD" target="_blank" class="link-button" style="background-color: #8e44ad;">Accéder au Briefing NATS</a>
-            <button id="pdf-load-notam-btn" class="link-button" style="background-color: #2c3e50;">Charger PDF des NOTAMs</button>
+            <button id="pdf-load-notam-btn" class="link-button" style="background-color: #2c3e50;">Importation NOTAMs</button>
             <input type="file" id="pdf-input-notam" accept="application/pdf">
         </div>
         
@@ -874,7 +878,7 @@
             initializeForeFlightButton();
             initializeSessionManagement();
             initializeHelpTooltips();
-            document.getElementById('add-manual-circuit-btn').addEventListener('click', toggleManualCircuitMode);
+            initializeGaarMapControls();
             setInterval(checkWeatherValidity, 60000); // Vérifie la validité des METARs et TAFs chaque minute
         }
         
@@ -1118,9 +1122,19 @@
             if (validity.start) itemContainer.dataset.startDate = validity.start.toISOString();
             if (validity.end) itemContainer.dataset.endDate = validity.end.toISOString();
 
-            const bMatch = notamText.match(/B\)\s*(\d{10})/);
-            const cMatch = notamText.match(/C\)\s*(\d{10}|PERM)/);
-            if (bMatch && cMatch) itemContainer.dataset.notamId = `${icao}-${bMatch[1]}-${cMatch[1]}`;
+            const firstLine = notamText.split('\n')[0];
+            const notamNumberMatch = firstLine.match(/([A-Z]\d{4}\/\d{2})$/);
+            const notamNumber = notamNumberMatch ? notamNumberMatch[1].replace('/', '-') : null;
+
+            if (notamNumber) {
+                itemContainer.dataset.notamId = `${icao}-${notamNumber}`;
+            } else {
+                const bMatch = notamText.match(/B\)\s*(\d{10})/);
+                const cMatch = notamText.match(/C\)\s*(\d{10}|PERM)/);
+                if (bMatch && cMatch) {
+                    itemContainer.dataset.notamId = `${icao}-${bMatch[1]}-${cMatch[1]}`;
+                }
+            }
 
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
@@ -1338,13 +1352,7 @@
         }
 
         function initializeGaarMapFromFile(gaarPdfFile) {
-            const statusDiv = document.getElementById('gaar-status');
-            initGaarMap(); 
-            clearAllCircuits(); // Always clear previous circuits when a new file is loaded.
-            
-            // Automatic extraction logic has been removed as requested.
-            // The map is now ready for manual circuit drawing.
-            statusDiv.textContent = 'Prêt pour l\'ajout manuel de circuits.';
+            initGaarMap();
         }
 
         function recreateGaarCircuitsFromState(savedCircuits) {
@@ -1379,6 +1387,7 @@
                 }
                 document.getElementById('gaar-status').textContent = `Affichage de ${gaarDrawnCircuits.length} circuit(s) restauré(s).`;
             }
+            updateCircuitControlsVisibility();
         }
 
         function createGaarMarker(coord, name, circuitIndex, cityIndex, color) {
@@ -1452,7 +1461,7 @@
                     });
                 });
             }
-
+            updateCircuitControlsVisibility();
             document.getElementById('gaar-status').textContent = `Point supprimé.`;
         };
 
@@ -1548,13 +1557,10 @@
                 }
             }
 
-            // --- REVISED LOGIC ---
-            // Find an existing, incomplete manual circuit first.
-            let targetCircuit = gaarDrawnCircuits.find(c => c.isManual && c.markers.length < 3);
+            let targetCircuit = gaarDrawnCircuits.find(c => c && c.isManual && c.markers.length < 3);
 
-            // If no incomplete circuit is found, create a new one.
             if (!targetCircuit) {
-                const manualCircuitsCount = gaarDrawnCircuits.filter(c => c.isManual).length;
+                const manualCircuitsCount = gaarDrawnCircuits.filter(c => c && c.isManual).length;
                 const newCircuitColor = manualCircuitColors[manualCircuitsCount % manualCircuitColors.length];
                 
                 targetCircuit = {
@@ -1567,7 +1573,6 @@
                 gaarDrawnCircuits.push(targetCircuit);
             }
             
-            // Now, add the new point to the identified targetCircuit
             const circuitIndex = gaarDrawnCircuits.indexOf(targetCircuit);
             const cityIndex = targetCircuit.markers.length;
             const pointName = (await reverseGeocode(e.latlng)) || `Point ${cityIndex + 1}`;
@@ -1577,6 +1582,15 @@
             targetCircuit.cityNames.push(pointName);
             
             updatePolygon(circuitIndex);
+            updateCircuitControlsVisibility();
+        }
+
+        function updateCircuitControlsVisibility() {
+            const deleteBtn = document.getElementById('delete-circuits-btn');
+            if (deleteBtn) {
+                const hasCircuits = gaarDrawnCircuits.some(c => c && c.markers.length > 0);
+                deleteBtn.style.display = hasCircuits ? 'inline-block' : 'none';
+            }
         }
 
         function clearAllCircuits() {
@@ -1586,25 +1600,16 @@
                 if (markers) markers.forEach(m => gaarMap.removeLayer(m));
             });
             gaarDrawnCircuits = [];
+            updateCircuitControlsVisibility();
         }
 
-        function resetGaarSection() {
+        function resetGaarPdfOnly() {
             gaarFileObject = null;
             document.getElementById('pdf-input-gaar').value = null;
             document.getElementById('pdf-info-gaar').textContent = '';
             document.getElementById('pdf-interactive-container-gaar').style.display = 'none';
-            document.getElementById('gaar-map-section').style.display = 'none';
             document.getElementById('pdf-load-gaar-btn').style.display = 'inline-block';
             document.getElementById('pdf-reset-gaar-btn').style.display = 'none';
-            document.getElementById('gaar-map-nav-link').style.display = 'none';
-            
-            if (gaarMap) {
-                clearAllCircuits();
-                document.getElementById('gaar-status').textContent = 'En attente du chargement du diagramme GAAR...';
-            }
-            if(isAddingManualCircuit) {
-                toggleManualCircuitMode();
-            }
         }
         
         function toggleManualCircuitMode() {
@@ -1622,6 +1627,16 @@
                 mapContainer.classList.remove('crosshair-cursor');
             }
         }
+
+        function initializeGaarMapControls() {
+            document.getElementById('add-manual-circuit-btn').addEventListener('click', toggleManualCircuitMode);
+            document.getElementById('delete-circuits-btn').addEventListener('click', () => {
+                if (gaarDrawnCircuits.length > 0 && confirm("Voulez-vous vraiment supprimer tous les circuits tracés sur la carte ?")) {
+                    clearAllCircuits();
+                    document.getElementById('gaar-status').textContent = 'Tous les circuits ont été supprimés.';
+                }
+            });
+        }
             
         function initializeInteractivePdfViewers() {
             const createFileHandler = (fileObjectSetter, infoId, viewerId, mapInitFn, initialScale = 1.5) => (files) => {
@@ -1631,10 +1646,8 @@
                 document.getElementById(infoId).textContent = `Document chargé : ${file.name}`;
                 createInteractivePdfHandler(document.getElementById(viewerId), file, mapInitFn, initialScale);
                 if (viewerId === 'pdf-interactive-container-gaar') {
-                    document.getElementById('gaar-map-section').style.display = 'block';
                     document.getElementById('pdf-load-gaar-btn').style.display = 'none';
                     document.getElementById('pdf-reset-gaar-btn').style.display = 'inline-block';
-                    document.getElementById('gaar-map-nav-link').style.display = 'block';
                 }
             };
             const fdsHandler = createFileHandler(f => fdsFileObject = f, 'pdf-info-fds', 'pdf-interactive-container-fds', null, 1.65);
@@ -1650,7 +1663,7 @@
             document.getElementById('pdf-load-gaar-btn').addEventListener('click', () => document.getElementById('pdf-input-gaar').click());
             document.getElementById('pdf-input-gaar').addEventListener('change', (e) => gaarHandler(e.target.files));
             setupDropzone('gaar-section', gaarHandler);
-            document.getElementById('pdf-reset-gaar-btn').addEventListener('click', resetGaarSection);
+            document.getElementById('pdf-reset-gaar-btn').addEventListener('click', resetGaarPdfOnly);
             
             document.getElementById('show-gaar-map-btn').addEventListener('click', () => {
                 const mapSection = document.getElementById('gaar-map-section');
@@ -1658,7 +1671,6 @@
                 initGaarMap(); 
                 document.getElementById('gaar-status').textContent = 'Prêt pour l\'ajout manuel de circuits.';
                 mapSection.scrollIntoView({ behavior: 'smooth' });
-                document.getElementById('pdf-reset-gaar-btn').style.display = 'inline-block';
                 document.getElementById('gaar-map-nav-link').style.display = 'block';
             });
 
@@ -1714,29 +1726,37 @@
             const dbName = 'briefingSessionDB', storeName = 'sessionStore', sessionStatus = document.getElementById('session-status');
             const saveBtnTop = document.getElementById('save-session-btn');
             const saveBtnBottom = document.getElementById('save-session-btn-bottom');
-            let db;
             
-            function openDB() { return new Promise((resolve, reject) => { const r = indexedDB.open(dbName, 1); r.onerror = () => reject("Erreur DB."); r.onsuccess = e => { db = e.target.result; resolve(); }; r.onupgradeneeded = e => e.target.result.createObjectStore(storeName, { keyPath: 'id' }); }); }
+            function openDB() { 
+                return new Promise((resolve, reject) => { 
+                    const r = indexedDB.open(dbName, 1); 
+                    r.onerror = (e) => reject("Erreur DB: " + e.target.error); 
+                    r.onsuccess = e => resolve(e.target.result); 
+                    r.onupgradeneeded = e => e.target.result.createObjectStore(storeName, { keyPath: 'id' }); 
+                }); 
+            }
             
             async function performSave() {
                 if (isSavingSession) return;
                 isSavingSession = true;
                 saveBtnTop.disabled = true;
                 saveBtnBottom.disabled = true;
-
-                if (!db) await openDB();
                 sessionStatus.textContent = "Sauvegarde en cours...";
                 
-                const checkedNotamIds = [], highlightedNotams = {};
-                document.querySelectorAll('#notam-display .notam-item').forEach(item => {
-                    const id = item.dataset.notamId; if (!id) return;
-                    if (item.querySelector('.notam-checkbox').checked) checkedNotamIds.push(id);
-                    const content = item.querySelector('.notam-text-content').innerHTML;
-                    if (content.includes('<mark')) highlightedNotams[id] = content;
-                });
-                
-                const gaarMapState = gaarDrawnCircuits.map(circuit => {
-                    return {
+                let localDb;
+                try {
+                    // On ouvre une nouvelle connexion DB à chaque sauvegarde pour éviter les connexions périmées.
+                    localDb = await openDB();
+
+                    const checkedNotamIds = [], highlightedNotams = {};
+                    document.querySelectorAll('#notam-display .notam-item').forEach(item => {
+                        const id = item.dataset.notamId; if (!id) return;
+                        if (item.querySelector('.notam-checkbox').checked) checkedNotamIds.push(id);
+                        const content = item.querySelector('.notam-text-content').innerHTML;
+                        if (content.includes('<mark')) highlightedNotams[id] = content;
+                    });
+                    
+                    const gaarMapState = gaarDrawnCircuits.map(circuit => ({
                         color: circuit.color,
                         isManual: circuit.isManual,
                         points: circuit.markers.map((marker, index) => ({
@@ -1744,21 +1764,19 @@
                             lng: marker.getLatLng().lng,
                             name: circuit.cityNames[index]
                         }))
-                    };
-                });
+                    }));
 
-                const weatherData = {};
-                document.querySelectorAll('.airport-section-container[data-loaded="true"]').forEach(container => {
-                    const icao = container.dataset.icao;
-                    if (icao) {
-                        weatherData[icao] = {
-                            metarHTML: container.querySelector('.metar-container').innerHTML,
-                            tafHTML: container.querySelector('.taf-container').innerHTML
-                        };
-                    }
-                });
+                    const weatherData = {};
+                    document.querySelectorAll('.airport-section-container[data-loaded="true"]').forEach(container => {
+                        const icao = container.dataset.icao;
+                        if (icao) {
+                            weatherData[icao] = {
+                                metarHTML: container.querySelector('.metar-container').innerHTML,
+                                tafHTML: container.querySelector('.taf-container').innerHTML
+                            };
+                        }
+                    });
                 
-                try {
                     const dataToSave = {
                         id: 'currentSession',
                         fds: await fileToSavable(fdsFileObject),
@@ -1771,18 +1789,27 @@
                         savedAt: new Date()
                     };
 
-                    const store = db.transaction([storeName], 'readwrite').objectStore(storeName);
+                    const store = localDb.transaction([storeName], 'readwrite').objectStore(storeName);
+                    
+                    // La méthode .put() est atomique : elle remplace l'ancienne sauvegarde par la nouvelle.
+                    // C'est plus sûr qu'un .clear() suivi d'un .add(), car il n'y a pas de risque de perte de données si l'ajout échoue.
                     const request = store.put(dataToSave);
+
                     request.onsuccess = () => { 
                         const now = new Date();
                         const formattedTime = `${String(now.getHours()).padStart(2, '0')}h${String(now.getMinutes()).padStart(2, '0')}`;
                         sessionStatus.textContent = `Session sauvegardée à ${formattedTime}`; 
                     };
-                    request.onerror = (e) => { sessionStatus.textContent = `Erreur de sauvegarde: ${e.target.error}`; console.error("Erreur IndexedDB:", e.target.error);};
+                    request.onerror = (e) => { 
+                        sessionStatus.textContent = `Erreur de sauvegarde: ${e.target.error}`; 
+                        console.error("Erreur IndexedDB:", e.target.error);
+                    };
+
                 } catch (error) {
-                    sessionStatus.textContent = `Erreur de préparation des fichiers: ${error.message}`;
-                    console.error("Erreur de préparation avant sauvegarde :", error);
+                    sessionStatus.textContent = `Erreur lors de la sauvegarde: ${error.message}`;
+                    console.error("Erreur de sauvegarde :", error);
                 } finally {
+                    if (localDb) localDb.close(); // On ferme la connexion après usage.
                     isSavingSession = false;
                     saveBtnTop.disabled = false;
                     saveBtnBottom.disabled = false;
@@ -1791,17 +1818,40 @@
 
             saveBtnTop.addEventListener('click', performSave);
             saveBtnBottom.addEventListener('click', performSave);
+
             document.getElementById('clear-session-btn').addEventListener('click', async () => {
                 if (confirm("Vraiment effacer la session sauvegardée ?")) {
-                    try { if (!db) await openDB(); db.transaction([storeName], 'readwrite').objectStore(storeName).clear(); alert("Sauvegarde effacée. Rechargement..."); location.reload(); }
-                    catch (error) { sessionStatus.textContent = `Erreur: ${error}`; }
+                    let localDb;
+                    try { 
+                        localDb = await openDB();
+                        const request = localDb.transaction([storeName], 'readwrite').objectStore(storeName).clear(); 
+                        request.onsuccess = () => {
+                            alert("Sauvegarde effacée. Rechargement..."); 
+                            location.reload();
+                        };
+                        request.onerror = (e) => {
+                            sessionStatus.textContent = `Erreur: ${e.target.error}`;
+                        };
+                    }
+                    catch (error) { 
+                        sessionStatus.textContent = `Erreur: ${error}`; 
+                    } finally {
+                        if (localDb) localDb.close();
+                    }
                 }
             });
 
             (async function loadSession() {
+                let db;
                 try {
-                    await openDB();
-                    db.transaction([storeName], 'readonly').objectStore(storeName).get('currentSession').onsuccess = e => {
+                    db = await openDB(); // Ouvre la connexion pour la lecture initiale
+                    const request = db.transaction([storeName], 'readonly').objectStore(storeName).get('currentSession');
+
+                    request.onerror = (e) => {
+                         sessionStatus.textContent = `Erreur DB: ${e.target.error}`;
+                    };
+
+                    request.onsuccess = e => {
                         const data = e.target.result;
                         if (data) {
                             if (data.fds) {
@@ -1820,7 +1870,7 @@
                                 if (hasGaarPdf) {
                                    document.getElementById('pdf-load-gaar-btn').style.display = 'none';
                                 }
-                                document.getElementById('pdf-reset-gaar-btn').style.display = 'inline-block';
+                                document.getElementById('pdf-reset-gaar-btn').style.display = hasGaarPdf ? 'inline-block' : 'none';
                                 document.getElementById('gaar-map-nav-link').style.display = 'block';
                             }
                             
@@ -1828,8 +1878,7 @@
                                 const file = savableToFile(data.gaar);
                                 gaarFileObject = file;
                                 document.getElementById('pdf-info-gaar').textContent = `Document chargé : ${file.name}`;
-                                const callback = hasGaarMapState ? null : initializeGaarMapFromFile;
-                                createInteractivePdfHandler(document.getElementById('pdf-interactive-container-gaar'), file, callback, 1.3);
+                                createInteractivePdfHandler(document.getElementById('pdf-interactive-container-gaar'), file, initializeGaarMapFromFile, 1.3);
                             }
                             
                             if (hasGaarMapState) {
@@ -1862,7 +1911,11 @@
                             sessionStatus.textContent = "Aucune session sauvegardée.";
                         }
                     };
-                } catch (error) { sessionStatus.textContent = `Erreur DB: ${error}`; }
+                } catch (error) { 
+                    sessionStatus.textContent = `Erreur DB: ${error}`; 
+                } finally {
+                    if (db) db.close(); // On ferme la connexion après la lecture/écriture
+                }
             })();
         }
         
@@ -2053,7 +2106,7 @@
             const keywordsToFilter = [
                 'aerodrome administration', 'animal', 'avgas 100ll', 'crane', 'dme', 'drill', 
                 'fato', 'grf', 'handling', 'lights', 'model flying', 'night parachuting', 
-                'obst', 'obstacles', 'obstacle', 'police', 'radar', 'rffs', 'telescopic', 'trees', 
+                'obst', 'obstacles', 'police', 'radar', 'rffs', 'telescopic', 'trees', 
                 'unpaved', 'vor', 'wig wag'
             ];
 
@@ -2133,7 +2186,7 @@
                     }
 
                     if (activeKeywords.length > 0 && !shouldBeHidden) {
-                        const itemText = item.textContent.toLowerCase();
+                        const itemText = item.textContent;
                         if (activeKeywords.some(k => {
                             const regex = new RegExp(`\\b${k.replace(/ /g, '\\s')}\\b`, 'i');
                             return regex.test(itemText);
@@ -2153,8 +2206,26 @@
                     const lines = section.trim().split('\n'), header = lines.shift() || "";
                     if (!header.match(/^LF[A-Z]{2}\s+-\s+/)) return;
                     if (header.includes("No information received")) { airportsData[header] = [header]; return; }
-                    const content = lines.join('\n').replace(/Page \d+ of \d+\s*\n?/gi, '').replace(/\.(Q\))/g, '.\n$1');
-                    airportsData[header] = content.split(/(?=Q\))/g).filter(b => b.trim().startsWith('Q)')).map(b => b.trim().replace(/(\r\n|\n){2,}/g, '\n'));
+                    
+                    let content = lines.join('\n').replace(/Page \d+ of \d+\s*\n?/gi, '');
+                    const notamBlocks = content.split(/(?=Q\))/g).filter(b => b.trim().startsWith('Q)'));
+                    
+                    let currentNotamNumber = '';
+                    const processedBlocks = [];
+
+                    content.split('\n').forEach(line => {
+                        const notamNumberMatch = line.match(/([A-Z]\d{4}\/\d{2})$/);
+                        if(notamNumberMatch) {
+                            currentNotamNumber = notamNumberMatch[1];
+                        }
+                        if(line.startsWith('Q)')) {
+                            processedBlocks.push(line.trim() + ' ' + currentNotamNumber);
+                        } else if (processedBlocks.length > 0) {
+                            processedBlocks[processedBlocks.length-1] += '\n' + line;
+                        }
+                    });
+
+                    airportsData[header] = processedBlocks;
                 });
                 
                 Object.keys(airportsData).forEach(airportName => {
