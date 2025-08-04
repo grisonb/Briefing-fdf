@@ -603,14 +603,14 @@
         <button class="nav-toggle" id="nav-toggle" aria-label="Menu">&#9776;</button>
         <ul class="nav-links" id="nav-links">
             <li><a href="#fds-section">FDS</a></li>
-            <li><a href="#risk-maps-section">RISQUES</a></li>
+            <li><a href="#dispo-pelic-section">DISPO AVIONS/PELIC</a></li>
             <li><a href="#gaar-section">GAAR</a></li>
+            <li><a href="#risk-maps-section">RISQUES</a></li>
             <li id="gaar-map-nav-link"><a href="#gaar-map-section">Carte GAAR</a></li>
             <li><a href="#temsi-section">TEMSI</a></li>
             <li><a href="#windy-section">WINDY</a></li>
             <li><a href="#notam-section">NOTAMs/METAR</a></li>
             <li><a href="#sup-aip-section">SUP AIP</a></li>
-            <li><a href="#pelican-section">PELIC.</a></li>
             <li><a href="#synergi-section">SYNERGI</a></li>
             <li><a href="#google-earth-section">GOOGLE EARTH</a></li>
         </ul>
@@ -620,7 +620,7 @@
         <div class="page-header-background"></div>
         <h1 id="main-title">Briefing Fdf</h1>
         <p id="current-time-display"></p>
-        <p style="position: relative; z-index: 2; text-align: center; color: #333; font-size: 1em; margin-top: -25px; margin-bottom: 30px;">v2.6</p>
+        <p style="position: relative; z-index: 2; text-align: center; color: #333; font-size: 1em; margin-top: -25px; margin-bottom: 30px;">v2.7</p>
     </div>
 
     <div class="session-management" id="session-section">
@@ -632,10 +632,9 @@
     </div>
 
     <div id="fds-section" class="pdf-section dropzone">
-        <h2>Feuille de Service / Dispo Avions</h2>
+        <h2>Feuille de Service</h2>
         <div class="pdf-controls">
             <button id="pdf-load-fds-btn" class="link-button" style="background-color: #2980b9;">Charger la Feuille de Service</button>
-            <a href="http://cncasc-app.fr/pages/ABE.php" target="_blank" class="link-button" style="background-color:#3498db;">Ouvrir dispo avions</a>
             <input type="file" id="pdf-input-fds" accept="application/pdf">
         </div>
         <div id="pdf-interactive-container-fds" class="interactive-pdf-viewer" style="display: none;">
@@ -645,14 +644,14 @@
         <p id="pdf-info-fds" class="pdf-info"></p>
     </div>
 
-    <div class="map-section" id="risk-maps-section">
-        <h2>Cartes des Risques Météo-France</h2>
+    <div class="map-section" id="dispo-pelic-section">
+        <h2>Dispo Avions / Pélicandrome</h2>
         <div class="controles" style="gap: 20px;">
-            <a href="http://www.meteo.fr/extranets/proxy/index/affiche/id/298186" target="_blank" class="link-button" style="background-color: #f39c12;">Carte des Risques / National</a>
-            <a href="http://www.meteo.fr/extranets/proxy/index/affiche/id/305344" target="_blank" class="link-button" style="background-color: #e67e22;">Carte des Risques / Zone Sud</a>
+            <a href="http://cncasc-app.fr/pages/ABE.php" target="_blank" class="link-button" style="background-color:#3498db;">Dispo avions</a>
+            <a href="https://cncasc-app.fr/pages/pelicandrome.php" target="_blank" class="link-button" style="background-color:#3498db;">Pélicandromes</a>
         </div>
     </div>
-
+    
     <div id="gaar-section" class="pdf-section dropzone">
         <h2>Diagramme GAAR</h2>
         <div class="pdf-controls">
@@ -668,6 +667,14 @@
         <p id="pdf-info-gaar" class="pdf-info"></p>
     </div>
     
+    <div class="map-section" id="risk-maps-section">
+        <h2>Carte des risques</h2>
+        <div class="controles" style="gap: 20px;">
+            <a href="http://www.meteo.fr/extranets/proxy/index/affiche/id/298186" target="_blank" class="link-button" style="background-color: #f39c12;">Carte des Risques / National</a>
+            <a href="http://www.meteo.fr/extranets/proxy/index/affiche/id/305344" target="_blank" class="link-button" style="background-color: #e67e22;">Carte des Risques / Zone Sud</a>
+        </div>
+    </div>
+
     <div class="map-section" id="gaar-map-section" style="display: none;">
         <h2>Carte des Circuits GAAR</h2>
         <div id="gaar-map-container">
@@ -811,13 +818,6 @@
         <input type="file" id="pdf-input-sup-aip" accept="application/pdf" multiple>
     </div>
 
-    <div class="map-section" id="pelican-section">
-        <h2>Pélicandromes</h2>
-        <div style="text-align:center;">
-            <a href="https://cncasc-app.fr/pages/pelicandrome.php" target="_blank" class="link-button" style="background-color:#3498db;">Ouvrir Pélicandromes</a>
-        </div>
-    </div>
-    
     <div class="map-section" id="synergi-section">
         <h2>SYNERGI / CNCASC</h2>
         <div class="controles">
