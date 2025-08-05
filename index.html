@@ -604,8 +604,8 @@
         <ul class="nav-links" id="nav-links">
             <li><a href="#fds-section">FDS</a></li>
             <li><a href="#dispo-pelic-section">DISPO AVIONS/PELIC</a></li>
-            <li><a href="#gaar-section">GAAR</a></li>
             <li><a href="#risk-maps-section">RISQUES</a></li>
+            <li><a href="#gaar-section">GAAR</a></li>
             <li id="gaar-map-nav-link"><a href="#gaar-map-section">Carte GAAR</a></li>
             <li><a href="#temsi-section">TEMSI</a></li>
             <li><a href="#windy-section">WINDY</a></li>
@@ -667,14 +667,6 @@
         <p id="pdf-info-gaar" class="pdf-info"></p>
     </div>
     
-    <div class="map-section" id="risk-maps-section">
-        <h2>Carte des risques</h2>
-        <div class="controles" style="gap: 20px;">
-            <a href="http://www.meteo.fr/extranets/proxy/index/affiche/id/298186" target="_blank" class="link-button" style="background-color: #f39c12;">Carte des Risques / National</a>
-            <a href="http://www.meteo.fr/extranets/proxy/index/affiche/id/305344" target="_blank" class="link-button" style="background-color: #e67e22;">Carte des Risques / Zone Sud</a>
-        </div>
-    </div>
-
     <div class="map-section" id="gaar-map-section" style="display: none;">
         <h2>Carte des Circuits GAAR</h2>
         <div id="gaar-map-container">
@@ -684,6 +676,14 @@
             </div>
             <div id="gaar-map-display"></div>
             <div id="gaar-status">Préparez vos circuits sur la carte</div>
+        </div>
+    </div>
+
+    <div class="map-section" id="risk-maps-section">
+        <h2>Carte des risques</h2>
+        <div class="controles" style="gap: 20px;">
+            <a href="http://www.meteo.fr/extranets/proxy/index/affiche/id/298186" target="_blank" class="link-button" style="background-color: #f39c12;">Carte des Risques / National</a>
+            <a href="http://www.meteo.fr/extranets/proxy/index/affiche/id/305344" target="_blank" class="link-button" style="background-color: #e67e22;">Carte des Risques / Zone Sud</a>
         </div>
     </div>
     
@@ -2106,7 +2106,7 @@
             const keywordsToFilter = [
                 'aerodrome administration', 'animal', 'avgas 100ll', 'crane', 'dme', 'drill', 
                 'fato', 'grf', 'handling', 'lights', 'model flying', 'night parachuting', 
-                'obst', 'obstacles', 'police', 'radar', 'rffs', 'telescopic', 'trees', 
+                'obst', 'obstacle', 'obstacles', 'police', 'radar', 'rffs', 'telescopic', 'trees', 
                 'unpaved', 'vor', 'wig wag'
             ];
 
