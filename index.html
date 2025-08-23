@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Briefing Fdf</title>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
@@ -620,7 +620,7 @@
         <div class="page-header-background"></div>
         <h1 id="main-title">Briefing Fdf</h1>
         <p id="current-time-display"></p>
-        <p style="position: relative; z-index: 2; text-align: center; color: #333; font-size: 1em; margin-top: -25px; margin-bottom: 30px;">v2.8.1</p>
+        <p style="position: relative; z-index: 2; text-align: center; color: #333; font-size: 1em; margin-top: -25px; margin-bottom: 30px;">v2.7.1</p>
     </div>
 
     <div class="session-management" id="session-section">
@@ -865,20 +865,7 @@
         }
         window.onload = waitForPdfJsAndInitialize;
         
-                function initializePage() {
-            // --- DÉBUT DU CODE AJOUTÉ POUR BLOQUER LE ZOOM SUR iOS ---
-            document.addEventListener('touchmove', function(event) {
-                // Bloque le geste si plus d'un doigt est utilisé (pincement pour zoomer)
-                if (event.touches.length > 1) {
-                    event.preventDefault();
-                }
-            }, { passive: false }); // 'passive: false' est crucial pour que preventDefault() fonctionne
-
-            document.addEventListener('gesturestart', function (event) {
-                event.preventDefault();
-            });
-            // --- FIN DU CODE AJOUTÉ ---
-
+        function initializePage() {
             window.scrollTo(0, 0);
             initializeNavigation(); 
             initializePageTitle();
