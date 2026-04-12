@@ -12,11 +12,11 @@ Recharge la dernière sauvegarde pour reprendre rapidement la session.
 ## 4) Partager
 Génère un lien de partage de la session pour l'envoyer à une autre personne.
 
-## 5) CNCAC
-Ouvre CNCAC afin d'activer une session valide pendant **20 minutes**.
+## 5) CNCASC
+Ouvre CNCASC afin d'activer une session valide pendant **20 minutes**.
 Cette session est nécessaire pour que les boutons associés du briefing fonctionnent.
 
-> ⚠️ Remarque : valable sous réserve que le site CNCAC soit toujours disponible cette année.
+> ⚠️ Remarque : valable sous réserve que le site CNCASC soit toujours disponible cette année.
 
 ## Conseil pratique
-Si un bouton lié à CNCAC ne répond plus, rouvrir CNCAC puis relancer la session de 20 minutes.
+Si un bouton lié à CNCASC ne répond plus, rouvrir CNCASC puis relancer la session de 20 minutes.

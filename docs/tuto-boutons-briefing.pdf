@@ -12,7 +12,7 @@ endobj
 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
 endobj
 5 0 obj
-<< /Length 1087 >>
+<< /Length 1091 >>
 stream
 BT
 /F1 12 Tf
@@ -45,9 +45,9 @@ BT
 0 -18 Td
 () Tj
 0 -18 Td
-(5\) CNCAC) Tj
+(5\) CNCASC) Tj
 0 -18 Td
-(   Ouvre CNCAC afin d'activer une session valide pendant 20 minutes.) Tj
+(   Ouvre CNCASC afin d'activer une session valide pendant 20 minutes.) Tj
 0 -18 Td
 (   Cette session est necessaire pour que les boutons associes du briefing fonctionnent.) Tj
 0 -18 Td
@@ -57,7 +57,7 @@ BT
 0 -18 Td
 (Conseil pratique) Tj
 0 -18 Td
-(- Si un bouton lie a CNCAC ne repond plus, rouvrir CNCAC puis relancer la session de 20 minutes.) Tj
+(- Si un bouton lie a CNCASC ne repond plus, rouvrir CNCASC puis relancer la session de 20 minutes.) Tj
 ET
 endstream
 endobj
@@ -72,5 +72,5 @@ xref
 trailer
 << /Size 6 /Root 1 0 R >>
 startxref
-1450
+1454
 %%EOF
