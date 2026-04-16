@@ -639,16 +639,19 @@
         <div class="page-header-background"></div>
         <h1 id="main-title">Briefing Fdf</h1>
         <p id="current-time-display"></p>
-        <p style="position: relative; z-index: 2; text-align: center; color: #333; font-size: 1em; margin-top: -25px; margin-bottom: 30px;">v<span id="app-version">2026.1</span></p>
+        <p style="position: relative; z-index: 2; text-align: center; color: #333; font-size: 1em; margin-top: -25px; margin-bottom: 30px;">
+    v<span id="app-version">2026.1</span>
+    <button id="force-update-btn" class="link-button" style="background-color: #34495e; padding: 4px 10px; font-size: 0.8em; margin-left: 10px; vertical-align: middle;">
+        Forcer MAJ
+    </button>
+</p>
     </div>
 
     <div class="session-management" id="session-section">
     <button id="save-session-btn" class="link-button" style="background-color: #28a745;">Sauvegarder</button>
     <button id="restore-session-btn" class="link-button" style="background-color: #1abc9c;">Restaurer</button>
-    <button id="clear-session-btn" class="link-button" style="background-color: var(--sc-red);">Effacer</button>
-    <button id="restore-session-btn" class="link-button" style="background-color: #1abc9c;">Restaurer</button>
-
     <button id="export-session-btn" class="link-button" style="background-color: #8e44ad;">Partager</button>
+    <button id="clear-session-btn" class="link-button" style="background-color: var(--sc-red);">Effacer</button>
     <a href="https://cncasc-app.fr/" target="_blank" class="link-button" style="background-color: #3498db;">CNCASC</a>
     <p id="session-status"></p>
     <div id="share-result">
@@ -863,9 +866,7 @@
         </div>
     </div>
     
-    <div style="text-align: center; margin: 40px 0 20px 0;">
-        <button id="save-session-btn-bottom" class="link-button" style="background-color: #28a745;">Sauvegarder la session</button>
-    </div>
+
     
     <button id="back-to-top-btn" title="Retour en haut">&#8679;</button>
 
@@ -910,28 +911,75 @@
         }
         
         function initializePage() {
-            window.scrollTo(0, 0);
-            const appVersionEl = document.getElementById('app-version');
-            if (appVersionEl) appVersionEl.textContent = APP_VERSION;
-            initializeNavigation(); 
-            initializePageTitle();
-            initializeTemsi();
-            initializeWindy();
-            if (window.pdfjsLib) {
-                initializeInteractivePdfViewers();
-            } else {
-                console.warn("Visionneuse PDF désactivée (pdf.js introuvable).");
-            }
-            initializeSupAipLoader();
-            initializeNotamParser(); 
-            initializeManualMetarFetch();
-            initializeForeFlightButton();
-            initializeSessionManagement();
-            initializeHelpTooltips();
-            initializeGaarMapControls();
-            setInterval(checkWeatherValidity, 60000); // Vérifie la validité des METARs et TAFs chaque minute
+    window.scrollTo(0, 0);
+    const appVersionEl = document.getElementById('app-version');
+    if (appVersionEl) appVersionEl.textContent = APP_VERSION;
+
+    const forceUpdateBtn = document.getElementById('force-update-btn');
+    if (forceUpdateBtn) {
+        forceUpdateBtn.addEventListener('click', forceAppUpdate);
+    }
+
+    initializeNavigation(); 
+    initializePageTitle();
+    initializeTemsi();
+    initializeWindy();
+    if (window.pdfjsLib) {
+        initializeInteractivePdfViewers();
+    } else {
+        console.warn("Visionneuse PDF désactivée (pdf.js introuvable).");
+    }
+    initializeSupAipLoader();
+    initializeNotamParser(); 
+    initializeManualMetarFetch();
+    initializeForeFlightButton();
+    initializeSessionManagement();
+    initializeHelpTooltips();
+    initializeGaarMapControls();
+    setInterval(checkWeatherValidity, 60000); // Vérifie la validité des METARs et TAFs chaque minute
+}
+        async function forceAppUpdate() {
+    const btn = document.getElementById('force-update-btn');
+    const originalText = btn ? btn.textContent : '';
+
+    try {
+        if (btn) {
+            btn.disabled = true;
+            btn.textContent = 'Mise à jour...';
         }
-        
+
+        // 1) Demande au navigateur de vérifier les SW enregistrés
+        if ('serviceWorker' in navigator) {
+            const registrations = await navigator.serviceWorker.getRegistrations();
+
+            for (const registration of registrations) {
+                try {
+                    await registration.update();
+                } catch (e) {}
+
+                try {
+                    await registration.unregister();
+                } catch (e) {}
+            }
+        }
+
+        // 2) Vide tous les caches connus
+        if ('caches' in window) {
+            const cacheNames = await caches.keys();
+            await Promise.all(cacheNames.map((cacheName) => caches.delete(cacheName)));
+        }
+
+        // 3) Rechargement propre depuis le serveur
+        window.location.reload();
+    } catch (error) {
+        console.error('Erreur lors du forçage de mise à jour :', error);
+        alert("Impossible de forcer la mise à jour automatiquement. Fermez puis rouvrez la page.");
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = originalText;
+        }
+    }
+}
         function initializeNavigation() {
             const nav = document.getElementById('main-nav');
             const navToggle = document.getElementById('nav-toggle');
@@ -1840,14 +1888,17 @@
     const shareQrImage = document.getElementById('share-qr-image');
     let lastShareUrl = "";
 
-    // Sécurité anti-merge/caching: ne garder qu'un seul bouton Restaurer visible.
-    const restoreButtons = Array.from(document.querySelectorAll('#restore-session-btn'));
-    restoreButtons.forEach((btn, idx) => { if (idx > 0) btn.remove(); });
-    const clearBtnPrimary = document.querySelector('#clear-session-btn');
-    const restoreBtnPrimary = document.querySelector('#restore-session-btn');
-    if (clearBtnPrimary && restoreBtnPrimary) {
-        clearBtnPrimary.insertAdjacentElement('afterend', restoreBtnPrimary);
-    }
+   // Sécurité anti-merge/caching: ne garder qu'un seul bouton Restaurer visible
+// et le laisser juste après "Sauvegarder".
+const restoreButtons = Array.from(document.querySelectorAll('#restore-session-btn'));
+restoreButtons.forEach((btn, idx) => { if (idx > 0) btn.remove(); });
+
+const saveBtnPrimary = document.querySelector('#save-session-btn');
+const restoreBtnPrimary = document.querySelector('#restore-session-btn');
+
+if (saveBtnPrimary && restoreBtnPrimary) {
+    saveBtnPrimary.insertAdjacentElement('afterend', restoreBtnPrimary);
+}
 
     let isSavingSession = false;
     const LEGACY_SHARE_API_BASE = 'https://grisonb.synology.me/briefing-api';
