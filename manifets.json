@@ -1,6 +1,6 @@
 {
-  "name": "Briefing FDF",
-  "short_name": "Briefing TEST",
+  "name": "Briefing",
+  "short_name": "Briefing",
   "description": "Briefing FDF avec Tour de France 2026",
   "start_url": "./index.html",
   "scope": "./",
