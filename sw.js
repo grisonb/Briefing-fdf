@@ -1,4 +1,4 @@
-const CACHE_NAME = 'briefing-fdf-v2026.3';
+const CACHE_NAME = 'briefing-fdf-v2026.4';
 
 const LOCAL_ASSETS = [
   './manifest.json',
