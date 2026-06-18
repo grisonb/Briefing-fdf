@@ -1,4 +1,4 @@
-const CACHE_NAME = 'briefing-fdf-v2026.5';
+const CACHE_NAME = 'briefing-fdf-v2026.6';
 
 const LOCAL_ASSETS = [
   './manifest.json',
@@ -26,7 +26,13 @@ const LOCAL_ASSETS = [
   './tdf2026/stage18.jpg',
   './tdf2026/stage19.jpg',
   './tdf2026/stage20.jpg',
-  './tdf2026/stage21.jpg'
+  './tdf2026/stage21.jpg',
+  './tdf2026/supaip/SUP_AIP_ETAPE_3.pdf',
+  './tdf2026/supaip/SUP_AIP_ETAPE_6.pdf',
+  './tdf2026/supaip/SUP_AIP_ETAPE_17.pdf',
+  './tdf2026/supaip/SUP_AIP_ETAPE_18.pdf',
+  './tdf2026/supaip/SUP_AIP_ETAPE_19.pdf',
+  './tdf2026/supaip/SUP_AIP_ETAPE_20.pdf'
 ];
 
 async function networkFirst(request) {
