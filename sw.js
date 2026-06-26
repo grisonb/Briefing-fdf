@@ -1,4 +1,4 @@
-const CACHE_NAME = 'briefing-fdf-v2026.6';
+const CACHE_NAME = 'briefing-fdf-v2026-10-ng';
 
 const LOCAL_ASSETS = [
   './manifest.json',
@@ -96,10 +96,51 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
   const sameOrigin = url.origin === self.location.origin;
 
+  // Ressources externes spéciales stockées sur le NAS BFG.
+  if (!sameOrigin && url.hostname === 'grisonb.synology.me' && (
+      url.pathname.includes('/briefing-data/risk-maps/') ||
+      url.pathname.includes('/briefing-data/gaar/') ||
+      url.pathname.includes('/briefing-data/temsi/') ||
+      url.pathname.includes('/briefing-api/get-risk-map-pdf.php') ||
+      url.pathname.includes('/briefing-api/get-risk-map-status.php') ||
+      url.pathname.includes('/briefing-api/get-gaar-pdf.php') ||
+      url.pathname.includes('/briefing-api/get-gaar-status.php')
+    )) {
+    event.respondWith((async () => {
+      try {
+        const networkRes = await fetch(event.request, { cache: 'no-store' });
+        const cache = await caches.open(CACHE_NAME);
+        cache.put(event.request, networkRes.clone()).catch(() => {});
+        return networkRes;
+      } catch (err) {
+        const cached = await caches.match(event.request);
+        if (cached) return cached;
+        throw err;
+      }
+    })());
+    return;
+  }
+
+  // Ressource externe spéciale : TEMSI Météo-France.
+  // Elle peut être mise en cache au moment de la sauvegarde pour un affichage hors ligne.
+  if (!sameOrigin && url.hostname === 'aviation.meteo.fr' && url.pathname.includes('/affiche_image.php')) {
+    event.respondWith((async () => {
+      try {
+        const networkRes = await fetch(event.request);
+        const cache = await caches.open(CACHE_NAME);
+        cache.put(event.request, networkRes.clone()).catch(() => {});
+        return networkRes;
+      } catch (err) {
+        const cached = await caches.match(event.request);
+        if (cached) return cached;
+        throw err;
+      }
+    })());
+    return;
+  }
+
   // IMPORTANT GAAR/Leaflet/iPad :
-  // On ne met plus en cache les ressources externes.
-  // Leaflet, OpenStreetMap, CDNJS, UNPKG, CheckWX, Météo-France, Windy, etc.
-  // passent directement au réseau.
+  // Les autres ressources externes restent hors cache.
   if (!sameOrigin) {
     event.respondWith(fetch(event.request));
     return;
@@ -108,7 +149,6 @@ self.addEventListener('fetch', (event) => {
   const isNavigation = event.request.mode === 'navigate';
   const isIndex =
     url.pathname.endsWith('/index.html') ||
-    url.pathname.endsWith('/Briefing-fdf/') ||
     url.pathname.endsWith('/Briefing-fdf/');
 
   if (isNavigation || isIndex) {
