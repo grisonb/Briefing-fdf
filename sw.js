@@ -1,4 +1,4 @@
-const CACHE_NAME = 'briefing-fdf-v2026-11-ng';
+const CACHE_NAME = 'briefing-fdf-v2026-12-ng';
 
 const LOCAL_ASSETS = [
   './manifest.json',
@@ -103,6 +103,8 @@ self.addEventListener('fetch', (event) => {
       url.pathname.includes('/briefing-data/temsi/') ||
       url.pathname.includes('/briefing-api/get-risk-map-pdf.php') ||
       url.pathname.includes('/briefing-api/get-risk-map-status.php') ||
+      url.pathname.includes('/briefing-api/request-risk-map-generation.php') ||
+      url.pathname.includes('/briefing-api/get-risk-map-generation-status.php') ||
       url.pathname.includes('/briefing-api/get-gaar-pdf.php') ||
       url.pathname.includes('/briefing-api/get-gaar-status.php') ||
       url.pathname.includes('/briefing-api/get-metar-taf.php')
@@ -150,6 +152,7 @@ self.addEventListener('fetch', (event) => {
   const isNavigation = event.request.mode === 'navigate';
   const isIndex =
     url.pathname.endsWith('/index.html') ||
+    url.pathname.endsWith('/Briefing_fdf_TEST/') ||
     url.pathname.endsWith('/Briefing-fdf/');
 
   if (isNavigation || isIndex) {
