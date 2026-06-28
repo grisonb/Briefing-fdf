@@ -6,8 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
     <title>Briefing Fdf</title>
-    <link rel="manifest" href="./manifest.json?v=2026.11-ng">
-    <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png?v=2026.11-ng">
+    <link rel="manifest" href="./manifest.json?v=2026.12-ng">
+    <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png?v=2026.12-ng">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="Briefing">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -1853,10 +1853,11 @@
             <li class="briefing-protected-data briefing-sensitive-hidden"><a href="#risk-maps-section">RISQUES</a></li>
             <li><a href="#temsi-section">TEMSI</a></li>
             <li><a href="#windy-section">WINDY</a></li>
-            <li><a href="#notam-section">NOTAM/METAR</a></li>
+            <li><a href="#notam-section">NOTAMS</a></li>
             <li id="tdf-nav-link"><a href="#tdf-section">Tour de France</a></li>
             <li><a href="#sup-aip-section">SUP AIP</a></li>
             <li class="briefing-protected-data briefing-sensitive-hidden"><a href="#cncasc-fdf-section">FDF CNCASC</a></li>
+            <li><a href="#synergi-section">SYNERGI</a></li>
             <li><a href="#google-earth-section">G. EARTH</a></li>
         </ul>
     </nav>
@@ -1866,7 +1867,7 @@
         <h1 id="main-title">Briefing Fdf</h1>
         <p id="current-time-display"></p>
         <p style="position: relative; z-index: 2; text-align: center; color: #333; font-size: 1em; margin-top: -25px; margin-bottom: 30px;">
-    v<span id="app-version">2026.11 NG</span>
+    v<span id="app-version">2026.12 NG</span>
     <button id="force-update-btn" class="link-button" style="background-color: #34495e; padding: 4px 10px; font-size: 0.8em; margin-left: 10px; vertical-align: middle;">
         Forcer MAJ
     </button>
@@ -1997,9 +1998,9 @@
     <div class="map-section briefing-protected-data briefing-sensitive-hidden" id="risk-maps-section">
         <h2>Carte des risques</h2>
         <div class="controles" style="gap: 20px;">
-            <button id="risk-maps-refresh-btn" class="link-button" style="background-color: #2980b9; color:white;">Actualiser</button>
-            <a id="risk-map-national-open" href="https://grisonb.synology.me/briefing-data/risk-maps/latest-risk-national.pdf" target="_blank" class="link-button" style="background-color: #f6d1dc; color:#7b1f3a;">Carte des Risques / National</a>
-            <a id="risk-map-zonesud-open" href="https://grisonb.synology.me/briefing-data/risk-maps/latest-risk-zonesud.pdf" target="_blank" class="link-button" style="background-color: #f4c2b8; color:#8a2a1d;">Cartes des Risques / Zone Sud</a>
+            <button id="risk-maps-force-mf-btn" class="link-button" style="background-color: #c0392b; color:white; font-weight:800;">Forcer MAJ Météo-France</button>
+            <a id="risk-map-national-open" href="https://grisonb.synology.me/briefing-data/risk-maps/latest-risk-national.pdf" target="_blank" class="link-button" style="background-color: #0a2c5a; color:white;">Carte des Risques / National</a>
+            <a id="risk-map-zonesud-open" href="https://grisonb.synology.me/briefing-data/risk-maps/latest-risk-zonesud.pdf" target="_blank" class="link-button" style="background-color: #145da0; color:white;">Carte des Risques / Zone Sud</a>
         </div>
         <p id="risk-maps-status" class="risk-map-status">Chargement des cartes depuis le NAS...</p>
         <div class="risk-maps-grid">
@@ -2225,7 +2226,7 @@
     <footer>Données : Météo-France, SIA, Windy.com, CheckWX.com. Page non commerciale, à usage personnel.</footer>
     
     <script>
-        const APP_VERSION = "2026.11 NG";
+        const APP_VERSION = "2026.12 NG";
 
         // --- Proxy NAS pour la source de données météo CheckWX ---
         const CHECKWX_PROXY_URL = "https://grisonb.synology.me/briefing-api/get-metar-taf.php";
@@ -4010,15 +4011,35 @@ const tdfStages = [
             return payload && payload.tomorrow && payload.tomorrow.exists ? payload.tomorrow : null;
         }
 
-        function getFdsStatusSignature_(payload) {
-            const today = payload && payload.today ? payload.today : (payload && payload.file ? payload.file : null);
-            const tomorrow = payload && payload.tomorrow ? payload.tomorrow : null;
+        function getFdsEntrySignature_(entry) {
+            if (!entry) return '';
             return [
-                today && today.updatedAt ? today.updatedAt : '',
-                today && today.originalFilename ? today.originalFilename : '',
-                tomorrow && tomorrow.updatedAt ? tomorrow.updatedAt : '',
-                tomorrow && tomorrow.originalFilename ? tomorrow.originalFilename : ''
+                entry.dateKey || entry.fileDate || '',
+                entry.updatedAt || '',
+                entry.mailDate || '',
+                entry.originalFilename || entry.filename || entry.file || '',
+                entry.sizeBytes || entry.size || ''
             ].join('|');
+        }
+
+        function getFdsStatusSignature_(payload) {
+            return [
+                getFdsEntrySignature_(getFdsTodayEntry_(payload)),
+                getFdsEntrySignature_(getFdsTomorrowEntry_(payload))
+            ].join('||');
+        }
+
+        function describeFdsStatusForWait_(payload) {
+            const today = getFdsTodayEntry_(payload);
+            const tomorrow = getFdsTomorrowEntry_(payload);
+            const parts = [];
+            if (today) {
+                parts.push(`jour=${today.originalFilename || today.file || today.dateKey || 'présent'} ${today.updatedAt || ''}`.trim());
+            }
+            if (tomorrow) {
+                parts.push(`lendemain=${tomorrow.originalFilename || tomorrow.file || tomorrow.dateKey || 'présent'} ${tomorrow.updatedAt || ''}`.trim());
+            }
+            return parts.join(' — ');
         }
 
         function updateFdsTomorrowButton_(statusPayload) {
@@ -4132,32 +4153,41 @@ const tdfStages = [
             return new Promise(resolve => setTimeout(resolve, ms));
         }
 
-        async function waitForUpdatedFdsStatus_(previousUpdatedAt) {
-            // v3.84 : attente allongée.
-            // Le traitement Gmail + Apps Script + NAS peut prendre plus de 20 secondes,
-            // surtout quand la FDS du lendemain vient juste d’arriver.
-            // Avant, un premier clic pouvait déclencher la mise à jour, mais le panneau
-            // "FDS du lendemain disponible" n’apparaissait qu’au second clic.
-            const maxAttempts = 36;
+        async function waitForUpdatedFdsStatus_(previousSignature) {
+            // v3.95 : attente robuste mais affichage simplifié.
+            // Objectif : un seul clic utilisateur, sans polluer l'écran avec tous les essais internes.
+            const maxAttempts = 45; // ~90 secondes
+            const retryGmailAttempts = new Set([8, 20, 32]);
+            const visibleProgressAttempts = new Set([0, 5, 10, 15, 20, 30, 40]);
             let lastPayload = null;
             let lastError = null;
 
             for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
-                await waitFds_(attempt === 0 ? 3000 : 2000);
+                await waitFds_(attempt === 0 ? 2500 : 2000);
+
+                if (retryGmailAttempts.has(attempt)) {
+                    setFdsAutoStatus_('Recherche FDS toujours en cours — relance automatique Gmail/NAS...');
+                    await callFdsGmailRefreshWithoutBlocking_().catch(() => {});
+                }
 
                 try {
                     lastPayload = await fetchFdsStatus_(Date.now());
                     updateFdsTomorrowButton_(lastPayload);
 
                     const currentSignature = getFdsStatusSignature_(lastPayload);
-                    if (!previousUpdatedAt || !currentSignature || currentSignature !== previousUpdatedAt) {
+
+                    if (!previousSignature || (currentSignature && currentSignature !== previousSignature)) {
                         return lastPayload;
                     }
 
-                    setFdsAutoStatus_(`Attente du PDF Gmail sur le NAS... essai ${attempt + 1}/${maxAttempts}`);
+                    if (visibleProgressAttempts.has(attempt)) {
+                        setFdsAutoStatus_('Recherche FDS en cours — attente de l’import Gmail/NAS...');
+                    }
                 } catch (error) {
                     lastError = error;
-                    setFdsAutoStatus_(`Statut NAS temporairement indisponible... essai ${attempt + 1}/${maxAttempts}`, { warning: true });
+                    if (visibleProgressAttempts.has(attempt)) {
+                        setFdsAutoStatus_('Recherche FDS en cours — statut NAS temporairement indisponible...', { warning: true });
+                    }
                 }
             }
 
@@ -4172,31 +4202,36 @@ const tdfStages = [
         async function actualiserFeuilleServiceDepuisGmail_() {
             const btn = document.getElementById('fds-auto-refresh-btn');
             const originalText = btn ? btn.textContent : '';
-            let previousUpdatedAt = '';
+            let previousSignature = '';
+            let currentStatus = null;
 
             try {
                 setFdsMode_(FDS_MODE_AUTO, { message: false });
                 if (btn) {
                     btn.disabled = true;
-                    btn.textContent = 'Actualisation...';
+                    btn.textContent = 'Recherche Gmail...';
                 }
 
-                setFdsAutoStatus_('Lecture du statut feuille de service sur le NAS...');
+                setFdsAutoStatus_('Recherche FDS en cours...');
                 try {
-                    const currentStatus = await fetchFdsStatus_(Date.now());
-                    previousUpdatedAt = getFdsStatusSignature_(currentStatus);
+                    currentStatus = await fetchFdsStatus_(Date.now());
+                    previousSignature = getFdsStatusSignature_(currentStatus);
+                    updateFdsTomorrowButton_(currentStatus);
                 } catch (statusError) {
-                    previousUpdatedAt = '';
+                    previousSignature = '';
                 }
 
-                setFdsAutoStatus_('Demande envoyée à Gmail via Apps Script...');
+                setFdsAutoStatus_('Recherche FDS lancée — ne pas recliquer.');
                 await callFdsGmailRefreshWithoutBlocking_();
 
-                setFdsAutoStatus_('Gmail appelé. Attente du nouveau PDF sur le NAS...');
-                const newStatus = await waitForUpdatedFdsStatus_(previousUpdatedAt);
+                if (btn) btn.textContent = 'Attente NAS...';
+                setFdsAutoStatus_('Recherche FDS en cours — attente de l’import Gmail/NAS...');
+                const newStatus = await waitForUpdatedFdsStatus_(previousSignature);
                 const todayEntry = getFdsTodayEntry_(newStatus);
                 const tomorrowEntry = getFdsTomorrowEntry_(newStatus);
+
                 if (todayEntry) {
+                    if (btn) btn.textContent = 'Chargement PDF...';
                     await loadFdsPdfFromNas_(newStatus, Date.now(), todayEntry.dateKey || todayEntry.fileDate, todayEntry);
                     const emailDate = todayEntry.mailDate ? formatFdsMetaDate_(todayEntry.mailDate) : formatFdsMetaDate_(todayEntry.updatedAt);
                     setFdsAutoStatus_(`Feuille de service du jour actualisée : ${todayEntry.originalFilename || 'PDF'} — email du ${emailDate}.`);
@@ -4205,7 +4240,7 @@ const tdfStages = [
                     if (tomorrowEntry) {
                         setFdsAutoStatus_('Aucune FDS du jour disponible. Une FDS du lendemain est disponible mais non affichée automatiquement.', { warning: true });
                     } else {
-                        setFdsAutoStatus_('Aucune FDS du jour disponible sur le NAS.', { warning: true });
+                        setFdsAutoStatus_('Recherche Gmail terminée, mais aucune FDS du jour disponible sur le NAS.', { warning: true });
                     }
                 }
             } catch (error) {
@@ -4554,6 +4589,8 @@ const tdfStages = [
 
         const BFG_RISK_MAP_SCALE = 1.5;
         const BFG_RISK_MAP_STATUS_URL = 'https://grisonb.synology.me/briefing-api/get-risk-map-status.php';
+        const BFG_RISK_MAP_REQUEST_URL = 'https://grisonb.synology.me/briefing-api/request-risk-map-generation.php';
+        const BFG_RISK_MAP_GENERATION_STATUS_URL = 'https://grisonb.synology.me/briefing-api/get-risk-map-generation-status.php';
 
         const BFG_RISK_MAPS = {
             national: {
@@ -4679,6 +4716,118 @@ const tdfStages = [
             }
         }
 
+        function getRiskMapGenerationStatusValue_(payload) {
+            return payload && payload.status && payload.status.status
+                ? String(payload.status.status).toLowerCase()
+                : '';
+        }
+
+        async function requestRiskMapGeneration_() {
+            const response = await fetch(`${BFG_RISK_MAP_REQUEST_URL}?source=bfg-test&v=${Date.now()}`, {
+                cache: 'no-store',
+                headers: {
+                    'Accept': 'application/json'
+                }
+            });
+
+            const payload = await response.json().catch(() => null);
+
+            if (!response.ok || !payload || !payload.ok) {
+                const message = payload && payload.message ? payload.message : `HTTP ${response.status}`;
+                throw new Error(`Demande Météo-France refusée : ${message}`);
+            }
+
+            return payload.request || payload;
+        }
+
+        async function fetchRiskMapGenerationStatus_(cacheBuster) {
+            const response = await fetch(`${BFG_RISK_MAP_GENERATION_STATUS_URL}?v=${cacheBuster}`, {
+                cache: 'no-store',
+                headers: {
+                    'Accept': 'application/json'
+                }
+            });
+
+            const payload = await response.json().catch(() => null);
+
+            if (!response.ok || !payload || !payload.ok) {
+                const message = payload && payload.message ? payload.message : `HTTP ${response.status}`;
+                throw new Error(`Statut demande Météo-France indisponible : ${message}`);
+            }
+
+            return payload;
+        }
+
+        async function waitForRiskMapGenerationSuccess_(requestId, timeoutMs = 180000) {
+            const startedAt = Date.now();
+            let lastStatus = '';
+
+            while (Date.now() - startedAt < timeoutMs) {
+                const elapsedSeconds = Math.round((Date.now() - startedAt) / 1000);
+                setRiskMapsStatus_(`Demande Météo-France envoyée au VPS — attente résultat (${elapsedSeconds}s)...`);
+
+                const payload = await fetchRiskMapGenerationStatus_(Date.now());
+                const status = getRiskMapGenerationStatusValue_(payload);
+                const statusId = payload && payload.status && payload.status.id ? String(payload.status.id) : '';
+
+                if (statusId === requestId) {
+                    lastStatus = status || lastStatus;
+
+                    if (status === 'success' || status === 'done' || status === 'completed') {
+                        return payload.status;
+                    }
+
+                    if (status === 'error' || status === 'failed' || status === 'failure') {
+                        const message = payload.status && payload.status.message ? payload.status.message : 'échec inconnu';
+                        throw new Error(`Mise à jour Météo-France échouée : ${message}`);
+                    }
+                }
+
+                await new Promise(resolve => setTimeout(resolve, 5000));
+            }
+
+            throw new Error(`Délai dépassé en attente du VPS${lastStatus ? ` — dernier statut : ${lastStatus}` : ''}.`);
+        }
+
+        async function forceRiskMapsMeteoFrance_() {
+            const btn = document.getElementById('risk-maps-force-mf-btn');
+            const refreshBtn = document.getElementById('risk-maps-refresh-btn');
+            const originalText = btn ? btn.textContent : '';
+
+            try {
+                if (btn) {
+                    btn.disabled = true;
+                    btn.textContent = 'MAJ MF en cours...';
+                }
+                if (refreshBtn) refreshBtn.disabled = true;
+
+                setRiskMapsStatus_('Création demande de mise à jour Météo-France...');
+                const request = await requestRiskMapGeneration_();
+                const requestId = request && request.id ? String(request.id) : '';
+
+                if (!requestId) {
+                    throw new Error('Demande créée mais identifiant absent.');
+                }
+
+                setRiskMapsStatus_(`Demande ${requestId} créée — attente du VPS...`);
+                const finalStatus = await waitForRiskMapGenerationSuccess_(requestId);
+
+                const updatedAt = finalStatus && finalStatus.updatedAt ? formatRiskMapMeta_({ updatedAt: finalStatus.updatedAt }) : '';
+                setRiskMapsStatus_(`Mise à jour Météo-France terminée${updatedAt ? ` à ${updatedAt}` : ''}. Rechargement des cartes...`);
+
+                await loadRiskMaps_();
+            } catch (error) {
+                console.error(error);
+                setRiskMapsStatus_(`Erreur Forcer MAJ Météo-France : ${error.message || error}`);
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = originalText || 'Forcer MAJ Météo-France';
+                }
+                if (refreshBtn) refreshBtn.disabled = false;
+            }
+        }
+
         function initializeRiskMaps() {
             const refreshBtn = document.getElementById('risk-maps-refresh-btn');
             if (refreshBtn) {
@@ -4686,6 +4835,11 @@ const tdfStages = [
                     setRiskMapsStatus_('Requête serveur en cours pour vérifier les dernières cartes...');
                     loadRiskMaps_();
                 });
+            }
+
+            const forceMfBtn = document.getElementById('risk-maps-force-mf-btn');
+            if (forceMfBtn) {
+                forceMfBtn.addEventListener('click', forceRiskMapsMeteoFrance_);
             }
 
             loadRiskMaps_();
