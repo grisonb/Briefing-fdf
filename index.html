@@ -6,8 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
     <title>Briefing Fdf</title>
-    <link rel="manifest" href="./manifest.json?v=2026.13-ng">
-    <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png?v=2026.13-ng">
+    <link rel="manifest" href="./manifest.json?v=2026.14-ng">
+    <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png?v=2026.14-ng">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="Briefing">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -258,6 +258,11 @@
         .session-actions-row .link-button {
             margin: 5px 6px;
         }
+        /* v4.21 : le partage reste compact. Aucun panneau QR / dernier partage ne s'affiche après création. */
+        #share-result, #last-share-panel {
+            display: none !important;
+        }
+
         .shared-briefing-panel {
             margin: 14px auto 0 auto;
             max-width: 420px;
@@ -1915,7 +1920,7 @@
         <h1 id="main-title">Briefing Fdf</h1>
         <p id="current-time-display"></p>
         <p style="position: relative; z-index: 2; text-align: center; color: #333; font-size: 1em; margin-top: -25px; margin-bottom: 30px;">
-    v<span id="app-version">2026.13 NG</span>
+    v<span id="app-version">2026.14 NG</span>
     <button id="force-update-btn" class="link-button" style="background-color: #34495e; padding: 4px 10px; font-size: 0.8em; margin-left: 10px; vertical-align: middle;">
         Forcer MAJ
     </button>
@@ -2291,7 +2296,7 @@
     <footer>Données : Météo-France, SIA, Windy.com, CheckWX.com. Page non commerciale, à usage personnel.</footer>
     
     <script>
-        const APP_VERSION = "2026.13 NG";
+        const APP_VERSION = "2026.14 NG";
 
         // --- Proxy NAS pour la source de données météo CheckWX ---
         const CHECKWX_PROXY_URL = "https://grisonb.synology.me/briefing-api/get-metar-taf.php";
@@ -2366,8 +2371,7 @@ const tdfStages = [
             const tdfHideDate = '2026-07-27';
 
             // Affichage Tour de France borné à la période définie.
-            // Pour revenir au comportement opérationnel normal, remettre cette constante à false.
-            // Contrainte conservée : affichage normal uniquement du 04/07/2026 au 26/07/2026 inclus.
+            // Mettre à true uniquement pour test temporaire.
             const TDF_FORCE_DISPLAY = false;
             const shouldShowTdf = TDF_FORCE_DISPLAY || (today >= tdfStartDate && today < tdfHideDate);
 
@@ -2622,42 +2626,63 @@ const tdfStages = [
         }
 
         function preventIpadKeyboardOnStartup_() {
-            const input = document.getElementById('cncasc-password-input');
-            if (!input) return;
+            const guardedInputs = [
+                document.getElementById('cncasc-password-input'),
+                document.getElementById('shared-code-input')
+            ].filter(Boolean);
 
-            // Authentification NAS par GET CORS simple, jeton valable jusqu’à 23h00.
-            // La v4.14 pouvait empêcher la saisie du code accès Briefing sur iPad
-            // selon le moment où Safari déclenchait pointerdown / focus.
-            input.removeAttribute('readonly');
-            input.disabled = false;
+            if (guardedInputs.length === 0) return;
 
-            let userInteractionStarted = false;
+            guardedInputs.forEach((input) => {
+                input.removeAttribute('autofocus');
+                input.autofocus = false;
 
-            const enableForUserTyping = () => {
-                userInteractionStarted = true;
-                input.removeAttribute('readonly');
-                input.disabled = false;
-            };
-
-            const forceBlurOnStartupOnly = () => {
-                if (!userInteractionStarted && document.activeElement === input) {
-                    input.blur();
+                if (input.id === 'cncasc-password-input') {
+                    input.removeAttribute('readonly');
+                    input.disabled = false;
                 }
-            };
 
-            window.setTimeout(forceBlurOnStartupOnly, 50);
-            window.setTimeout(forceBlurOnStartupOnly, 300);
-            window.setTimeout(forceBlurOnStartupOnly, 1000);
+                let allowFocusUntil = 0;
 
-            input.addEventListener('pointerdown', enableForUserTyping, { passive: true });
-            input.addEventListener('touchstart', enableForUserTyping, { passive: true });
-            input.addEventListener('mousedown', enableForUserTyping);
-            input.addEventListener('focus', enableForUserTyping);
+                const markUserTypingIntent = () => {
+                    allowFocusUntil = Date.now() + 1600;
+                    if (input.id === 'cncasc-password-input') {
+                        input.removeAttribute('readonly');
+                        input.disabled = false;
+                    }
+                };
 
-            window.addEventListener('pageshow', () => {
-                input.removeAttribute('readonly');
-                input.disabled = false;
-                window.setTimeout(forceBlurOnStartupOnly, 50);
+                const blurIfAutomaticStartupFocus = () => {
+                    if (Date.now() > allowFocusUntil && document.activeElement === input) {
+                        input.blur();
+                    }
+                };
+
+                input.addEventListener('pointerdown', markUserTypingIntent, { passive: true });
+                input.addEventListener('touchstart', markUserTypingIntent, { passive: true });
+                input.addEventListener('mousedown', markUserTypingIntent);
+                input.addEventListener('focus', () => {
+                    // Ne pas considérer un focus automatique Safari/PWA comme une intention de saisie.
+                    // Seul un pointerdown/touchstart/mousedown préalable autorise le clavier.
+                    if (Date.now() > allowFocusUntil) {
+                        window.setTimeout(blurIfAutomaticStartupFocus, 0);
+                        window.setTimeout(blurIfAutomaticStartupFocus, 80);
+                    }
+                });
+
+                window.setTimeout(blurIfAutomaticStartupFocus, 0);
+                window.setTimeout(blurIfAutomaticStartupFocus, 50);
+                window.setTimeout(blurIfAutomaticStartupFocus, 300);
+                window.setTimeout(blurIfAutomaticStartupFocus, 1000);
+
+                window.addEventListener('pageshow', () => {
+                    if (input.id === 'cncasc-password-input') {
+                        input.removeAttribute('readonly');
+                        input.disabled = false;
+                    }
+                    window.setTimeout(blurIfAutomaticStartupFocus, 50);
+                    window.setTimeout(blurIfAutomaticStartupFocus, 300);
+                });
             });
         }
 
@@ -3253,7 +3278,7 @@ const tdfStages = [
                 if (unlockBtn) unlockBtn.disabled = true;
                 setCncascWarning_('Connexion Briefing en cours...');
 
-                // Le NAS Synology intercepte certains POST/401 : authentification en GET avec réponses JSON HTTP 200.
+                // v4.20 : le POST vers ce fichier est intercepté par Synology avant PHP.
                 // On utilise donc un GET CORS simple, avec URL unique par tentative.
                 // Le code n'est pas affiché dans l'adresse Safari : il est seulement dans la requête fetch.
                 const authUrl = `${CNCASC_AUTH_API_URL}?v=7&t=${Date.now()}&code=${encodeURIComponent(password)}`;
@@ -6407,6 +6432,30 @@ const tdfStages = [
     const LAST_SHARE_STORAGE_KEY = 'briefingFdfLastShareCodeV1';
     let lastShareUrl = "";
     let lastShareCode = ""; 
+    const LAST_SAVE_STATUS_STORAGE_KEY = 'briefingFdfLastSaveStatusV1';
+
+    function getLastSaveStatus_() {
+        return String(localStorage.getItem(LAST_SAVE_STATUS_STORAGE_KEY) || '').trim();
+    }
+
+    function setLastSaveStatus_(message) {
+        const normalized = String(message || '').trim();
+        if (normalized) localStorage.setItem(LAST_SAVE_STATUS_STORAGE_KEY, normalized);
+        else localStorage.removeItem(LAST_SAVE_STATUS_STORAGE_KEY);
+    }
+
+    function setSessionStatusWithMemory_(fallbackMessage = '') {
+        if (!sessionStatus) return;
+
+        const parts = [];
+        const saveMessage = getLastSaveStatus_();
+        const storedShareCode = normalizeShareCode_(localStorage.getItem(LAST_SHARE_STORAGE_KEY));
+
+        if (saveMessage) parts.push(saveMessage);
+        if (storedShareCode) parts.push(`Code de partage généré : ${storedShareCode}`);
+
+        sessionStatus.textContent = parts.length > 0 ? parts.join(' — ') : fallbackMessage;
+    }
 
     let isSavingSession = false;
     const LEGACY_SHARE_API_BASE = 'https://grisonb.synology.me/briefing-api';
@@ -6623,31 +6672,38 @@ let activeShareApiBase = SHARE_API_BASE;
         renderLastShareCode_();
     }
 
-    function renderLastShareCode_() {
+    function renderLastShareCode_(options = {}) {
         const storedCode = normalizeShareCode_(localStorage.getItem(LAST_SHARE_STORAGE_KEY));
-        if (!storedCode) {
-            if (lastSharePanel) lastSharePanel.style.display = 'none';
-            return;
-        }
+
+        // v4.21 : pas de panneau "Partage créé" ni "Dernier partage créé".
+        // Le dernier code créé reste seulement dans la ligne d'état de l'iPad créateur.
+        if (shareResult) shareResult.style.display = 'none';
+        if (lastSharePanel) lastSharePanel.style.display = 'none';
+
+        if (!storedCode) return;
 
         lastShareCode = storedCode;
+        lastShareUrl = buildShareUrl(storedCode);
         if (lastShareCodeDisplay) lastShareCodeDisplay.textContent = storedCode;
-        if (lastSharePanel) lastSharePanel.style.display = 'block';
+        if (shareLinkInput) shareLinkInput.value = storedCode;
+        if (shareCodeDisplay) shareCodeDisplay.textContent = storedCode;
+
+        if (options.updateStatus !== false && sessionStatus) {
+            setSessionStatusWithMemory_();
+        }
     }
 
     function showShareResult(shareCode, shareUrl) {
         lastShareCode = normalizeShareCode_(shareCode);
-        lastShareUrl = shareUrl || "";
+        lastShareUrl = shareUrl || buildShareUrl(lastShareCode);
         if (!lastShareCode) return;
 
         persistLastShareCode_(lastShareCode);
 
-        if (shareLinkInput) shareLinkInput.value = lastShareCode;
-        if (shareCodeDisplay) shareCodeDisplay.textContent = lastShareCode;
-        if (shareQrImage) {
-            shareQrImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(lastShareCode)}`;
-        }
-        if (shareResult) shareResult.style.display = 'block';
+        // v4.21 : affichage compact uniquement.
+        if (shareResult) shareResult.style.display = 'none';
+        if (lastSharePanel) lastSharePanel.style.display = 'none';
+        if (sessionStatus) setSessionStatusWithMemory_();
     }
 
     function getShareIdFromUrl_(shareUrl) {
@@ -6847,7 +6903,9 @@ let activeShareApiBase = SHARE_API_BASE;
                 tx.onerror = () => reject(tx.error);
             });
 
-            sessionStatus.textContent = `Sauvegarde locale effectuée (${new Date(savable.savedAt).toLocaleString('fr-FR')})`;
+            const saveMessage = `Sauvegarde locale effectuée (${new Date(savable.savedAt).toLocaleString('fr-FR')})`;
+            setLastSaveStatus_(saveMessage);
+            setSessionStatusWithMemory_(saveMessage);
         } catch (error) {
             sessionStatus.textContent = `Erreur lors de la sauvegarde: ${error.message || error}`;
             console.error("Erreur de sauvegarde :", error);
@@ -6889,7 +6947,7 @@ let activeShareApiBase = SHARE_API_BASE;
                     const shareCode = normalizeShareCode_(remoteShare.shareCode || remoteShare.shareId);
                     const shareUrl = remoteShare.shareUrl || buildShareUrl(shareCode);
                     showShareResult(shareCode, shareUrl);
-                    sessionStatus.textContent = `Code de partage généré : ${shareCode}`;
+                    setSessionStatusWithMemory_();
                 } else {
                     const filename = downloadPortableJson_(portable);
                     shareResult && (shareResult.style.display = 'none');
@@ -7174,7 +7232,7 @@ let activeShareApiBase = SHARE_API_BASE;
 
     function applySavedSessionData_(data) {
         if (!data) {
-            sessionStatus.textContent = "Aucune session sauvegardée.";
+            setSessionStatusWithMemory_("Aucune session sauvegardée.");
             return;
         }
 
@@ -7262,7 +7320,7 @@ let activeShareApiBase = SHARE_API_BASE;
             restoreTemsiOfflineState_(data.temsiState);
         }
 
-        sessionStatus.textContent = `Session restaurée (du ${new Date(data.savedAt).toLocaleString('fr-FR')})`;
+        setSessionStatusWithMemory_(`Session restaurée (du ${new Date(data.savedAt).toLocaleString('fr-FR')})`);
     }
 
     async function restoreLocalSession_() {
