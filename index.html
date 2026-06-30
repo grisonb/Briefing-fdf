@@ -5,11 +5,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
-    <title>Briefing Fdf TEST v4.14</title>
-    <link rel="manifest" href="./manifest.json?v=4.03">
-    <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png?v=4.03">
+    <title>Briefing Fdf</title>
+    <link rel="manifest" href="./manifest.json?v=2026.13-ng">
+    <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png?v=2026.13-ng">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-title" content="Briefing TEST">
+    <meta name="apple-mobile-web-app-title" content="Briefing">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="theme-color" content="#0a2c5a">
 
@@ -829,7 +829,7 @@
             font-weight: bold;
         }
 
-        /* --- TOUR DE FRANCE TEST --- */
+        /* --- TOUR DE FRANCE --- */
         #tdf-section .tdf-controls {
             display: flex;
             flex-wrap: wrap;
@@ -1912,10 +1912,10 @@
 
     <div class="page-header">
         <div class="page-header-background"></div>
-        <h1 id="main-title">Briefing Fdf TEST v4.14</h1>
+        <h1 id="main-title">Briefing Fdf</h1>
         <p id="current-time-display"></p>
         <p style="position: relative; z-index: 2; text-align: center; color: #333; font-size: 1em; margin-top: -25px; margin-bottom: 30px;">
-    v<span id="app-version">4.13 TEST - Pencil NOTAM ligne texte verrouillée</span>
+    v<span id="app-version">2026.13 NG</span>
     <button id="force-update-btn" class="link-button" style="background-color: #34495e; padding: 4px 10px; font-size: 0.8em; margin-left: 10px; vertical-align: middle;">
         Forcer MAJ
     </button>
@@ -1926,7 +1926,7 @@
     <div class="cncasc-auth-panel cncasc-disconnected" id="cncasc-auth-panel">
         <h3>Accès Briefing</h3>
         <div class="cncasc-auth-row">
-            <input id="cncasc-password-input" type="text" inputmode="text" placeholder="Code accès Briefing" aria-label="Code accès Briefing" name="bfg-cncasc-code" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" data-lpignore="true" data-1p-ignore="true" data-form-type="other" readonly>
+            <input id="cncasc-password-input" type="text" inputmode="text" placeholder="Code accès Briefing" aria-label="Code accès Briefing" name="bfg-cncasc-code" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" data-lpignore="true" data-1p-ignore="true" data-form-type="other">
             <button id="cncasc-unlock-btn" class="link-button" style="background-color:#2980b9;">Connexion</button>
             <button id="cncasc-global-refresh-btn" class="link-button" style="background-color:#1abc9c;">Actualiser</button>
             <button id="cncasc-lock-btn" class="link-button" style="background-color:var(--sc-red);">Déconnexion</button>
@@ -2291,7 +2291,7 @@
     <footer>Données : Météo-France, SIA, Windy.com, CheckWX.com. Page non commerciale, à usage personnel.</footer>
     
     <script>
-        const APP_VERSION = "4.14 TEST - Login 23h + dernier partage mémorisé";
+        const APP_VERSION = "2026.13 NG";
 
         // --- Proxy NAS pour la source de données météo CheckWX ---
         const CHECKWX_PROXY_URL = "https://grisonb.synology.me/briefing-api/get-metar-taf.php";
@@ -2308,7 +2308,7 @@
 
 
 
-        // --- TOUR DE FRANCE TEST ---
+        // --- TOUR DE FRANCE ---
 // --- DONNÉES TOUR DE FRANCE 2026 ---
 const tdfStages = [
     { stage: 1, type: "C.L.M par équipe", name: "Barcelone > Barcelone", date: "2026-07-04", distance: "19 km", mapUrl: "./tdf2026/stage01.jpg", supAipUrl: null },
@@ -2365,11 +2365,11 @@ const tdfStages = [
             const tdfStartDate = '2026-07-04';
             const tdfHideDate = '2026-07-27';
 
-            // TEST v3.10 : affichage forcé de la fenêtre Tour de France pour tester les SUP AIP.
+            // Affichage Tour de France borné à la période définie.
             // Pour revenir au comportement opérationnel normal, remettre cette constante à false.
             // Contrainte conservée : affichage normal uniquement du 04/07/2026 au 26/07/2026 inclus.
-            const TDF_FORCE_DISPLAY_FOR_TEST = true;
-            const shouldShowTdf = TDF_FORCE_DISPLAY_FOR_TEST || (today >= tdfStartDate && today < tdfHideDate);
+            const TDF_FORCE_DISPLAY = false;
+            const shouldShowTdf = TDF_FORCE_DISPLAY || (today >= tdfStartDate && today < tdfHideDate);
 
             if (!shouldShowTdf) {
                 tdfSection.style.display = 'none';
@@ -2625,29 +2625,39 @@ const tdfStages = [
             const input = document.getElementById('cncasc-password-input');
             if (!input) return;
 
-            input.setAttribute('readonly', 'readonly');
+            // Authentification NAS par GET CORS simple, jeton valable jusqu’à 23h00.
+            // La v4.14 pouvait empêcher la saisie du code accès Briefing sur iPad
+            // selon le moment où Safari déclenchait pointerdown / focus.
+            input.removeAttribute('readonly');
+            input.disabled = false;
 
-            const forceBlur = () => {
-                if (document.activeElement === input) {
+            let userInteractionStarted = false;
+
+            const enableForUserTyping = () => {
+                userInteractionStarted = true;
+                input.removeAttribute('readonly');
+                input.disabled = false;
+            };
+
+            const forceBlurOnStartupOnly = () => {
+                if (!userInteractionStarted && document.activeElement === input) {
                     input.blur();
                 }
             };
 
-            forceBlur();
-            window.setTimeout(forceBlur, 50);
-            window.setTimeout(forceBlur, 300);
-            window.setTimeout(forceBlur, 1000);
+            window.setTimeout(forceBlurOnStartupOnly, 50);
+            window.setTimeout(forceBlurOnStartupOnly, 300);
+            window.setTimeout(forceBlurOnStartupOnly, 1000);
 
-            const enableForUserTyping = () => {
-                input.removeAttribute('readonly');
-            };
-
-            input.addEventListener('pointerdown', enableForUserTyping, { once: true });
-            input.addEventListener('touchstart', enableForUserTyping, { once: true, passive: true });
-            input.addEventListener('mousedown', enableForUserTyping, { once: true });
+            input.addEventListener('pointerdown', enableForUserTyping, { passive: true });
+            input.addEventListener('touchstart', enableForUserTyping, { passive: true });
+            input.addEventListener('mousedown', enableForUserTyping);
+            input.addEventListener('focus', enableForUserTyping);
 
             window.addEventListener('pageshow', () => {
-                window.setTimeout(forceBlur, 50);
+                input.removeAttribute('readonly');
+                input.disabled = false;
+                window.setTimeout(forceBlurOnStartupOnly, 50);
             });
         }
 
@@ -2727,7 +2737,10 @@ const tdfStages = [
             // Règle opérationnelle BFG : la connexion reste valable localement jusqu'à 23h00
             // du jour de connexion. Le jeton côté NAS doit aussi être émis jusqu'à 23h00.
             const localExp = getBfgLoginExpiryForToday_();
-            const exp = Math.max(serverExp, localExp);
+            // Ne jamais afficher une validité locale plus longue que celle réellement
+            // émise par le NAS. Si auth-cncasc.php n'est pas encore remplacé,
+            // l'interface montrera l'ancienne échéance, ce qui évite une fausse session active.
+            const exp = Math.min(serverExp, localExp);
 
             localStorage.setItem(CNCASC_TOKEN_STORAGE_KEY, token);
             localStorage.setItem(CNCASC_TOKEN_EXP_STORAGE_KEY, String(exp));
@@ -3240,15 +3253,12 @@ const tdfStages = [
                 if (unlockBtn) unlockBtn.disabled = true;
                 setCncascWarning_('Connexion Briefing en cours...');
 
-                const response = await fetch(CNCASC_AUTH_API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    cache: 'no-store',
-                    body: JSON.stringify({
-                        password,
-                        requestedExpiresAt: getBfgLoginExpiryIsoForToday_(),
-                        requestedPolicy: 'same-day-23h'
-                    })
+                // Le NAS Synology intercepte certains POST/401 : authentification en GET avec réponses JSON HTTP 200.
+                // On utilise donc un GET CORS simple, avec URL unique par tentative.
+                // Le code n'est pas affiché dans l'adresse Safari : il est seulement dans la requête fetch.
+                const authUrl = `${CNCASC_AUTH_API_URL}?v=7&t=${Date.now()}&code=${encodeURIComponent(password)}`;
+                const response = await fetch(authUrl, {
+                    method: 'GET'
                 });
 
                 const payload = await response.json().catch(() => null);
@@ -8342,7 +8352,7 @@ window.__notamTextFull = notamInput.value;
 
         function initializePageTitle() {
             const titleElement = document.getElementById('main-title');
-            titleElement.textContent = `Briefing Fdf TEST v4.14 du ${new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}`;
+            titleElement.textContent = `Briefing Fdf du ${new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}`;
             const timeDisplay = document.getElementById('current-time-display');
             const updateTime = () => timeDisplay.textContent = new Date().toLocaleTimeString('fr-FR');
             updateTime(); setInterval(updateTime, 1000);
