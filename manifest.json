@@ -1,7 +1,7 @@
 {
-  "name": "Briefing FDF",
-  "short_name": "Briefing",
-  "description": "Briefing FDF v2026.12 NG",
+  "name": "Briefing FDF TEST",
+  "short_name": "Briefing TEST",
+  "description": "Briefing FDF TEST v4.14 Login 23h et dernier partage mémorisé",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
