@@ -5,11 +5,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
-    <title>Briefing Fdf</title>
-    <link rel="manifest" href="./manifest.json?v=2026.12-ng">
-    <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png?v=2026.12-ng">
+    <title>Briefing Fdf TEST v4.14</title>
+    <link rel="manifest" href="./manifest.json?v=4.03">
+    <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png?v=4.03">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-title" content="Briefing">
+    <meta name="apple-mobile-web-app-title" content="Briefing TEST">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="theme-color" content="#0a2c5a">
 
@@ -300,6 +300,30 @@
             background: white;
             border-radius: 8px;
             padding: 6px;
+        }
+        #share-code-display, #last-share-code-display {
+            display: inline-block;
+            margin: 8px 0;
+            padding: 8px 12px;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.92);
+            color: #1f2d3d;
+            font-weight: 800;
+            letter-spacing: 1px;
+            font-size: 1.15em;
+        }
+        #last-share-panel {
+            margin-top: 12px;
+            background: rgba(255,255,255,0.12);
+            border: 1px solid rgba(255,255,255,0.35);
+            border-radius: 8px;
+            padding: 12px;
+            display: none;
+        }
+        .share-panel-note {
+            margin: 6px 0 10px 0;
+            font-size: 0.95em;
+            opacity: 0.95;
         }
         
         .map-section, .pdf-section, .notam-section {
@@ -624,6 +648,30 @@
             color: black;
         }
 
+        mark.highlighted-text.pencil-highlight-preview {
+            background-color: rgba(255, 215, 0, 0.55);
+            font-weight: normal;
+            outline: 1px dashed rgba(120, 90, 0, 0.55);
+        }
+
+        .notam-text-content.pencil-highlighter-active {
+            cursor: crosshair;
+            touch-action: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        html.pencil-notam-scroll-lock,
+        body.pencil-notam-scroll-lock {
+            overflow: hidden !important;
+            touch-action: none !important;
+            overscroll-behavior: none !important;
+        }
+
+        .pencil-undo-highlight-action {
+            background-color: #c0392b !important;
+        }
+
         .sup-aip-item { margin-bottom: 30px; border-top: 2px solid var(--sc-blue); padding-top: 20px; }
         
         .dropzone.drag-over { background-color: #fff8e1; border-color: var(--sc-yellow); border-style: dashed; }
@@ -781,7 +829,7 @@
             font-weight: bold;
         }
 
-        /* --- TOUR DE FRANCE --- */
+        /* --- TOUR DE FRANCE TEST --- */
         #tdf-section .tdf-controls {
             display: flex;
             flex-wrap: wrap;
@@ -1864,10 +1912,10 @@
 
     <div class="page-header">
         <div class="page-header-background"></div>
-        <h1 id="main-title">Briefing Fdf</h1>
+        <h1 id="main-title">Briefing Fdf TEST v4.14</h1>
         <p id="current-time-display"></p>
         <p style="position: relative; z-index: 2; text-align: center; color: #333; font-size: 1em; margin-top: -25px; margin-bottom: 30px;">
-    v<span id="app-version">2026.12 NG</span>
+    v<span id="app-version">4.13 TEST - Pencil NOTAM ligne texte verrouillée</span>
     <button id="force-update-btn" class="link-button" style="background-color: #34495e; padding: 4px 10px; font-size: 0.8em; margin-left: 10px; vertical-align: middle;">
         Forcer MAJ
     </button>
@@ -1894,6 +1942,21 @@
         <button id="save-session-btn" class="link-button" style="background-color: #28a745;">Sauvegarder</button>
         <button id="export-session-btn" class="link-button" style="background-color: #8e44ad;">Partager</button>
         <button id="clear-session-btn" class="link-button" style="background-color: var(--sc-red);">Effacer</button>
+    </div>
+    <div id="share-result" class="shared-briefing-panel" style="display: none;">
+        <h4>Partage créé</h4>
+        <p class="share-panel-note">Code à transmettre :</p>
+        <div id="share-code-display"></div><br>
+        <input id="share-link-input" type="text" readonly aria-label="Code du partage créé">
+        <button id="copy-share-link-btn" class="link-button" style="background-color: #34495e; margin-top: 8px;">Copier le code</button><br>
+        <img id="share-qr-image" alt="QR code du partage">
+    </div>
+    <div id="last-share-panel" class="shared-briefing-panel" style="display: none;">
+        <h4>Dernier partage créé</h4>
+        <p class="share-panel-note">Conservé sur cet appareil même après fermeture de BFG.</p>
+        <div id="last-share-code-display"></div><br>
+        <button id="copy-last-share-code-btn" class="link-button" style="background-color: #34495e; margin-top: 8px;">Copier</button>
+        <button id="open-last-share-code-btn" class="link-button" style="background-color: #16a085; margin-top: 8px;">Ouvrir</button>
     </div>
     <div id="session-help-tooltip" class="help-tooltip" style="display: none;">
         <h4>Aide : sauvegarde et partage du briefing</h4>
@@ -2134,12 +2197,14 @@
             <button class="link-button confirm-action filter-action">Garder la sélection</button>
             <button class="link-button reset show-all-action" style="display: none;">Tout afficher</button>
             <button class="link-button save-pdf-action" style="display: none;">Sauvegarder en PDF</button>
+            <button class="link-button pencil-undo-highlight-action" type="button">Annuler surlignage</button>
         </div>
         <div id="notam-display"></div>
         <div id="notam-controls-bottom" class="notam-controls">
             <button class="link-button confirm-action filter-action">Garder la sélection</button>
             <button class="link-button reset show-all-action" style="display: none;">Tout afficher</button>
             <button class="link-button save-pdf-action" style="display: none;">Sauvegarder en PDF</button>
+            <button class="link-button pencil-undo-highlight-action" type="button">Annuler surlignage</button>
         </div>
 
         <div id="manual-metar-section">
@@ -2226,7 +2291,7 @@
     <footer>Données : Météo-France, SIA, Windy.com, CheckWX.com. Page non commerciale, à usage personnel.</footer>
     
     <script>
-        const APP_VERSION = "2026.12 NG";
+        const APP_VERSION = "4.14 TEST - Login 23h + dernier partage mémorisé";
 
         // --- Proxy NAS pour la source de données météo CheckWX ---
         const CHECKWX_PROXY_URL = "https://grisonb.synology.me/briefing-api/get-metar-taf.php";
@@ -2243,7 +2308,7 @@
 
 
 
-        // --- TOUR DE FRANCE ---
+        // --- TOUR DE FRANCE TEST ---
 // --- DONNÉES TOUR DE FRANCE 2026 ---
 const tdfStages = [
     { stage: 1, type: "C.L.M par équipe", name: "Barcelone > Barcelone", date: "2026-07-04", distance: "19 km", mapUrl: "./tdf2026/stage01.jpg", supAipUrl: null },
@@ -2300,11 +2365,11 @@ const tdfStages = [
             const tdfStartDate = '2026-07-04';
             const tdfHideDate = '2026-07-27';
 
-            // Affichage Tour de France selon calendrier.
+            // TEST v3.10 : affichage forcé de la fenêtre Tour de France pour tester les SUP AIP.
             // Pour revenir au comportement opérationnel normal, remettre cette constante à false.
             // Contrainte conservée : affichage normal uniquement du 04/07/2026 au 26/07/2026 inclus.
-            const TDF_FORCE_DISPLAY = false;
-            const shouldShowTdf = TDF_FORCE_DISPLAY || (today >= tdfStartDate && today < tdfHideDate);
+            const TDF_FORCE_DISPLAY_FOR_TEST = true;
+            const shouldShowTdf = TDF_FORCE_DISPLAY_FOR_TEST || (today >= tdfStartDate && today < tdfHideDate);
 
             if (!shouldShowTdf) {
                 tdfSection.style.display = 'none';
@@ -2525,6 +2590,18 @@ const tdfStages = [
 
         const CNCASC_TOKEN_STORAGE_KEY = 'bfg_cncasc_token_v1';
         const CNCASC_TOKEN_EXP_STORAGE_KEY = 'bfg_cncasc_token_exp_v1';
+        const BFG_LOGIN_END_HOUR_LOCAL = 23;
+
+        function getBfgLoginExpiryForToday_() {
+            const expiry = new Date();
+            expiry.setHours(BFG_LOGIN_END_HOUR_LOCAL, 0, 0, 0);
+            return expiry.getTime();
+        }
+
+        function getBfgLoginExpiryIsoForToday_() {
+            return new Date(getBfgLoginExpiryForToday_()).toISOString();
+        }
+
 
         function hardenSensitiveInputsAgainstAutofill_() {
             const sensitiveInputs = [
@@ -2644,8 +2721,13 @@ const tdfStages = [
         }
 
         function storeCncascToken_(token, expiresAt) {
-            const exp = Date.parse(expiresAt);
-            if (!token || Number.isNaN(exp)) return false;
+            const serverExp = Date.parse(expiresAt);
+            if (!token || Number.isNaN(serverExp)) return false;
+
+            // Règle opérationnelle BFG : la connexion reste valable localement jusqu'à 23h00
+            // du jour de connexion. Le jeton côté NAS doit aussi être émis jusqu'à 23h00.
+            const localExp = getBfgLoginExpiryForToday_();
+            const exp = Math.max(serverExp, localExp);
 
             localStorage.setItem(CNCASC_TOKEN_STORAGE_KEY, token);
             localStorage.setItem(CNCASC_TOKEN_EXP_STORAGE_KEY, String(exp));
@@ -3162,7 +3244,11 @@ const tdfStages = [
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     cache: 'no-store',
-                    body: JSON.stringify({ password })
+                    body: JSON.stringify({
+                        password,
+                        requestedExpiresAt: getBfgLoginExpiryIsoForToday_(),
+                        requestedPolicy: 'same-day-23h'
+                    })
                 });
 
                 const payload = await response.json().catch(() => null);
@@ -3868,7 +3954,7 @@ const tdfStages = [
             initPelicModal_();
             updateCncascAuthUi_();
 
-            // Si une session 6 h est encore valide sur cet iPad, les données sont actualisées automatiquement.
+            // Si une session du jour est encore valide sur cet iPad, les données sont actualisées automatiquement.
             if (getStoredCncascToken_()) {
                 fetchAllCncascData_();
             }
@@ -6301,8 +6387,14 @@ const tdfStages = [
     const shareLinkInput = document.getElementById('share-link-input');
     const copyShareLinkBtn = document.getElementById('copy-share-link-btn');
     const shareQrImage = document.getElementById('share-qr-image');
+    const shareCodeDisplay = document.getElementById('share-code-display');
+    const lastSharePanel = document.getElementById('last-share-panel');
+    const lastShareCodeDisplay = document.getElementById('last-share-code-display');
+    const copyLastShareCodeBtn = document.getElementById('copy-last-share-code-btn');
+    const openLastShareCodeBtn = document.getElementById('open-last-share-code-btn');
     const sharedCodeInput = document.getElementById('shared-code-input');
     const openSharedCodeBtn = document.getElementById('open-shared-code-btn');
+    const LAST_SHARE_STORAGE_KEY = 'briefingFdfLastShareCodeV1';
     let lastShareUrl = "";
     let lastShareCode = ""; 
 
@@ -6514,13 +6606,38 @@ let activeShareApiBase = SHARE_API_BASE;
         return String(value || "").trim().toUpperCase();
     }
 
+    function persistLastShareCode_(shareCode) {
+        const normalized = normalizeShareCode_(shareCode);
+        if (!normalized) return;
+        localStorage.setItem(LAST_SHARE_STORAGE_KEY, normalized);
+        renderLastShareCode_();
+    }
+
+    function renderLastShareCode_() {
+        const storedCode = normalizeShareCode_(localStorage.getItem(LAST_SHARE_STORAGE_KEY));
+        if (!storedCode) {
+            if (lastSharePanel) lastSharePanel.style.display = 'none';
+            return;
+        }
+
+        lastShareCode = storedCode;
+        if (lastShareCodeDisplay) lastShareCodeDisplay.textContent = storedCode;
+        if (lastSharePanel) lastSharePanel.style.display = 'block';
+    }
+
     function showShareResult(shareCode, shareUrl) {
-        if (!shareResult || !shareLinkInput || !shareQrImage) return;
         lastShareCode = normalizeShareCode_(shareCode);
         lastShareUrl = shareUrl || "";
-        shareLinkInput.value = lastShareCode;
-        shareQrImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(lastShareCode)}`;
-        shareResult.style.display = 'block';
+        if (!lastShareCode) return;
+
+        persistLastShareCode_(lastShareCode);
+
+        if (shareLinkInput) shareLinkInput.value = lastShareCode;
+        if (shareCodeDisplay) shareCodeDisplay.textContent = lastShareCode;
+        if (shareQrImage) {
+            shareQrImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(lastShareCode)}`;
+        }
+        if (shareResult) shareResult.style.display = 'block';
     }
 
     function getShareIdFromUrl_(shareUrl) {
@@ -6801,6 +6918,39 @@ let activeShareApiBase = SHARE_API_BASE;
             }
         });
     }
+
+    if (copyLastShareCodeBtn) {
+        copyLastShareCodeBtn.addEventListener('click', async () => {
+            const codeToCopy = normalizeShareCode_(localStorage.getItem(LAST_SHARE_STORAGE_KEY) || lastShareCode);
+            if (!codeToCopy) return;
+            try {
+                await navigator.clipboard.writeText(codeToCopy);
+                sessionStatus.textContent = `Dernier code de partage copié : ${codeToCopy}`;
+            } catch {
+                const ta = document.createElement('textarea');
+                ta.value = codeToCopy;
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+                sessionStatus.textContent = `Dernier code de partage copié : ${codeToCopy}`;
+            }
+        });
+    }
+
+    if (openLastShareCodeBtn) {
+        openLastShareCodeBtn.addEventListener('click', () => {
+            const code = normalizeShareCode_(localStorage.getItem(LAST_SHARE_STORAGE_KEY) || lastShareCode);
+            if (!code) return;
+            if (sharedCodeInput) {
+                sharedCodeInput.value = code;
+                setCursorAtEnd_(sharedCodeInput);
+            }
+            openSharedCodeBtn && openSharedCodeBtn.click();
+        });
+    }
+
+    renderLastShareCode_();
 
     function getTodayBfgPrefix_() {
         const now = new Date();
@@ -7652,10 +7802,23 @@ window.__notamTextFull = notamInput.value;
                     if(icao) await fetchAndDisplayWeather(icao, airportContainer);
                 }
 
+                // Évite qu'un clic synthétique généré par iPadOS après un tracé Apple Pencil
+                // supprime immédiatement le surlignage qui vient d'être appliqué.
+                if (Date.now() - lastPencilHighlightEndAt_ < 1200) return;
                 const mark = t.closest('mark.highlighted-text'); if(mark && !window.getSelection().toString()) { const p = mark.parentNode; while(mark.firstChild) p.insertBefore(mark.firstChild, mark); p.removeChild(mark); p.normalize(); }
             });
 
+            let lastPencilHighlightEndAt_ = 0;
+            const pencilHighlightUndoStack_ = [];
+            let pencilHighlightState_ = null;
+            let pencilPendingState_ = null;
+            const PENCIL_HOLD_MS_ = 280;
+            const PENCIL_PENDING_MOVE_CANCEL_PX_ = 9;
+            const PENCIL_PENDING_VERTICAL_SCROLL_PX_ = 7;
+            const PENCIL_ACTIVE_HORIZONTAL_START_PX_ = 4;
+
             function handleTextHighlight(event) {
+                if (Date.now() - lastPencilHighlightEndAt_ < 700) return;
                 const textContentDiv = event.target.closest('.notam-text-content'); if (!textContentDiv) return;
                 setTimeout(() => {
                     const selection = window.getSelection(); if (!selection || selection.isCollapsed || !textContentDiv.contains(selection.anchorNode)) return;
@@ -7671,8 +7834,495 @@ window.__notamTextFull = notamInput.value;
                     newSelection.removeAllRanges();
                 }, 10);
             }
+
+            function getCaretRangeFromPoint_(x, y) {
+                if (document.caretRangeFromPoint) return document.caretRangeFromPoint(x, y);
+                if (document.caretPositionFromPoint) {
+                    const pos = document.caretPositionFromPoint(x, y);
+                    if (!pos) return null;
+                    const range = document.createRange();
+                    range.setStart(pos.offsetNode, pos.offset);
+                    range.collapse(true);
+                    return range;
+                }
+                return null;
+            }
+
+            function getTextOffsetFromRange_(container, range) {
+                if (!range || !container) return null;
+                if (range.startContainer !== container && !container.contains(range.startContainer)) return null;
+                try {
+                    const before = document.createRange();
+                    before.selectNodeContents(container);
+                    before.setEnd(range.startContainer, range.startOffset);
+                    return before.toString().length;
+                } catch (error) {
+                    return null;
+                }
+            }
+
+            function getTextOffsetFromPoint_(container, x, y) {
+                const range = getCaretRangeFromPoint_(x, y);
+                const offset = getTextOffsetFromRange_(container, range);
+                if (offset !== null) return offset;
+                const rect = container.getBoundingClientRect();
+                if (x >= rect.right) return container.textContent.length;
+                if (x <= rect.left) return 0;
+                return null;
+            }
+
+            function getDomPositionForTextOffset_(container, targetOffset) {
+                const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, null);
+                let current = 0;
+                let lastTextNode = null;
+                while (walker.nextNode()) {
+                    const node = walker.currentNode;
+                    const length = node.nodeValue.length;
+                    lastTextNode = node;
+                    if (targetOffset <= current + length) {
+                        return { node, offset: Math.max(0, Math.min(length, targetOffset - current)) };
+                    }
+                    current += length;
+                }
+                if (lastTextNode) return { node: lastTextNode, offset: lastTextNode.nodeValue.length };
+                return null;
+            }
+
+            function applyMarkByTextOffsets_(container, start, end, className) {
+                const text = container.textContent || '';
+                if (start > end) [start, end] = [end, start];
+                start = Math.max(0, Math.min(text.length, start));
+                end = Math.max(0, Math.min(text.length, end));
+                if (end <= start) return false;
+                const startPos = getDomPositionForTextOffset_(container, start);
+                const endPos = getDomPositionForTextOffset_(container, end);
+                if (!startPos || !endPos) return false;
+                const range = document.createRange();
+                range.setStart(startPos.node, startPos.offset);
+                range.setEnd(endPos.node, endPos.offset);
+                if (range.collapsed) return false;
+                const mark = document.createElement('mark');
+                mark.className = className;
+                try {
+                    const fragment = range.extractContents();
+                    mark.appendChild(fragment);
+                    range.insertNode(mark);
+                    container.normalize();
+                    return true;
+                } catch (error) {
+                    console.warn('Surlignage Pencil impossible.', error);
+                    return false;
+                }
+            }
+
+            function restorePencilBaseHtml_() {
+                if (pencilHighlightState_ && pencilHighlightState_.container) {
+                    pencilHighlightState_.container.innerHTML = pencilHighlightState_.baseHtml;
+                }
+            }
+
+            function renderPencilPreview_() {
+                const state = pencilHighlightState_;
+                if (!state || !state.container || state.lastOffset === null) return;
+                state.container.innerHTML = state.baseHtml;
+                const start = Math.max(state.lineStart, Math.min(state.lineEnd, state.startOffset));
+                const end = Math.max(state.lineStart, Math.min(state.lineEnd, state.lastOffset));
+                applyMarkByTextOffsets_(state.container, start, end, 'highlighted-text pencil-highlight-preview');
+            }
+
+            function removeHighlightedMark_(mark) {
+                if (!mark || !mark.parentNode) return false;
+                const parent = mark.parentNode;
+                while (mark.firstChild) parent.insertBefore(mark.firstChild, mark);
+                parent.removeChild(mark);
+                parent.normalize();
+                return true;
+            }
+
+            function undoLastPencilHighlight_() {
+                const last = pencilHighlightUndoStack_.pop();
+                if (!last || !last.container || !document.body.contains(last.container)) return;
+                last.container.innerHTML = last.previousHtml;
+            }
+
+            function isPencilEvent_(event) {
+                return event && event.pointerType === 'pen';
+            }
+
+            function getHighlightedMarkFromPoint_(x, y) {
+                if (!document.elementsFromPoint) return null;
+                const elements = document.elementsFromPoint(x, y) || [];
+                for (const element of elements) {
+                    if (!element || !element.closest) continue;
+                    const mark = element.closest('mark.highlighted-text');
+                    if (mark) return mark;
+                }
+                return null;
+            }
+
+            function getHighlightedMarkNearPoint_(container, x, y) {
+                const exact = getHighlightedMarkFromPoint_(x, y);
+                if (exact && (!container || container.contains(exact))) return exact;
+                if (!container) return null;
+                let best = null;
+                let bestDistance = Infinity;
+                container.querySelectorAll('mark.highlighted-text').forEach(mark => {
+                    Array.from(mark.getClientRects()).forEach(rect => {
+                        const marginX = 14;
+                        const marginY = 10;
+                        if (x < rect.left - marginX || x > rect.right + marginX || y < rect.top - marginY || y > rect.bottom + marginY) return;
+                        const dx = x < rect.left ? rect.left - x : (x > rect.right ? x - rect.right : 0);
+                        const dy = y < rect.top ? rect.top - y : (y > rect.bottom ? y - rect.bottom : 0);
+                        const distance = Math.hypot(dx, dy);
+                        if (distance < bestDistance) {
+                            best = mark;
+                            bestDistance = distance;
+                        }
+                    });
+                });
+                return best;
+            }
+
+            function getHardLineBoundsForOffset_(text, offset) {
+                const safeText = String(text || '');
+                if (!safeText.length) return { lineStart: 0, lineEnd: 0 };
+                offset = Math.max(0, Math.min(safeText.length, Number.isFinite(offset) ? offset : 0));
+
+                // Si Safari renvoie le caret juste après un caractère, on garde la ligne du caractère touché.
+                // Cela évite qu'un point proche d'une fin de ligne bascule sur la ligne suivante.
+                const reference = Math.max(0, Math.min(safeText.length - 1, offset >= safeText.length ? offset - 1 : offset));
+                const before = safeText.lastIndexOf('\n', reference - (safeText[reference] === '\n' ? 1 : 0));
+                let after = safeText.indexOf('\n', reference);
+                if (after === -1) after = safeText.length;
+                return { lineStart: before === -1 ? 0 : before + 1, lineEnd: after };
+            }
+
+            function getCharacterBoxForOffset_(container, index) {
+                const startPos = getDomPositionForTextOffset_(container, index);
+                const endPos = getDomPositionForTextOffset_(container, index + 1);
+                if (!startPos || !endPos) return null;
+                const range = document.createRange();
+                try {
+                    range.setStart(startPos.node, startPos.offset);
+                    range.setEnd(endPos.node, endPos.offset);
+                } catch (_) {
+                    return null;
+                }
+                const rects = Array.from(range.getClientRects()).filter(rect => rect.height > 0 && rect.width >= 0);
+                if (!rects.length) return null;
+                const rect = rects.reduce((best, candidate) => {
+                    const bestArea = Math.max(0, best.width) * Math.max(0, best.height);
+                    const candidateArea = Math.max(0, candidate.width) * Math.max(0, candidate.height);
+                    return candidateArea > bestArea ? candidate : best;
+                }, rects[0]);
+                return {
+                    index,
+                    left: rect.left,
+                    right: rect.right,
+                    top: rect.top,
+                    bottom: rect.bottom,
+                    centerX: (rect.left + rect.right) / 2,
+                    centerY: (rect.top + rect.bottom) / 2,
+                    height: rect.height
+                };
+            }
+
+            function getLockedTextLineFromSeed_(container, seedOffset, y) {
+                const text = container.textContent || '';
+                if (!text.length || seedOffset === null) return { lineStart: 0, lineEnd: 0, lineY: y, charBoxes: [] };
+
+                // Étape 1 : verrouillage sur la ligne TEXTE contenant le point de départ.
+                // Ainsi, si on démarre sur C)2607030500, les lignes B et D sont exclues dès le départ.
+                const hard = getHardLineBoundsForOffset_(text, seedOffset);
+                const allBoxes = [];
+
+                for (let i = hard.lineStart; i < hard.lineEnd; i++) {
+                    if (text[i] === '\n' || text[i] === '\r') continue;
+                    const box = getCharacterBoxForOffset_(container, i);
+                    if (box) allBoxes.push(box);
+                }
+
+                if (!allBoxes.length) {
+                    return { lineStart: hard.lineStart, lineEnd: hard.lineEnd, lineY: y, charBoxes: [] };
+                }
+
+                // Étape 2 : si une ligne texte est visuellement renvoyée sur deux lignes, on ne garde
+                // que la ligne visuelle réellement touchée par le Pencil.
+                const seedBox = allBoxes.reduce((best, box) => {
+                    const bestDist = Math.abs(best.centerY - y);
+                    const boxDist = Math.abs(box.centerY - y);
+                    return boxDist < bestDist ? box : best;
+                }, allBoxes[0]);
+                const lineY = seedBox.centerY;
+                const toleranceY = Math.max(3.5, Math.min(8, (seedBox.height || 14) * 0.45));
+                const charBoxes = allBoxes
+                    .filter(box => Math.abs(box.centerY - lineY) <= toleranceY)
+                    .sort((a, b) => a.index - b.index);
+
+                if (!charBoxes.length) {
+                    return { lineStart: hard.lineStart, lineEnd: hard.lineEnd, lineY, charBoxes: [] };
+                }
+
+                return {
+                    lineStart: charBoxes[0].index,
+                    lineEnd: charBoxes[charBoxes.length - 1].index + 1,
+                    hardLineStart: hard.lineStart,
+                    hardLineEnd: hard.lineEnd,
+                    lineY,
+                    charBoxes
+                };
+            }
+
+            function getOffsetOnLockedLine_(lineLock, x, allowOutside) {
+                if (!lineLock || !Array.isArray(lineLock.charBoxes) || !lineLock.charBoxes.length) return null;
+                const boxes = lineLock.charBoxes;
+                const visibleBoxes = boxes.filter(box => Number.isFinite(box.left) && Number.isFinite(box.right));
+                if (!visibleBoxes.length) return null;
+                const first = visibleBoxes[0];
+                const last = visibleBoxes[visibleBoxes.length - 1];
+
+                if (!allowOutside) {
+                    const outsideMargin = 4;
+                    if (x < first.left - outsideMargin || x > last.right + outsideMargin) return null;
+                }
+
+                // Pendant une sélection active, on clamp volontairement à la ligne verrouillée.
+                // Même si la pointe dépasse à gauche/droite, on ne garde pas l'ancien offset,
+                // et on ne bascule jamais sur la ligne précédente/suivante.
+                if (x <= first.left) return lineLock.lineStart;
+                if (x >= last.right) return lineLock.lineEnd;
+                for (const box of visibleBoxes) {
+                    if (x <= box.centerX) return box.index;
+                    if (x <= box.right) return box.index + 1;
+                }
+                return lineLock.lineEnd;
+            }
+
+            function lockPencilPageScroll_() {
+                document.documentElement.classList.add('pencil-notam-scroll-lock');
+                document.body.classList.add('pencil-notam-scroll-lock');
+            }
+
+            function unlockPencilPageScroll_() {
+                document.documentElement.classList.remove('pencil-notam-scroll-lock');
+                document.body.classList.remove('pencil-notam-scroll-lock');
+            }
+
+            function keepPencilPageStill_() {
+                const state = pencilHighlightState_;
+                if (!state) return;
+                if (Number.isFinite(state.startScrollX) && Number.isFinite(state.startScrollY)) {
+                    if (window.scrollX !== state.startScrollX || window.scrollY !== state.startScrollY) {
+                        window.scrollTo(state.startScrollX, state.startScrollY);
+                    }
+                }
+            }
+
+            function preventPencilTouchScroll_(event) {
+                if (!pencilHighlightState_) return;
+                event.preventDefault();
+                event.stopPropagation();
+                keepPencilPageStill_();
+            }
+
+            function clearPencilPending_() {
+                if (pencilPendingState_ && pencilPendingState_.timer) clearTimeout(pencilPendingState_.timer);
+                pencilPendingState_ = null;
+            }
+
+            function startPencilHighlightFromPending_() {
+                const pending = pencilPendingState_;
+                if (!pending || pending.cancelled || pending.tapMark) return;
+                if ((pending.maxDistance || 0) > PENCIL_PENDING_MOVE_CANCEL_PX_) {
+                    clearPencilPending_();
+                    return;
+                }
+
+                const container = pending.container;
+                window.getSelection()?.removeAllRanges();
+                pencilHighlightState_ = {
+                    pointerId: pending.pointerId,
+                    container,
+                    baseHtml: container.innerHTML,
+                    startOffset: pending.startOffset,
+                    lastOffset: pending.startOffset,
+                    startX: pending.startX,
+                    startY: pending.startY,
+                    lockY: pending.lineLock.lineY,
+                    lineStart: pending.lineLock.lineStart,
+                    lineEnd: pending.lineLock.lineEnd,
+                    lineLock: pending.lineLock,
+                    maxDistance: pending.maxDistance || 0,
+                    startScrollX: window.scrollX,
+                    startScrollY: window.scrollY,
+                    moved: false
+                };
+
+                pencilPendingState_ = null;
+                lockPencilPageScroll_();
+                container.classList.add('pencil-highlighter-active');
+                try { container.setPointerCapture(pencilHighlightState_.pointerId); } catch (_) {}
+            }
+
+            function handlePencilHighlightDown_(event) {
+                if (!isPencilEvent_(event)) return;
+                if (pencilHighlightState_ || pencilPendingState_) return;
+                const textContentDiv = event.target.closest('.notam-text-content');
+                if (!textContentDiv) return;
+
+                const tapMark = event.target.closest('mark.highlighted-text') || getHighlightedMarkNearPoint_(textContentDiv, event.clientX, event.clientY);
+                if (tapMark) {
+                    pencilPendingState_ = {
+                        pointerId: event.pointerId,
+                        container: textContentDiv,
+                        startX: event.clientX,
+                        startY: event.clientY,
+                        maxDistance: 0,
+                        tapMark,
+                        timer: null
+                    };
+                    return;
+                }
+
+                const seedRange = getCaretRangeFromPoint_(event.clientX, event.clientY);
+                const seedOffset = getTextOffsetFromRange_(textContentDiv, seedRange);
+                if (seedOffset === null) return; // Zone blanche : on laisse le Pencil scroller normalement.
+
+                const lineLock = getLockedTextLineFromSeed_(textContentDiv, seedOffset, event.clientY);
+                let startOffset = getOffsetOnLockedLine_(lineLock, event.clientX, false);
+                if (startOffset === null || lineLock.lineEnd <= lineLock.lineStart) return; // Hors texte : scroll normal.
+                startOffset = Math.max(lineLock.lineStart, Math.min(lineLock.lineEnd, startOffset));
+
+                pencilPendingState_ = {
+                    pointerId: event.pointerId,
+                    container: textContentDiv,
+                    startOffset,
+                    startX: event.clientX,
+                    startY: event.clientY,
+                    lineLock,
+                    maxDistance: 0,
+                    tapMark: null,
+                    timer: null,
+                    cancelled: false
+                };
+                pencilPendingState_.timer = setTimeout(startPencilHighlightFromPending_, PENCIL_HOLD_MS_);
+            }
+
+            function handlePencilHighlightMove_(event) {
+                if (!isPencilEvent_(event)) return;
+
+                const pending = pencilPendingState_;
+                if (pending && event.pointerId === pending.pointerId) {
+                    const dx = event.clientX - pending.startX;
+                    const dy = event.clientY - pending.startY;
+                    const distance = Math.hypot(dx, dy);
+                    pending.maxDistance = Math.max(pending.maxDistance || 0, distance);
+
+                    // Avant le délai d'appui immobile, tout mouvement vertical ou trop marqué
+                    // est considéré comme une intention de scroll, pas comme une sélection.
+                    if (Math.abs(dy) > PENCIL_PENDING_VERTICAL_SCROLL_PX_ || distance > PENCIL_PENDING_MOVE_CANCEL_PX_) {
+                        pending.cancelled = true;
+                        clearPencilPending_();
+                    }
+                    return;
+                }
+
+                const state = pencilHighlightState_;
+                if (!state || event.pointerId !== state.pointerId) return;
+                event.preventDefault();
+                event.stopPropagation();
+                keepPencilPageStill_();
+
+                const distance = Math.hypot(event.clientX - state.startX, event.clientY - state.startY);
+                state.maxDistance = Math.max(state.maxDistance || 0, distance);
+                const horizontalDistance = Math.abs(event.clientX - state.startX);
+                if (horizontalDistance < PENCIL_ACTIVE_HORIZONTAL_START_PX_) return;
+
+                const offset = getOffsetOnLockedLine_(state.lineLock, event.clientX, true);
+                if (offset === null) return;
+                state.moved = true;
+                state.lastOffset = Math.max(state.lineStart, Math.min(state.lineEnd, offset));
+                renderPencilPreview_();
+            }
+
+            function handlePencilHighlightUp_(event) {
+                if (!isPencilEvent_(event)) return;
+
+                const pending = pencilPendingState_;
+                if (pending && event.pointerId === pending.pointerId) {
+                    const markToRemove = pending.tapMark || getHighlightedMarkNearPoint_(pending.container, event.clientX, event.clientY);
+                    if (markToRemove && pending.container.contains(markToRemove) && (pending.maxDistance || 0) < 11) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        const previousHtml = pending.container.innerHTML;
+                        pencilHighlightUndoStack_.push({ container: pending.container, previousHtml });
+                        removeHighlightedMark_(markToRemove);
+                        lastPencilHighlightEndAt_ = Date.now();
+                        window.getSelection()?.removeAllRanges();
+                    }
+                    clearPencilPending_();
+                    return;
+                }
+
+                const state = pencilHighlightState_;
+                if (!state || event.pointerId !== state.pointerId) return;
+                event.preventDefault();
+                event.stopPropagation();
+                const container = state.container;
+                const previousHtml = state.baseHtml;
+                keepPencilPageStill_();
+
+                const offset = getOffsetOnLockedLine_(state.lineLock, event.clientX, true);
+                if (offset !== null) {
+                    state.lastOffset = Math.max(state.lineStart, Math.min(state.lineEnd, offset));
+                }
+
+                container.classList.remove('pencil-highlighter-active');
+                try { container.releasePointerCapture(event.pointerId); } catch (_) {}
+
+                if (state.moved) {
+                    restorePencilBaseHtml_();
+                    const start = Math.max(state.lineStart, Math.min(state.lineEnd, state.startOffset));
+                    const end = Math.max(state.lineStart, Math.min(state.lineEnd, state.lastOffset));
+                    if (Math.abs(end - start) > 0) {
+                        const applied = applyMarkByTextOffsets_(container, start, end, 'highlighted-text');
+                        if (applied) pencilHighlightUndoStack_.push({ container, previousHtml });
+                    }
+                } else {
+                    restorePencilBaseHtml_();
+                }
+
+                pencilHighlightState_ = null;
+                unlockPencilPageScroll_();
+                lastPencilHighlightEndAt_ = Date.now();
+                window.getSelection()?.removeAllRanges();
+            }
+
+            function handlePencilHighlightCancel_(event) {
+                if (pencilPendingState_ && event.pointerId === pencilPendingState_.pointerId) {
+                    clearPencilPending_();
+                    return;
+                }
+                const state = pencilHighlightState_;
+                if (!state || event.pointerId !== state.pointerId) return;
+                event.preventDefault();
+                state.container.classList.remove('pencil-highlighter-active');
+                restorePencilBaseHtml_();
+                pencilHighlightState_ = null;
+                unlockPencilPageScroll_();
+                lastPencilHighlightEndAt_ = Date.now();
+            }
+
             notamSection.addEventListener('mouseup', handleTextHighlight);
             notamSection.addEventListener('touchend', handleTextHighlight);
+            notamSection.addEventListener('pointerdown', handlePencilHighlightDown_, { passive: false });
+            notamSection.addEventListener('pointermove', handlePencilHighlightMove_, { passive: false });
+            notamSection.addEventListener('pointerup', handlePencilHighlightUp_, { passive: false });
+            notamSection.addEventListener('pointercancel', handlePencilHighlightCancel_, { passive: false });
+            notamSection.addEventListener('touchmove', preventPencilTouchScroll_, { passive: false, capture: true });
+            document.addEventListener('touchmove', preventPencilTouchScroll_, { passive: false, capture: true });
+            window.addEventListener('scroll', keepPencilPageStill_, { passive: true });
+            document.querySelectorAll('.pencil-undo-highlight-action').forEach(button => button.addEventListener('click', undoLastPencilHighlight_));
         }
         
         function initializeManualMetarFetch() {
@@ -7692,7 +8342,7 @@ window.__notamTextFull = notamInput.value;
 
         function initializePageTitle() {
             const titleElement = document.getElementById('main-title');
-            titleElement.textContent = `Briefing Fdf du ${new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}`;
+            titleElement.textContent = `Briefing Fdf TEST v4.14 du ${new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}`;
             const timeDisplay = document.getElementById('current-time-display');
             const updateTime = () => timeDisplay.textContent = new Date().toLocaleTimeString('fr-FR');
             updateTime(); setInterval(updateTime, 1000);
