@@ -1,4 +1,4 @@
-const CACHE_NAME = 'briefing-fdf-v2026-14-ng';
+const CACHE_NAME = 'briefing-fdf-v2026-15-ng';
 
 const LOCAL_ASSETS = [
   './manifest.json',
@@ -152,6 +152,7 @@ self.addEventListener('fetch', (event) => {
   const isNavigation = event.request.mode === 'navigate';
   const isIndex =
     url.pathname.endsWith('/index.html') ||
+    url.pathname.endsWith('/Briefing_fdf_TEST/') ||
     url.pathname.endsWith('/Briefing-fdf/');
 
   if (isNavigation || isIndex) {
