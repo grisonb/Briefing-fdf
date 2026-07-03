@@ -1,4 +1,4 @@
-CHANGELOG BFG — v2026.16 NG
+CHANGELOG BFG — v2026.16 NG 
 Date : 2026-07-03
 Base : TEST v4.27 — taille de trait pour annotations PDF FDS/GAAR
 Cible : version pérenne Briefing-fdf
