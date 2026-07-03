@@ -1,7 +1,7 @@
 {
   "name": "Briefing FDF",
   "short_name": "Briefing",
-  "description": "Briefing FDF v2026.15 NG",
+  "description": "Briefing FDF v2026.16 NG",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
