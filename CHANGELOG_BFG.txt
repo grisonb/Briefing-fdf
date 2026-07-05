@@ -3,6 +3,7 @@ Date : 2026-07-05
 Base utilisée : TEST v4.30 reset PDF FDS/GAAR
 Version précédente pérenne : v2026.17 NG
 
+
 Résumé
 - Passage en pérenne de la correction TEST v4.30.
 - Conservation des apports de v2026.17 NG : fenêtre groupée "AZBA / SUP AIP", bouton "Carte SUP AIP / AZBA", bouton "AZBA SIA", bouton "ForeFlight".
