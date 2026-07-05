@@ -1,26 +1,36 @@
-CHANGELOG BFG — v2026.16 NG 
-Date : 2026-07-03
-Base : TEST v4.27 — taille de trait pour annotations PDF FDS/GAAR
+CHANGELOG BFG — v2026.17 NG
+Date : 2026-07-05
+Base : TEST v4.29 — AZBA / SUP AIP groupés
 Cible : version pérenne Briefing-fdf
 
 Fichiers générés :
-- CHANGELOG_BFG_v2026.16_NG.txt
-- index_v2026.16_NG.txt
-- manifest_v2026.16_NG.txt
-- sw_v2026.16_NG.txt
-- BFG_v2026.16_NG_base_TEST_v4.27.zip
+- CHANGELOG_BFG_v2026.17_NG.txt
+- index_v2026.17_NG.txt
+- manifest_v2026.17_NG.txt
+- sw_v2026.17_NG.txt
+- BFG_v2026.17_NG_base_TEST_v4.29.zip
 
-Changements repris depuis la base TEST v4.27 :
+Changements repris depuis la base TEST v4.29 :
+- Regroupement des fenêtres SUP AIP et AZBA dans une seule rubrique « AZBA / SUP AIP ».
+- Navigation haute : la rubrique est nommée « AZBA / SUP AIP ».
+- Bouton « Carte SUP AIP / AZBA » : ouvre https://supaip.fr/ dans un nouvel onglet, car l'affichage iframe de supaip.fr ne fonctionne pas.
+- Bouton « AZBA SIA » : accès à la carte AZBA officielle SIA.
+- Bouton « ForeFlight » : ancien bouton « Ouvrir ForeFlight » renommé.
+- Ordre des boutons dans la rubrique :
+  1. Carte SUP AIP / AZBA
+  2. AZBA SIA
+  3. ForeFlight
+  4. Charger SUP AIP
+
+Changements déjà conservés depuis les versions précédentes :
 - Accès Briefing : bandeau “Actualisation globale terminée” affiché en vert soutenu.
 - FDS / GAAR : mode d’écriture Pencil sur les PDF affichés.
 - FDS / GAAR : annotations visuelles BFG au-dessus du PDF, sans modification du PDF source.
 - FDS / GAAR : boutons Écrire PDF, Annuler trait, Effacer page.
-- FDS / GAAR : ajout de la gomme.
+- FDS / GAAR : gomme.
 - FDS / GAAR : choix de couleur rouge, bleu, vert, noir.
-- FDS / GAAR : correction des carrés de couleur pour avoir une taille homogène.
-- FDS / GAAR : ajout du curseur “Trait” pour régler l’épaisseur de 1 à 10 par pas de 0,5.
-
-Changements déjà conservés depuis les versions précédentes :
+- FDS / GAAR : carrés de couleur homogènes.
+- FDS / GAAR : curseur “Trait” pour régler l’épaisseur de 1 à 10 par pas de 0,5.
 - Connexion Accès Briefing valable jusqu’à 23h00 du jour de connexion.
 - Authentification NAS en JSON HTTP 200 pour éviter les pages d’erreur Synology.
 - Dernier code de partage mémorisé sur l’iPad créateur, mais masqué automatiquement le lendemain.
@@ -36,22 +46,27 @@ Changements déjà conservés depuis les versions précédentes :
 Adaptations pérennes :
 - Titre application : “Briefing Fdf”.
 - Nom PWA : “Briefing”.
-- Version affichée : “2026.16 NG”.
-- Cache service worker : briefing-fdf-v2026-16-ng.
-- Source GAAR envoyée au NAS : bfg-v2026.16.
+- Version affichée : “2026.17 NG”.
+- Cache service worker : briefing-fdf-v2026-17-ng.
+- Source GAAR envoyée au NAS : bfg-v2026.17.
+- Source génération cartes de risque : bfg-v2026.17.
 - Forçage Tour de France TEST désactivé.
 
 Fichiers NAS :
-- Aucun nouveau fichier NAS requis pour v2026.16 si les fichiers de v2026.15 sont déjà en place.
+- Aucun nouveau fichier NAS requis pour v2026.17 si les fichiers précédents sont déjà en place.
 - request-gaar-import.php doit rester présent dans /web/briefing-api/ pour l’actualisation GAAR via relais NAS.
 - auth-cncasc.php doit rester en version fonctionnelle HTTP 200 JSON avec hash sha256(password_salt . code).
 
 Tests conseillés après mise en pérenne :
-1. Ouvrir https://grisonb.github.io/Briefing-fdf/?v=202616.
-2. Vérifier l’affichage de la version “2026.16 NG”.
+1. Ouvrir https://grisonb.github.io/Briefing-fdf/?v=202617.
+2. Vérifier l’affichage de la version “2026.17 NG”.
 3. Tester Accès Briefing et expiration jusqu’à 23h00.
 4. Tester Actualiser global : bandeau final vert soutenu.
-5. Tester FDS : écriture Pencil, couleur, taille de trait, gomme, annuler, effacer page.
-6. Tester GAAR : écriture Pencil, couleur, taille de trait, gomme, annuler, effacer page.
-7. Tester GAAR : Actualiser feuille GAAR via relais NAS.
-8. Vérifier que le Tour de France n’est pas affiché hors période.
+5. Tester FDS / GAAR : écriture Pencil, couleur, taille de trait, gomme, annuler, effacer page.
+6. Tester GAAR : Actualiser feuille GAAR via relais NAS.
+7. Vérifier la rubrique « AZBA / SUP AIP ».
+8. Vérifier l’ordre des boutons : Carte SUP AIP / AZBA, AZBA SIA, ForeFlight, Charger SUP AIP.
+9. Vérifier que « Carte SUP AIP / AZBA » ouvre supaip.fr dans un nouvel onglet.
+10. Vérifier que « AZBA SIA » ouvre la carte AZBA officielle.
+11. Vérifier que « ForeFlight » ouvre ForeFlight sur iPad si l’application est disponible.
+12. Vérifier que le Tour de France n’est pas affiché hors période.
