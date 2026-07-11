@@ -6,8 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
     <title>Briefing Fdf</title>
-    <link rel="manifest" href="./manifest.json?v=202618">
-    <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png?v=202618">
+    <link rel="manifest" href="./manifest.json?v=4.24">
+    <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png?v=4.24">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="Briefing">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -659,7 +659,8 @@
             outline: 1px dashed rgba(120, 90, 0, 0.55);
         }
 
-        .notam-text-content.pencil-highlighter-active {
+        .notam-text-content.pencil-highlighter-active,
+        .notam-validity.pencil-highlighter-active {
             cursor: crosshair;
             touch-action: none;
             -webkit-user-select: none;
@@ -671,6 +672,14 @@
             overflow: hidden !important;
             touch-action: none !important;
             overscroll-behavior: none !important;
+        }
+
+        .clear-notam-selection-action {
+            background-color: #7f8c8d !important;
+        }
+
+        .clear-notam-selection-action:hover {
+            background-color: #6c7a7b !important;
         }
 
         .pencil-undo-highlight-action {
@@ -744,9 +753,22 @@
         .pdf-canvas-wrapper.pdf-annotation-active .pdf-annotation-canvas {
             pointer-events: auto;
         }
+        .interactive-pdf-controls .pdf-annotate-toggle-btn {
+            width: 44px;
+            min-width: 44px;
+            height: 34px;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.75em;
+            line-height: 1;
+            font-weight: 900;
+        }
         .interactive-pdf-controls .pdf-annotate-toggle-btn.active {
             background-color: #0a2c5a;
             color: #ffffff;
+            border-color: #0a2c5a;
         }
         .interactive-pdf-controls .pdf-annotation-clear-btn {
             color: #9b1c1c;
@@ -1684,6 +1706,22 @@
         .pelic-marker.status-1h { background:#7f8c8d; }
         .pelic-marker.status-eau { background:#17a2b8; }
         .pelic-marker.status-indispo { background:#e74c3c; }
+
+        .pelic-marker.has-water-observation::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #006dff;
+            border: 1px solid #ffffff;
+            transform: translate(-50%, -50%);
+            z-index: 4;
+            pointer-events: none;
+            box-shadow: 0 0 0 1px rgba(0, 54, 150, 0.35);
+        }
         .pelic-marker.has-observation {
             animation: pelicObsPulse 2.6s ease-in-out infinite;
         }
@@ -1999,7 +2037,7 @@
         <h1 id="main-title">Briefing Fdf</h1>
         <p id="current-time-display"></p>
         <p style="position: relative; z-index: 2; text-align: center; color: #333; font-size: 1em; margin-top: -25px; margin-bottom: 30px;">
-    v<span id="app-version">2026.18 NG</span>
+    v<span id="app-version">2026.19 NG</span>
     <button id="force-update-btn" class="link-button" style="background-color: #34495e; padding: 4px 10px; font-size: 0.8em; margin-left: 10px; vertical-align: middle;">
         Forcer MAJ
     </button>
@@ -2072,7 +2110,7 @@
             <div id="fds-next-day-panel" class="fds-next-day-panel" aria-live="polite"></div>
         </div>
         <div id="pdf-interactive-container-fds" class="interactive-pdf-viewer" style="display: none;">
-            <div class="interactive-pdf-controls"><button class="pdf-nav-btn" data-action="prev">Page Préc.</button><span>Page <span class="page-num">1</span> / <span class="page-count">1</span></span><button class="pdf-nav-btn" data-action="next">Page Suiv.</button><div class="zoom-controls"><button class="pdf-nav-btn" data-action="zoom-out">-</button><span>Zoom</span><button class="pdf-nav-btn" data-action="zoom-in">+</button></div></div>
+            <div class="interactive-pdf-controls"><button class="pdf-nav-btn" data-action="prev">Page Préc.</button><span>Page <span class="page-num">1</span> / <span class="page-count">1</span></span><button class="pdf-nav-btn" data-action="next">Page Suiv.</button><button class="pdf-nav-btn" data-action="pdf-reset-render" type="button">Centrer PDF</button></div>
             <div class="pdf-canvas-wrapper"><canvas id="pdf-canvas-fds" class="pdf-canvas"></canvas></div>
         </div>
         <p id="pdf-info-fds" class="pdf-info"></p>
@@ -2122,7 +2160,7 @@
             <div id="gaar-next-day-panel" class="fds-next-day-panel" aria-live="polite"></div>
         </div>
         <div id="pdf-interactive-container-gaar" class="interactive-pdf-viewer" style="display: none;">
-            <div class="interactive-pdf-controls"><button class="pdf-nav-btn" data-action="prev">Page Préc.</button><span>Page <span class="page-num">1</span> / <span class="page-count">1</span></span><button class="pdf-nav-btn" data-action="next">Page Suiv.</button><div class="zoom-controls"><button class="pdf-nav-btn" data-action="zoom-out">-</button><span>Zoom</span><button class="pdf-nav-btn" data-action="zoom-in">+</button></div></div>
+            <div class="interactive-pdf-controls"><button class="pdf-nav-btn" data-action="prev">Page Préc.</button><span>Page <span class="page-num">1</span> / <span class="page-count">1</span></span><button class="pdf-nav-btn" data-action="next">Page Suiv.</button><button class="pdf-nav-btn" data-action="pdf-reset-render" type="button">Centrer PDF</button></div>
             <div class="pdf-canvas-wrapper"><canvas id="pdf-canvas-gaar" class="pdf-canvas"></canvas></div>
         </div>
         <p id="pdf-info-gaar" class="pdf-info"></p>
@@ -2281,6 +2319,7 @@
             <button class="link-button confirm-action filter-action">Garder la sélection</button>
             <button class="link-button reset show-all-action" style="display: none;">Tout afficher</button>
             <button class="link-button save-pdf-action" style="display: none;">Sauvegarder en PDF</button>
+            <button class="link-button reset clear-notam-selection-action" type="button">Annuler sélection</button>
             <button class="link-button pencil-undo-highlight-action" type="button">Annuler surlignage</button>
         </div>
         <div id="notam-display"></div>
@@ -2288,6 +2327,7 @@
             <button class="link-button confirm-action filter-action">Garder la sélection</button>
             <button class="link-button reset show-all-action" style="display: none;">Tout afficher</button>
             <button class="link-button save-pdf-action" style="display: none;">Sauvegarder en PDF</button>
+            <button class="link-button reset clear-notam-selection-action" type="button">Annuler sélection</button>
             <button class="link-button pencil-undo-highlight-action" type="button">Annuler surlignage</button>
         </div>
 
@@ -2370,7 +2410,7 @@
     <footer>Données : Météo-France, SIA, Windy.com, CheckWX.com. Page non commerciale, à usage personnel.</footer>
     
     <script>
-        const APP_VERSION = "2026.18 NG";
+        const APP_VERSION = "2026.19 NG";
 
         // --- Proxy NAS pour la source de données météo CheckWX ---
         const CHECKWX_PROXY_URL = "https://grisonb.synology.me/briefing-api/get-metar-taf.php";
@@ -2444,11 +2484,11 @@ const tdfStages = [
             const tdfStartDate = '2026-07-04';
             const tdfHideDate = '2026-07-27';
 
-            // Affichage normal uniquement pendant la période Tour de France prévue.
+            // Affichage contrôlé de la fenêtre Tour de France selon période.
             // Pour revenir au comportement opérationnel normal, remettre cette constante à false.
             // Contrainte conservée : affichage normal uniquement du 04/07/2026 au 26/07/2026 inclus.
-            const TDF_FORCE_DISPLAY = false;
-            const shouldShowTdf = TDF_FORCE_DISPLAY || (today >= tdfStartDate && today < tdfHideDate);
+            const TDF_FORCE_DISPLAY_FOR_TEST = false;
+            const shouldShowTdf = TDF_FORCE_DISPLAY_FOR_TEST || (today >= tdfStartDate && today < tdfHideDate);
 
             if (!shouldShowTdf) {
                 tdfSection.style.display = 'none';
@@ -3582,6 +3622,10 @@ const tdfStages = [
             return 'status-1h';
         }
 
+        function pelicHasWaterObservation_(observation) {
+            return /\beau\b/i.test(String(observation || ''));
+        }
+
         function normalizePelicItem_(item) {
             const capacite = (item.capacite === null || item.capacite === undefined || item.capacite === '') ? '' : ` / ${item.capacite} t`;
             return {
@@ -3609,7 +3653,7 @@ const tdfStages = [
             });
 
             const markers = items.map((item) => `
-                <button type="button" class="pelic-marker ${pelicMarkerClass_(item.statut)} ${String(item.observation || '').trim() ? 'has-observation' : ''}" 
+                <button type="button" class="pelic-marker ${pelicMarkerClass_(item.statut)} ${String(item.observation || '').trim() ? 'has-observation' : ''} ${pelicHasWaterObservation_(item.observation) ? 'has-water-observation' : ''}" 
                     style="top:${item.coords.top}; left:${item.coords.left};"
                     data-name="${escapeHtml_(item.name)}"
                     data-pelic='${escapeHtml_(JSON.stringify(normalizePelicItem_(item)))}'
@@ -4097,12 +4141,36 @@ const tdfStages = [
         }
         
 
+        const BFG_START_OFFLINE_ = !navigator.onLine;
         let bfgWasOffline_ = !navigator.onLine;
         let bfgOnlineReloadStarted_ = false;
 
+        function isBfgOffline_() {
+            return navigator.onLine === false;
+        }
+
+        function setBfgOfflineBanner_(message) {
+            const sessionStatus = document.getElementById('session-status');
+            if (!sessionStatus) return;
+            sessionStatus.textContent = message || 'Mode hors ligne — dernières données enregistrées affichées.';
+            sessionStatus.style.background = '#fef5d7';
+            sessionStatus.style.color = '#7a4b00';
+            sessionStatus.style.border = '1px solid #d8a400';
+            sessionStatus.style.padding = '6px 10px';
+            sessionStatus.style.borderRadius = '6px';
+        }
+
         function setBfgConnectionMessage_(message) {
             const sessionStatus = document.getElementById('session-status');
-            if (sessionStatus) sessionStatus.textContent = message;
+            if (!sessionStatus) return;
+            sessionStatus.textContent = message;
+            if (navigator.onLine === false) {
+                sessionStatus.style.background = '#fef5d7';
+                sessionStatus.style.color = '#7a4b00';
+                sessionStatus.style.border = '1px solid #d8a400';
+                sessionStatus.style.padding = '6px 10px';
+                sessionStatus.style.borderRadius = '6px';
+            }
         }
 
         async function reloadBfgAfterOnlineReturn_() {
@@ -4176,10 +4244,12 @@ const tdfStages = [
             const subject = meta.mailSubject || meta.subject || '';
             const sourceLabel = options.sourceLabel || (mode === FDS_MODE_MANUAL ? 'FDS manuelle affichée' : 'FDS automatique chargée');
 
+            window.__lastFdsMetaPanelPayload = { meta: { ...meta }, options: { ...options }, savedAt: new Date().toISOString() };
             panel.innerHTML = `
                 ${subject ? `<div class="fds-meta-title">${escapeHtml_(subject)}</div>` : ''}
                 <div class="fds-meta-date">Email / document du : ${escapeHtml_(dateLabel)}</div>
                 <div class="fds-meta-subject">${escapeHtml_(sourceLabel)} — ${escapeHtml_(filename)}</div>
+                ${isBfgOffline_() ? '<div class="fds-meta-subject">Mode hors ligne — métadonnées locales conservées</div>' : ''}
             `;
             panel.classList.add('visible');
         }
@@ -4275,6 +4345,9 @@ const tdfStages = [
         }
 
         function fetchWithTimeout_(url, options = {}, timeoutMs = 10000) {
+            if (isBfgOffline_()) {
+                return fetch(url, { ...options, cache: options.cache || 'force-cache' });
+            }
             const controller = new AbortController();
             const timer = setTimeout(() => controller.abort(), timeoutMs);
             return fetch(url, { ...options, signal: controller.signal })
@@ -4454,6 +4527,10 @@ const tdfStages = [
         }
 
         async function chargerDerniereFeuilleServiceAuDemarrage_() {
+            if (isBfgOffline_()) {
+                setFdsAutoStatus_('Mode hors ligne : aucune requête NAS FDS lancée. Dernière FDS locale conservée si disponible.', { warning: true });
+                return;
+            }
             if (getFdsMode_() === FDS_MODE_MANUAL) {
                 setFdsAutoStatus_('Mode FDS manuel : aucune feuille NAS chargée automatiquement. Utiliser Importation manuelle ou repasser en Auto.', { warning: true });
                 return;
@@ -4521,10 +4598,12 @@ const tdfStages = [
             const subject = meta.mailSubject || meta.subject || '';
             const sourceLabel = options.sourceLabel || (mode === GAAR_MODE_MANUAL ? 'GAAR manuelle affichée' : 'GAAR automatique chargée');
 
+            window.__lastGaarMetaPanelPayload = { meta: { ...meta }, options: { ...options }, savedAt: new Date().toISOString() };
             panel.innerHTML = `
                 ${subject ? `<div class="fds-meta-title">${escapeHtml_(subject)}</div>` : ''}
                 <div class="fds-meta-date">Email / document du : ${escapeHtml_(dateLabel)}</div>
                 <div class="fds-meta-subject">${escapeHtml_(sourceLabel)} — ${escapeHtml_(filename)}</div>
+                ${isBfgOffline_() ? '<div class="fds-meta-subject">Mode hors ligne — métadonnées locales conservées</div>' : ''}
             `;
             panel.classList.add('visible');
         }
@@ -4626,7 +4705,7 @@ const tdfStages = [
         async function requestGaarImportViaNas_() {
             const query = new URLSearchParams();
             query.set('t', String(Date.now()));
-            query.set('source', 'bfg-v2026.18-ng');
+            query.set('source', 'bfg-v2026.19-ng');
 
             const url = `${GAAR_IMPORT_REQUEST_API_URL}?${query.toString()}`;
             const response = await fetchWithTimeout_(url, { cache: 'no-store' }, 65000);
@@ -4751,6 +4830,10 @@ const tdfStages = [
         }
 
         async function chargerDerniereGaarAuDemarrage_() {
+            if (isBfgOffline_()) {
+                setGaarAutoStatus_('Mode hors ligne : aucune requête NAS GAAR lancée. Dernier diagramme local conservé si disponible.', { warning: true });
+                return;
+            }
             if (getGaarMode_() === GAAR_MODE_MANUAL) {
                 setGaarAutoStatus_('Mode GAAR manuel : aucune feuille NAS chargée automatiquement. Utiliser Importation manuelle ou repasser en Auto.', { warning: true });
                 return;
@@ -4775,8 +4858,12 @@ const tdfStages = [
                     }
                 }
             } catch (error) {
-                if (typeof resetGaarPdfOnly === 'function') resetGaarPdfOnly();
-                setGaarAutoStatus_('Aucune feuille GAAR du jour chargée automatiquement. Aucun ancien diagramme GAAR n’est affiché.', { warning: true });
+                if (!isBfgOffline_()) {
+                    if (typeof resetGaarPdfOnly === 'function') resetGaarPdfOnly();
+                    setGaarAutoStatus_('Aucune feuille GAAR du jour chargée automatiquement. Aucun ancien diagramme GAAR n’est affiché.', { warning: true });
+                } else {
+                    setGaarAutoStatus_('Mode hors ligne : dernier diagramme GAAR local conservé si disponible.', { warning: true });
+                }
             }
         }
 
@@ -4904,6 +4991,20 @@ const tdfStages = [
         async function loadRiskMaps_() {
             const loadedAt = new Date();
             const cacheBuster = Date.now();
+
+            if (isBfgOffline_()) {
+                setRiskMapsStatus_('Mode hors ligne : tentative d’affichage des dernières cartes risques en cache local...');
+                try {
+                    for (const cfg of Object.values(BFG_RISK_MAPS)) {
+                        await renderRiskMapPdf_(cfg, 'offline');
+                    }
+                    setRiskMapsStatus_(`Mode hors ligne — dernières cartes risques locales affichées à ${loadedAt.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}.`);
+                } catch (error) {
+                    console.warn('Cartes risques hors ligne indisponibles:', error);
+                    setRiskMapsStatus_('Mode hors ligne : cartes risques non disponibles dans le cache local.');
+                }
+                return;
+            }
 
             setRiskMapsStatus_('Vérification serveur des dernières cartes disponibles...');
 
@@ -5082,6 +5183,9 @@ const tdfStages = [
 
     initializeNavigation(); 
     initializePageTitle();
+    if (isBfgOffline_()) {
+        setBfgOfflineBanner_('Mode hors ligne détecté au démarrage — chargement des dernières données locales.');
+    }
     initializeTemsi();
     initializeRiskMaps();
     initializeWindy();
@@ -5840,6 +5944,14 @@ const tdfStages = [
 
                 if (!select || !info) return;
 
+                if (isBfgOffline_()) {
+                    info.classList.remove('temsi-status-ok');
+                    info.classList.add('temsi-status-warning');
+                    info.textContent = 'Mode hors ligne : aucune recherche TEMSI NAS lancée. Dernière TEMSI locale conservée si disponible.';
+                    if (refreshBtn) refreshBtn.onclick = () => populateTemsi_();
+                    return;
+                }
+
                 select.innerHTML = '';
 
                 const now = new Date();
@@ -6087,11 +6199,12 @@ const tdfStages = [
                 const group = document.createElement('div');
                 group.className = 'zoom-controls pdf-annotation-controls';
                 group.innerHTML = `
-                    <button class="pdf-nav-btn pdf-annotate-toggle-btn" data-action="annotation-toggle" type="button">Écrire PDF</button>
+                    <button class="pdf-nav-btn pdf-annotate-toggle-btn" data-action="annotation-toggle" type="button" title="Écrire PDF" aria-label="Écrire PDF">✎</button>
                     <button class="pdf-nav-btn pdf-annotation-color-btn" data-action="annotation-color" data-color="#d0021b" type="button" title="Rouge" aria-label="Rouge" style="background:#d0021b;"></button>
                     <button class="pdf-nav-btn pdf-annotation-color-btn" data-action="annotation-color" data-color="#0057b8" type="button" title="Bleu" aria-label="Bleu" style="background:#0057b8;"></button>
                     <button class="pdf-nav-btn pdf-annotation-color-btn" data-action="annotation-color" data-color="#0b7a2a" type="button" title="Vert" aria-label="Vert" style="background:#0b7a2a;"></button>
                     <button class="pdf-nav-btn pdf-annotation-color-btn" data-action="annotation-color" data-color="#111111" type="button" title="Noir" aria-label="Noir" style="background:#111111;"></button>
+                    <button class="pdf-nav-btn pdf-annotation-color-btn" data-action="annotation-color" data-color="#ffffff" type="button" title="Blanc" aria-label="Blanc" style="background:#ffffff; border:2px solid #555;"></button>
                     <label class="pdf-annotation-size-wrap" title="Taille du trait">Trait
                         <input data-action="annotation-size" type="range" min="1" max="10" step="0.5" value="3">
                         <span class="pdf-annotation-size-value">3</span>
@@ -6099,7 +6212,6 @@ const tdfStages = [
                     <button class="pdf-nav-btn pdf-annotation-eraser-btn" data-action="annotation-eraser" type="button">Gomme</button>
                     <button class="pdf-nav-btn" data-action="annotation-undo" type="button">Annuler trait</button>
                     <button class="pdf-nav-btn pdf-annotation-clear-btn" data-action="annotation-clear-page" type="button">Effacer page</button>
-                    <button class="pdf-nav-btn" data-action="pdf-reset-render" type="button">Réafficher PDF</button>
                 `;
                 controls.appendChild(group);
                 updatePdfAnnotationToolButtons_();
@@ -6237,7 +6349,9 @@ const tdfStages = [
                 const toggle = controls ? controls.querySelector('[data-action="annotation-toggle"]') : null;
                 if (toggle) {
                     toggle.classList.toggle('active', annotationMode);
-                    toggle.textContent = annotationMode ? 'Écriture ON' : 'Écrire PDF';
+                    toggle.textContent = '✎';
+                    toggle.title = annotationMode ? 'Écriture PDF activée' : 'Écrire PDF';
+                    toggle.setAttribute('aria-label', annotationMode ? 'Écriture PDF activée' : 'Écrire PDF');
                 }
                 if (annotationCanvas) annotationCanvas.style.pointerEvents = annotationMode ? 'auto' : 'none';
                 updatePdfAnnotationToolButtons_();
@@ -6397,8 +6511,8 @@ const tdfStages = [
                 if (!pdfDoc) return;
                 if (action === 'prev' && pageNum > 1) { pageNum--; queueRenderPage(pageNum); }
                 else if (action === 'next' && pageNum < pdfDoc.numPages) { pageNum++; queueRenderPage(pageNum); }
-                else if (action === 'zoom-in') { scale = Math.min(5.0, scale + 0.2); queueRenderPage(pageNum); }
-                else if (action === 'zoom-out') { scale = Math.max(0.3, scale - 0.2); queueRenderPage(pageNum); }
+                else if (action === 'zoom-in') { scale = Math.min(5.0, Math.round((scale + 0.10) * 100) / 100); queueRenderPage(pageNum); }
+                else if (action === 'zoom-out') { scale = Math.max(0.3, Math.round((scale - 0.10) * 100) / 100); queueRenderPage(pageNum); }
             }, { signal: handlerSignal });
 
             wrapper.addEventListener('wheel', e => {
@@ -6438,7 +6552,9 @@ const tdfStages = [
                 if (annotationMode) return;
                 if (e.touches.length === 2 && initialPinchDistance) {
                     e.preventDefault();
-                    scale = Math.max(0.3, Math.min(startScale * (getDistance(e.touches[0], e.touches[1]) / initialPinchDistance), 5.0));
+                    const pinchRatio = getDistance(e.touches[0], e.touches[1]) / initialPinchDistance;
+                    const dampedRatio = 1 + ((pinchRatio - 1) * 0.28);
+                    scale = Math.max(0.3, Math.min(startScale * dampedRatio, 5.0));
                     queueRenderPage(pageNum);
                 } else if (e.touches.length === 1 && isPanning) {
                     e.preventDefault();
@@ -7464,6 +7580,8 @@ let activeShareApiBase = SHARE_API_BASE;
 
                 fds: window.fdsFileObject ? await fileToSavable(window.fdsFileObject) : null,
                 gaar: window.gaarFileObject ? await fileToSavable(window.gaarFileObject) : null,
+                fdsMetaPanel: window.__lastFdsMetaPanelPayload || null,
+                gaarMetaPanel: window.__lastGaarMetaPanelPayload || null,
 
                 gaarMapState: (window.gaarDrawnCircuits || []).map(circuit => ({
                     color: circuit.color,
@@ -7838,6 +7956,9 @@ let activeShareApiBase = SHARE_API_BASE;
             window.fdsFileObject = file;
             document.getElementById('pdf-info-fds').textContent = `Document chargé : ${file.name}`;
             createInteractivePdfHandler(document.getElementById('pdf-interactive-container-fds'), file, null, 1.65);
+            if (data.fdsMetaPanel && data.fdsMetaPanel.meta) {
+                setFdsMetaPanel_(data.fdsMetaPanel.meta, { ...(data.fdsMetaPanel.options || {}), sourceLabel: ((data.fdsMetaPanel.options || {}).sourceLabel || 'FDS locale restaurée') });
+            }
         } else if (data.fds) {
             window.fdsFileObject = null;
             const infoFds = document.getElementById('pdf-info-fds');
@@ -7861,6 +7982,9 @@ let activeShareApiBase = SHARE_API_BASE;
             window.gaarFileObject = file;
             document.getElementById('pdf-info-gaar').textContent = `Document chargé : ${file.name}`;
             createInteractivePdfHandler(document.getElementById('pdf-interactive-container-gaar'), file, initializeGaarMapFromFile, 1.2);
+            if (data.gaarMetaPanel && data.gaarMetaPanel.meta) {
+                setGaarMetaPanel_(data.gaarMetaPanel.meta, { ...(data.gaarMetaPanel.options || {}), sourceLabel: ((data.gaarMetaPanel.options || {}).sourceLabel || 'GAAR locale restaurée') });
+            }
         } else if (data.gaar) {
             window.gaarFileObject = null;
             const infoGaar = document.getElementById('pdf-info-gaar');
@@ -8267,10 +8391,36 @@ window.__notamTextFull = notamInput.value;
                 'LFLX':'LFLX - CHATEAUROUX DEOLS', 'LFGJ':'LFGJ - DOLE', 'LFSG':'LFSG - EPINAL MIRECOURT', 'LFRV':'LFRV - VANNES GOLFE DU MORBIHAN'
             };
             const keywordsToFilter = [
-                'aerodrome administration', 'animal', 'avgas 100ll', 'crane', 'dme', 'drill', 
-                'fato', 'grf', 'handling', 'lights', 'model flying', 'night parachuting', 
-                'obst', 'obstacle', 'obstacles', 'police', 'radar', 'rffs', 'telescopic', 'trees', 
-                'unpaved', 'vor', 'wig wag'
+                'aerodrome administration',
+                'air start',
+                'altitude',
+                'animal',
+                'avgas 100ll',
+                'construction',
+                'crane',
+                'dme',
+                'drill',
+                'fato',
+                'grf',
+                'handling',
+                'lights',
+                'model flying',
+                'nacelle',
+                'night parachuting',
+                'obst',
+                'obstacle',
+                'obstacles',
+                'papi',
+                'police',
+                'radar',
+                'rffs',
+                'security',
+                'telescopic',
+                'trees',
+                'ul',
+                'unpaved',
+                'vor',
+                'wig wag'
             ];
 
             const manualLoadWeatherBtn = document.getElementById('manual-load-weather-btn');
@@ -8397,16 +8547,20 @@ window.__notamTextFull = notamInput.value;
                     if (!id) return;
                     const checkbox = item.querySelector('.notam-checkbox');
                     const contentEl = item.querySelector('.notam-text-content');
+                    const validityEl = item.querySelector('.notam-validity');
                     const html = contentEl?.innerHTML || '';
+                    const validityHtml = validityEl?.innerHTML || '';
                     const hasHighlight = html.includes('<mark');
+                    const hasValidityHighlight = validityHtml.includes('<mark');
                     const checked = !!checkbox?.checked;
-                    if (!checked && !hasHighlight) return;
+                    if (!checked && !hasHighlight && !hasValidityHighlight) return;
                     const signature = item.dataset.notamSignature || createNotamStableSignature_(contentEl?.innerText || contentEl?.textContent || '');
                     byId[id] = {
                         checked,
                         textSignature: signature
                     };
                     if (hasHighlight) byId[id].highlightHtml = html;
+                    if (hasValidityHighlight) byId[id].validityHighlightHtml = validityHtml;
                 });
                 return {
                     version: 'persistentNotamStateV1',
@@ -8438,6 +8592,10 @@ window.__notamTextFull = notamInput.value;
                         const contentEl = item.querySelector('.notam-text-content');
                         if (contentEl) contentEl.innerHTML = entry.highlightHtml;
                     }
+                    if (entry.validityHighlightHtml) {
+                        const validityEl = item.querySelector('.notam-validity');
+                        if (validityEl) validityEl.innerHTML = entry.validityHighlightHtml;
+                    }
                 });
             }
 
@@ -8457,6 +8615,10 @@ window.__notamTextFull = notamInput.value;
                         if (entry.highlightHtml) {
                             const contentEl = item.querySelector('.notam-text-content');
                             if (contentEl) contentEl.innerHTML = entry.highlightHtml;
+                        }
+                        if (entry.validityHighlightHtml) {
+                            const validityEl = item.querySelector('.notam-validity');
+                            if (validityEl) validityEl.innerHTML = entry.validityHighlightHtml;
                         }
                     });
                 }
@@ -8568,6 +8730,14 @@ window.__notamTextFull = notamInput.value;
                 savePdfButtons.forEach(btn => btn.style.display = 'none');
                 filterButtons.forEach(btn => btn.style.display = 'inline-block');
             }
+
+            function clearNotamSelection_() {
+                document.querySelectorAll('#notam-display .notam-checkbox:checked').forEach(checkbox => {
+                    checkbox.checked = false;
+                });
+                resetSelectionFilter();
+                persistCurrentNotamState_();
+            }
             
             setupKeywordFilterDropdown();
             renderInitialAirportSections();
@@ -8575,6 +8745,7 @@ window.__notamTextFull = notamInput.value;
             filterButtons.forEach(b => b.addEventListener('click', applySelectionFilter));
             showAllButtons.forEach(b => b.addEventListener('click', resetSelectionFilter));
             savePdfButtons.forEach(b => b.addEventListener('click', generateNotamPdf));
+            document.querySelectorAll('.clear-notam-selection-action').forEach(button => button.addEventListener('click', clearNotamSelection_));
             document.getElementById('notam-date-filter-cb').addEventListener('change', applyLiveFilters);
 
             notamSection.addEventListener('change', (e) => {
@@ -8625,7 +8796,7 @@ window.__notamTextFull = notamInput.value;
 
             function handleTextHighlight(event) {
                 if (Date.now() - lastPencilHighlightEndAt_ < 700) return;
-                const textContentDiv = event.target.closest('.notam-text-content'); if (!textContentDiv) return;
+                const textContentDiv = event.target.closest('.notam-text-content, .notam-validity'); if (!textContentDiv) return;
                 setTimeout(() => {
                     const selection = window.getSelection(); if (!selection || selection.isCollapsed || !textContentDiv.contains(selection.anchorNode)) return;
                     const range = selection.getRangeAt(0);
@@ -8748,10 +8919,17 @@ window.__notamTextFull = notamInput.value;
             }
 
             function undoLastPencilHighlight_() {
-                const last = pencilHighlightUndoStack_.pop();
-                if (!last || !last.container || !document.body.contains(last.container)) return;
-                last.container.innerHTML = last.previousHtml;
+                // Suppression globale demandée : un clic retire tous les surlignages NOTAMs,
+                // y compris les surlignages Pencil, doigt et titres de validité.
+                pencilHighlightUndoStack_.length = 0;
+                const marks = Array.from(document.querySelectorAll('#notam-display mark.highlighted-text'));
+                if (!marks.length) {
+                    window.getSelection()?.removeAllRanges();
+                    return;
+                }
+                marks.forEach(removeHighlightedMark_);
                 persistCurrentNotamState_();
+                window.getSelection()?.removeAllRanges();
             }
 
             function isPencilEvent_(event) {
@@ -8976,7 +9154,7 @@ window.__notamTextFull = notamInput.value;
             function handlePencilHighlightDown_(event) {
                 if (!isPencilEvent_(event)) return;
                 if (pencilHighlightState_ || pencilPendingState_) return;
-                const textContentDiv = event.target.closest('.notam-text-content');
+                const textContentDiv = event.target.closest('.notam-text-content, .notam-validity');
                 if (!textContentDiv) return;
 
                 const tapMark = event.target.closest('mark.highlighted-text') || getHighlightedMarkNearPoint_(textContentDiv, event.clientX, event.clientY);
