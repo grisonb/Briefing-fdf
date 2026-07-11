@@ -1,4 +1,4 @@
-const CACHE_NAME = 'briefing-fdf-v2026-19-ng';
+const CACHE_NAME = 'briefing-fdf-v2026-20-zoom-pdf-fluide';
 
 const LOCAL_ASSETS = [
   './manifest.json',
