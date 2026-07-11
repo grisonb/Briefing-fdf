@@ -1,50 +1,22 @@
-CHANGELOG BFG — v2026.18 NG
-Date : 2026-07-05
-Base utilisée : TEST v4.30 reset PDF FDS/GAAR
-Version précédente pérenne : v2026.17 NG
+BFG - Version pérenne v2026.19 NG
+Base : TEST v4.36
 
-Résumé
-- Passage en pérenne de la correction TEST v4.30.
-- Conservation des apports de v2026.17 NG : fenêtre groupée "AZBA / SUP AIP", bouton "Carte SUP AIP / AZBA", bouton "AZBA SIA", bouton "ForeFlight".
-- Ajout de la correction de rendu PDF FDS / GAAR.
+Modifications reprises depuis TEST v4.36 :
+- NOTAMs : le bouton "Annuler surlignage" supprime tous les surlignages en une seule fois.
+- NOTAMs : ajout du surlignage possible sur les titres "VALIDE DU ...".
+- NOTAMs : restauration/conservation locale des surlignages sur les titres.
 
-Changements fonctionnels
-1. FDS / GAAR — rendu PDF renforcé
-   - Reset complet de l’ancien rendu PDF avant nouveau rendu.
-   - Rotation forcée à 0° au rendu.
-   - Suppression des anciennes transformations CSS du canvas.
-   - Rerender automatique au retour réseau.
-   - Rerender automatique au retour d’arrière-plan.
-   - Rerender automatique après changement d’orientation / resize.
-   - Détection d’un rendu anormalement petit et relance automatique.
-   - Ajout du bouton "Réafficher PDF".
+Modifications précédemment validées dans la branche TEST reprise :
+- NOTAMs : ajout du bouton "Annuler sélection".
+- NOTAMs : classement alphabétique des filtres.
+- NOTAMs : ajout des filtres PAPI, UL, CONSTRUCTION, ALTITUDE, SECURITY, NACELLE, AIR START.
+- PDF FDS / GAAR : bouton "Centrer PDF".
+- PDF FDS / GAAR : icône crayon agrandie pour le mode écriture.
+- PDF FDS / GAAR : ajout de la couleur blanche.
+- Carte pélicandromes : point bleu si l’observation contient "Eau".
+- Mode hors ligne : reprise des corrections de robustesse de la v4.31.
 
-2. AZBA / SUP AIP — rappel des changements conservés depuis v2026.17 NG
-   - Fenêtre "AZBA / SUP AIP" groupée.
-   - Bouton "Carte SUP AIP / AZBA" ouvrant supaip.fr dans un nouvel onglet.
-   - Bouton "AZBA SIA" placé entre "Carte SUP AIP / AZBA" et "ForeFlight".
-   - Bouton "ForeFlight" conservé avec libellé court.
-
-Fichiers modifiés
-- index.html
-- manifest.json
-- sw.js
-- CHANGELOG_BFG_v2026.18_NG.txt
-
-Fichiers NAS
-- Aucun nouveau fichier NAS à remplacer pour cette version.
-- Les fichiers NAS existants restent requis si déjà en place : auth-cncasc.php et request-gaar-import.php.
-
-Contrôles effectués
-- Version affichée : v2026.18 NG.
-- Manifest JSON valide.
-- Service worker : syntaxe JavaScript valide.
-- Tour de France : forçage TEST désactivé, affichage uniquement selon période prévue.
-
-Tests recommandés après mise en ligne
-1. Ouvrir https://grisonb.github.io/Briefing-fdf/?v=202618
-2. Vérifier l’affichage v2026.18 NG.
-3. Ouvrir FDS puis cliquer sur "Réafficher PDF".
-4. Ouvrir GAAR puis cliquer sur "Réafficher PDF".
-5. Mettre l’iPad en arrière-plan puis revenir dans BFG : vérifier que le PDF reste dans le bon sens et à la bonne échelle.
-6. Couper/rétablir le réseau puis revenir sur FDS/GAAR : vérifier que le rendu PDF n’est pas minuscule ni inversé.
+Paramètres pérennes :
+- Version affichée : 2026.19 NG.
+- Tour de France : forçage TEST désactivé.
+- Aucun fichier NAS à remplacer.
