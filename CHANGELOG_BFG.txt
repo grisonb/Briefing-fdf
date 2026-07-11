@@ -1,22 +1,23 @@
-BFG - Version pérenne v2026.19 NG
-Base : TEST v4.36
+BFG - Version pérenne v2026.20
+Date : 2026-07-11
+Base : TEST v4.38 validée
 
-Modifications reprises depuis TEST v4.36 :
-- NOTAMs : le bouton "Annuler surlignage" supprime tous les surlignages en une seule fois.
-- NOTAMs : ajout du surlignage possible sur les titres "VALIDE DU ...".
-- NOTAMs : restauration/conservation locale des surlignages sur les titres.
-
-Modifications précédemment validées dans la branche TEST reprise :
-- NOTAMs : ajout du bouton "Annuler sélection".
-- NOTAMs : classement alphabétique des filtres.
-- NOTAMs : ajout des filtres PAPI, UL, CONSTRUCTION, ALTITUDE, SECURITY, NACELLE, AIR START.
-- PDF FDS / GAAR : bouton "Centrer PDF".
-- PDF FDS / GAAR : icône crayon agrandie pour le mode écriture.
-- PDF FDS / GAAR : ajout de la couleur blanche.
-- Carte pélicandromes : point bleu si l’observation contient "Eau".
-- Mode hors ligne : reprise des corrections de robustesse de la v4.31.
+Modification reprise depuis TEST v4.38 :
+- PDF FDS / GAAR : zoom à deux doigts rendu fluide sur iPad.
+- Pendant le pincement, le PDF et les annotations sont agrandis immédiatement sans relancer un rendu PDF.js à chaque mouvement.
+- Au relâchement des doigts, le niveau de zoom est conservé sans nouveau rendu haute définition, ce qui supprime le blocage observé après le geste.
+- Le PDF reste immédiatement déplaçable et un nouveau pincement peut commencer sans attente.
+- Les rendus réellement nécessaires, notamment lors d’un changement de page ou avec les boutons de zoom, sont plafonnés afin d’éviter des canevas excessivement lourds.
+- L’épaisseur des annotations est adaptée au niveau de zoom conservé.
 
 Paramètres pérennes :
-- Version affichée : 2026.19 NG.
-- Tour de France : forçage TEST désactivé.
+- Version affichée : 2026.20.
+- Tour de France : forçage TEST désactivé ; affichage uniquement pendant la période prévue.
+- Identifiant de source GAAR : bfg-v2026.20.
+- Nouveau cache du service worker : briefing-fdf-v2026-20-zoom-pdf-fluide.
 - Aucun fichier NAS à remplacer.
+
+Fichiers à remplacer :
+- index.html
+- manifest.json
+- sw.js
