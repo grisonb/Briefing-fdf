@@ -1,4 +1,4 @@
-const CACHE_NAME = 'briefing-fdf-v2026-20-zoom-pdf-fluide';
+const CACHE_NAME = 'briefing-fdf-v2026-21-donnees-conservees';
 
 const LOCAL_ASSETS = [
   './manifest.json',
@@ -35,11 +35,29 @@ const LOCAL_ASSETS = [
   './tdf2026/supaip/SUP_AIP_ETAPE_20.pdf'
 ];
 
-async function networkFirst(request) {
+async function fetchWithTimeout(request, options = {}, timeoutMs = 4000, waitForCompleteBody = false) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const networkRes = await fetch(request, { cache: 'no-store' });
-    const cache = await caches.open(CACHE_NAME);
-    cache.put(request, networkRes.clone()).catch(() => {});
+    const response = await fetch(request, { ...options, signal: controller.signal });
+    // Pour les navigations et les PDF BFG, le délai couvre aussi le téléchargement du corps.
+    // Sans cela, une connexion très mauvaise peut fournir les en-têtes puis rester bloquée indéfiniment.
+    if (waitForCompleteBody && response.type !== 'opaque') {
+      await response.clone().arrayBuffer();
+    }
+    return response;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function networkFirst(request, timeoutMs = 3500) {
+  try {
+    const networkRes = await fetchWithTimeout(request, { cache: 'no-store' }, timeoutMs, true);
+    if (networkRes && networkRes.ok) {
+      const cache = await caches.open(CACHE_NAME);
+      cache.put(request, networkRes.clone()).catch(() => {});
+    }
     return networkRes;
   } catch (err) {
     const cached = await caches.match(request);
@@ -54,9 +72,11 @@ async function cacheFirst(request) {
   const cached = await caches.match(request);
   if (cached) return cached;
 
-  const networkRes = await fetch(request);
-  const cache = await caches.open(CACHE_NAME);
-  cache.put(request, networkRes.clone()).catch(() => {});
+  const networkRes = await fetchWithTimeout(request, {}, 8000, true);
+  if (networkRes && networkRes.ok) {
+    const cache = await caches.open(CACHE_NAME);
+    cache.put(request, networkRes.clone()).catch(() => {});
+  }
   return networkRes;
 }
 
@@ -65,16 +85,21 @@ self.addEventListener('install', (event) => {
     const cache = await caches.open(CACHE_NAME);
 
     try {
-      const indexRes = await fetch(new Request('./index.html', { cache: 'no-store' }));
-      if (indexRes) await cache.put('./index.html', indexRes.clone());
-    } catch (_) {}
+      const indexRes = await fetchWithTimeout(new Request('./index.html', { cache: 'no-store' }), {}, 6000, true);
+      if (indexRes && indexRes.ok) await cache.put('./index.html', indexRes.clone());
+    } catch (_) {
+      // En réseau dégradé, reprendre l'ancienne copie avant de supprimer l'ancien cache.
+      const previousIndex = await caches.match('./index.html');
+      if (previousIndex) await cache.put('./index.html', previousIndex.clone());
+    }
 
     for (const url of LOCAL_ASSETS) {
       try {
-        const res = await fetch(new Request(url));
-        if (res) await cache.put(url, res.clone());
+        const res = await fetchWithTimeout(new Request(url), {}, 8000, true);
+        if (res && res.ok) await cache.put(url, res.clone());
       } catch (_) {
-        // Ignore les échecs ponctuels.
+        const previousAsset = await caches.match(url);
+        if (previousAsset) await cache.put(url, previousAsset.clone());
       }
     }
 
@@ -82,8 +107,53 @@ self.addEventListener('install', (event) => {
   })());
 });
 
+function isMigratableBfgDataRequest(request) {
+  try {
+    const url = new URL(request.url);
+    if (url.hostname !== 'grisonb.synology.me') return false;
+    return (
+      url.pathname.includes('/briefing-api/get-risk-map-pdf.php') ||
+      url.pathname.includes('/briefing-api/get-risk-map-status.php') ||
+      url.pathname.includes('/briefing-api/get-feuille-service-pdf.php') ||
+      url.pathname.includes('/briefing-api/get-feuille-service-status.php') ||
+      url.pathname.includes('/briefing-api/get-gaar-pdf.php') ||
+      url.pathname.includes('/briefing-api/get-gaar-status.php') ||
+      url.pathname.includes('/briefing-data/risk-maps/') ||
+      url.pathname.includes('/briefing-data/feuille-service/') ||
+      url.pathname.includes('/briefing-data/gaar/')
+    );
+  } catch (_) {
+    return false;
+  }
+}
+
+async function migratePreviousBfgDataCaches_() {
+  const keys = await caches.keys();
+  const target = await caches.open(CACHE_NAME);
+
+  for (const key of keys) {
+    if (key === CACHE_NAME || !key.startsWith('briefing-fdf')) continue;
+    try {
+      const source = await caches.open(key);
+      const requests = await source.keys();
+      for (const request of requests) {
+        if (!isMigratableBfgDataRequest(request)) continue;
+        const alreadyPresent = await target.match(request);
+        if (alreadyPresent) continue;
+        const response = await source.match(request);
+        if (response) await target.put(request, response.clone());
+      }
+    } catch (_) {
+      // Une entrée ancienne illisible ne doit pas bloquer l'activation.
+    }
+  }
+}
+
 self.addEventListener('activate', (event) => {
   event.waitUntil((async () => {
+    // v2026.21 : conserver les derniers PDF FDS/GAAR/risques lors d'une mise à jour
+    // de l'application, puis seulement supprimer les anciens caches.
+    await migratePreviousBfgDataCaches_();
     const keys = await caches.keys();
     await Promise.all(keys.map((key) => (key === CACHE_NAME ? null : caches.delete(key))));
     await self.clients.claim();
@@ -140,10 +210,21 @@ self.addEventListener('fetch', (event) => {
     event.respondWith((async () => {
       const normalizedRequest = normalizedBfgCacheRequest(event.request);
       try {
-        const networkRes = await fetch(event.request, { cache: 'no-store' });
-        const cache = await caches.open(CACHE_NAME);
-        cache.put(event.request, networkRes.clone()).catch(() => {});
-        cache.put(normalizedRequest, networkRes.clone()).catch(() => {});
+        const isLongGenerationRequest = url.pathname.includes('/briefing-api/request-risk-map-generation.php');
+        const isPdfOrDataRequest =
+          url.pathname.includes('/get-risk-map-pdf.php') ||
+          url.pathname.includes('/get-feuille-service-pdf.php') ||
+          url.pathname.includes('/get-gaar-pdf.php') ||
+          url.pathname.includes('/briefing-data/risk-maps/') ||
+          url.pathname.includes('/briefing-data/gaar/') ||
+          url.pathname.includes('/briefing-data/feuille-service/');
+        const timeoutMs = isLongGenerationRequest ? 65000 : (isPdfOrDataRequest ? 15000 : 5000);
+        const networkRes = await fetchWithTimeout(event.request, { cache: 'no-store' }, timeoutMs, true);
+        if (networkRes && networkRes.ok) {
+          const cache = await caches.open(CACHE_NAME);
+          cache.put(event.request, networkRes.clone()).catch(() => {});
+          cache.put(normalizedRequest, networkRes.clone()).catch(() => {});
+        }
         return networkRes;
       } catch (err) {
         const cached = await caches.match(event.request) || await caches.match(normalizedRequest);
@@ -159,7 +240,7 @@ self.addEventListener('fetch', (event) => {
   if (!sameOrigin && url.hostname === 'aviation.meteo.fr' && url.pathname.includes('/affiche_image.php')) {
     event.respondWith((async () => {
       try {
-        const networkRes = await fetch(event.request);
+        const networkRes = await fetchWithTimeout(event.request, {}, 10000, true);
         const cache = await caches.open(CACHE_NAME);
         cache.put(event.request, networkRes.clone()).catch(() => {});
         return networkRes;
@@ -186,7 +267,7 @@ self.addEventListener('fetch', (event) => {
     url.pathname.endsWith('/Briefing-fdf/');
 
   if (isNavigation || isIndex) {
-    event.respondWith(networkFirst(event.request));
+    event.respondWith(networkFirst(event.request, 3500));
     return;
   }
 
