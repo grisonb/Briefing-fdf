@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
     <title>Briefing Fdf</title>
-    <link rel="manifest" href="./manifest.json?v=2026.21">
+    <link rel="manifest" href="./manifest.json?v=2026.21-notams">
     <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png?v=4.24">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="Briefing">
@@ -635,12 +635,55 @@
             border-left-color: #28a745; 
             background-color: #f0fff4; 
         }
+        .notam-item.persistently-hidden-notam {
+            border-left-color: #c62828;
+            background-color: #fff3f3;
+        }
+        .notam-checkbox-column {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 9px;
+            flex: 0 0 auto;
+            margin-top: 1px;
+        }
+        .notam-checkbox-ring {
+            width: 32px;
+            height: 32px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            box-sizing: border-box;
+            background: #ffffff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.12);
+            cursor: pointer;
+        }
+        .notam-checkbox-ring-keep {
+            border: 3px solid #28a745;
+        }
+        .notam-checkbox-ring-hide {
+            border: 3px solid #d32f2f;
+            margin-top: 6px;
+        }
+        .notam-checkbox,
+        .notam-hide-checkbox {
+            width: 18px;
+            height: 18px;
+            margin: 0;
+            padding: 0;
+            flex-shrink: 0;
+            cursor: pointer;
+        }
         .notam-checkbox {
-             margin-top: 2px;
-             flex-shrink: 0;
+            accent-color: #28a745;
+        }
+        .notam-hide-checkbox {
+            accent-color: #d32f2f;
         }
         .notam-content-wrapper {
             flex-grow: 1;
+            min-width: 0;
         }
         .notam-validity {
             font-weight: bold;
@@ -5909,11 +5952,34 @@ const tdfStages = [
             }
 
             itemContainer.dataset.notamSignature = createNotamStableSignature_(notamText);
+            if (!itemContainer.dataset.notamId) {
+                itemContainer.dataset.notamId = `${icao}-SIG-${itemContainer.dataset.notamSignature}`;
+            }
 
+            const checkboxColumn = document.createElement('div');
+            checkboxColumn.className = 'notam-checkbox-column';
+
+            const keepLabel = document.createElement('label');
+            keepLabel.className = 'notam-checkbox-ring notam-checkbox-ring-keep';
+            keepLabel.title = 'Garder ce NOTAM dans la sélection';
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
             checkbox.className = 'notam-checkbox';
-            itemContainer.appendChild(checkbox);
+            checkbox.setAttribute('aria-label', 'Garder ce NOTAM dans la sélection');
+            keepLabel.appendChild(checkbox);
+
+            const hideLabel = document.createElement('label');
+            hideLabel.className = 'notam-checkbox-ring notam-checkbox-ring-hide';
+            hideLabel.title = 'Ne plus afficher ce NOTAM tant qu’il ne change pas';
+            const hideCheckbox = document.createElement('input');
+            hideCheckbox.type = 'checkbox';
+            hideCheckbox.className = 'notam-hide-checkbox';
+            hideCheckbox.setAttribute('aria-label', 'Ne plus afficher ce NOTAM tant qu’il ne change pas');
+            hideLabel.appendChild(hideCheckbox);
+
+            checkboxColumn.appendChild(keepLabel);
+            checkboxColumn.appendChild(hideLabel);
+            itemContainer.appendChild(checkboxColumn);
 
             const contentWrapper = document.createElement('div');
             contentWrapper.className = 'notam-content-wrapper';
@@ -9217,6 +9283,7 @@ window.__notamTextFull = notamInput.value;
                     const id = item.dataset.notamId;
                     if (!id) return;
                     const checkbox = item.querySelector('.notam-checkbox');
+                    const hideCheckbox = item.querySelector('.notam-hide-checkbox');
                     const contentEl = item.querySelector('.notam-text-content');
                     const validityEl = item.querySelector('.notam-validity');
                     const html = contentEl?.innerHTML || '';
@@ -9224,10 +9291,12 @@ window.__notamTextFull = notamInput.value;
                     const hasHighlight = html.includes('<mark');
                     const hasValidityHighlight = validityHtml.includes('<mark');
                     const checked = !!checkbox?.checked;
-                    if (!checked && !hasHighlight && !hasValidityHighlight) return;
+                    const hiddenUntilChanged = !!hideCheckbox?.checked;
+                    if (!checked && !hiddenUntilChanged && !hasHighlight && !hasValidityHighlight) return;
                     const signature = item.dataset.notamSignature || createNotamStableSignature_(contentEl?.innerText || contentEl?.textContent || '');
                     byId[id] = {
                         checked,
+                        hiddenUntilChanged,
                         textSignature: signature
                     };
                     if (hasHighlight) byId[id].highlightHtml = html;
@@ -9251,14 +9320,30 @@ window.__notamTextFull = notamInput.value;
                 return expected === item.dataset.notamSignature;
             }
 
+            function updatePersistentHiddenNotamsVisibility_() {
+                document.querySelectorAll('#notam-display .notam-item').forEach(item => {
+                    const isRedSelected = !!item.querySelector('.notam-hide-checkbox')?.checked;
+                    item.classList.toggle('persistently-hidden-notam', isRedSelected);
+                    item.classList.remove('hidden-by-user', 'force-show-hidden');
+                });
+            }
+
             function applyPersistentNotamState_() {
                 const state = readPersistentNotamState_();
                 const byId = state.byId || {};
+                let stateChanged = false;
                 Object.entries(byId).forEach(([id, entry]) => {
                     const item = findNotamItemById_(id);
-                    if (!item || !stateEntryMatchesCurrentNotam_(item, entry)) return;
+                    if (!item) return;
+                    if (!stateEntryMatchesCurrentNotam_(item, entry)) {
+                        delete byId[id];
+                        stateChanged = true;
+                        return;
+                    }
                     const checkbox = item.querySelector('.notam-checkbox');
+                    const hideCheckbox = item.querySelector('.notam-hide-checkbox');
                     if (checkbox && entry.checked) checkbox.checked = true;
+                    if (hideCheckbox && entry.hiddenUntilChanged) hideCheckbox.checked = true;
                     if (entry.highlightHtml) {
                         const contentEl = item.querySelector('.notam-text-content');
                         if (contentEl) contentEl.innerHTML = entry.highlightHtml;
@@ -9268,6 +9353,8 @@ window.__notamTextFull = notamInput.value;
                         if (validityEl) validityEl.innerHTML = entry.validityHighlightHtml;
                     }
                 });
+                if (stateChanged) writePersistentNotamState_(state);
+                updatePersistentHiddenNotamsVisibility_();
             }
 
             function applySavedNotamState_(savedState) {
@@ -9279,10 +9366,12 @@ window.__notamTextFull = notamInput.value;
                         const item = findNotamItemById_(id);
                         if (!item || !stateEntryMatchesCurrentNotam_(item, entry)) return;
                         const checkbox = item.querySelector('.notam-checkbox');
+                        const hideCheckbox = item.querySelector('.notam-hide-checkbox');
                         if (checkbox && entry.checked) {
                             checkbox.checked = true;
                             hasChecked = true;
                         }
+                        if (hideCheckbox && entry.hiddenUntilChanged) hideCheckbox.checked = true;
                         if (entry.highlightHtml) {
                             const contentEl = item.querySelector('.notam-text-content');
                             if (contentEl) contentEl.innerHTML = entry.highlightHtml;
@@ -9319,6 +9408,7 @@ window.__notamTextFull = notamInput.value;
                     });
                 }
 
+                updatePersistentHiddenNotamsVisibility_();
                 return hasChecked;
             }
 
@@ -9380,10 +9470,15 @@ window.__notamTextFull = notamInput.value;
                     persistCurrentNotamState_();
                     if (hasCheckedSavedState) applySelectionFilter();
                 }
+                updatePersistentHiddenNotamsVisibility_();
             }
             
             function applySelectionFilter() {
-                document.querySelectorAll('.notam-item').forEach(item => item.classList.toggle('hidden-by-filter', !item.querySelector('.notam-checkbox').checked));
+                document.querySelectorAll('.notam-item').forEach(item => {
+                    const keepChecked = !!item.querySelector('.notam-checkbox')?.checked;
+                    const redChecked = !!item.querySelector('.notam-hide-checkbox')?.checked;
+                    item.classList.toggle('hidden-by-filter', !keepChecked || redChecked);
+                });
                 filterButtons.forEach(btn => btn.style.display = 'none');
                 showAllButtons.forEach(btn => btn.style.display = 'inline-block');
                 savePdfButtons.forEach(btn => btn.style.display = 'inline-block');
@@ -9403,10 +9498,11 @@ window.__notamTextFull = notamInput.value;
             }
 
             function clearNotamSelection_() {
-                document.querySelectorAll('#notam-display .notam-checkbox:checked').forEach(checkbox => {
+                document.querySelectorAll('#notam-display .notam-checkbox:checked, #notam-display .notam-hide-checkbox:checked').forEach(checkbox => {
                     checkbox.checked = false;
                 });
                 resetSelectionFilter();
+                updatePersistentHiddenNotamsVisibility_();
                 persistCurrentNotamState_();
             }
             
@@ -9420,7 +9516,24 @@ window.__notamTextFull = notamInput.value;
             document.getElementById('notam-date-filter-cb').addEventListener('change', applyLiveFilters);
 
             notamSection.addEventListener('change', (e) => {
-                if (e.target && e.target.matches('.notam-checkbox')) {
+                const target = e.target;
+                if (!target) return;
+                const item = target.closest('.notam-item');
+                if (target.matches('.notam-checkbox')) {
+                    if (target.checked && item) {
+                        const hideCheckbox = item.querySelector('.notam-hide-checkbox');
+                        if (hideCheckbox) hideCheckbox.checked = false;
+                    }
+                    updatePersistentHiddenNotamsVisibility_();
+                    persistCurrentNotamState_();
+                    return;
+                }
+                if (target.matches('.notam-hide-checkbox')) {
+                    if (target.checked && item) {
+                        const keepCheckbox = item.querySelector('.notam-checkbox');
+                        if (keepCheckbox) keepCheckbox.checked = false;
+                    }
+                    updatePersistentHiddenNotamsVisibility_();
                     persistCurrentNotamState_();
                 }
             });
