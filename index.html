@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
     <title>Briefing Fdf</title>
-    <link rel="manifest" href="./manifest.json?v=2026.21-notams">
+    <link rel="manifest" href="./manifest.json?v=2026.22">
     <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png?v=4.24">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="Briefing">
@@ -2173,7 +2173,7 @@
         <h1 id="main-title">Briefing Fdf</h1>
         <p id="current-time-display"></p>
         <p style="position: relative; z-index: 2; text-align: center; color: #333; font-size: 1em; margin-top: -25px; margin-bottom: 30px;">
-    v<span id="app-version">2026.21</span>
+    v<span id="app-version">2026.22</span>
     <button id="force-update-btn" class="link-button" style="background-color: #34495e; padding: 4px 10px; font-size: 0.8em; margin-left: 10px; vertical-align: middle;">
         Forcer MAJ
     </button>
@@ -2546,10 +2546,42 @@
     <footer>Données : Météo-France, SIA, Windy.com, CheckWX.com. Page non commerciale, à usage personnel.</footer>
     
     <script>
-        const APP_VERSION = "2026.21";
+        const APP_VERSION = "2026.22";
 
         // --- Proxy NAS pour la source de données météo CheckWX ---
         const CHECKWX_PROXY_URL = "https://grisonb.synology.me/briefing-api/get-metar-taf.php";
+        // v2026.22 : chargement METAR/TAF équilibré, base validée de la version pérenne.
+        // Les premières tentatives de tous les terrains passent avant les éventuelles secondes tentatives.
+        const CHECKWX_MAX_CONCURRENT_REQUESTS = 8;
+        const CHECKWX_REQUEST_TIMEOUT_MS = 15000;
+        const CHECKWX_RETRY_DELAY_MS = 800;
+        let checkwxActiveRequests_ = 0;
+        const checkwxRequestQueue_ = [];
+
+        function pumpCheckwxRequestQueue_() {
+            while (checkwxActiveRequests_ < CHECKWX_MAX_CONCURRENT_REQUESTS && checkwxRequestQueue_.length > 0) {
+                const queued = checkwxRequestQueue_.shift();
+                checkwxActiveRequests_++;
+                Promise.resolve()
+                    .then(queued.task)
+                    .then(queued.resolve, queued.reject)
+                    .finally(() => {
+                        checkwxActiveRequests_--;
+                        pumpCheckwxRequestQueue_();
+                    });
+            }
+        }
+
+        function runCheckwxRequestQueued_(task) {
+            return new Promise((resolve, reject) => {
+                checkwxRequestQueue_.push({ task, resolve, reject });
+                pumpCheckwxRequestQueue_();
+            });
+        }
+
+        function waitCheckwxRetry_(delayMs) {
+            return new Promise(resolve => setTimeout(resolve, delayMs));
+        }
 
         // --- GLOBAL VARIABLES ---
         window.fdsFileObject = null;
@@ -2620,11 +2652,11 @@ const tdfStages = [
             const tdfStartDate = '2026-07-04';
             const tdfHideDate = '2026-07-27';
 
-            // Affichage de la fenêtre Tour de France contrôlé par la période opérationnelle.
+            // Version pérenne : affichage Tour de France uniquement pendant la période prévue.
             // Pour revenir au comportement opérationnel normal, remettre cette constante à false.
             // Contrainte conservée : affichage normal uniquement du 04/07/2026 au 26/07/2026 inclus.
-            const TDF_FORCE_DISPLAY_FOR_TEST = false;
-            const shouldShowTdf = TDF_FORCE_DISPLAY_FOR_TEST || (today >= tdfStartDate && today < tdfHideDate);
+            const TDF_FORCE_DISPLAY_OVERRIDE = false;
+            const shouldShowTdf = TDF_FORCE_DISPLAY_OVERRIDE || (today >= tdfStartDate && today < tdfHideDate);
 
             if (!shouldShowTdf) {
                 tdfSection.style.display = 'none';
@@ -4272,10 +4304,84 @@ const tdfStages = [
             }
         }
         window.onload = waitForPdfJsAndInitialize;
-        if ('serviceWorker' in navigator && window.location.protocol.startsWith('http')) {
-            navigator.serviceWorker.register('./sw.js').catch((err) => {
-                console.warn('Service Worker non enregistré :', err);
+        const BFG_REQUIRED_SW_VERSION_ = '2026.22';
+        let bfgServiceWorkerWeatherReadyPromise_ = Promise.resolve(true);
+
+        function queryBfgControllerVersion_(timeoutMs = 1800) {
+            return new Promise((resolve) => {
+                if (!('serviceWorker' in navigator) || !navigator.serviceWorker.controller) {
+                    resolve(null);
+                    return;
+                }
+
+                const channel = new MessageChannel();
+                let settled = false;
+                const finish = (value) => {
+                    if (settled) return;
+                    settled = true;
+                    clearTimeout(timer);
+                    resolve(value || null);
+                };
+                const timer = setTimeout(() => finish(null), timeoutMs);
+                channel.port1.onmessage = (event) => {
+                    const version = event && event.data ? event.data.version : null;
+                    finish(version);
+                };
+
+                try {
+                    navigator.serviceWorker.controller.postMessage(
+                        { type: 'BFG_GET_VERSION' },
+                        [channel.port2]
+                    );
+                } catch (_) {
+                    finish(null);
+                }
             });
+        }
+
+        async function ensureBfgServiceWorkerForWeather_() {
+            if (!('serviceWorker' in navigator) || !window.location.protocol.startsWith('http')) {
+                return true;
+            }
+
+            const registration = await navigator.serviceWorker.register(
+                './sw.js?v=2026.22',
+                { updateViaCache: 'none' }
+            );
+
+            try { await registration.update(); } catch (_) {}
+
+            let controllerVersion = await queryBfgControllerVersion_();
+            if (controllerVersion === BFG_REQUIRED_SW_VERSION_) return true;
+
+            const waitingWorker = registration.waiting;
+            if (waitingWorker) {
+                try { waitingWorker.postMessage({ type: 'BFG_SKIP_WAITING' }); } catch (_) {}
+            }
+
+            await new Promise((resolve) => {
+                let finished = false;
+                const finish = () => {
+                    if (finished) return;
+                    finished = true;
+                    clearTimeout(timer);
+                    navigator.serviceWorker.removeEventListener('controllerchange', finish);
+                    resolve();
+                };
+                const timer = setTimeout(finish, 9000);
+                navigator.serviceWorker.addEventListener('controllerchange', finish);
+            });
+
+            controllerVersion = await queryBfgControllerVersion_(2500);
+            return controllerVersion === BFG_REQUIRED_SW_VERSION_;
+        }
+
+        if ('serviceWorker' in navigator && window.location.protocol.startsWith('http')) {
+            bfgServiceWorkerWeatherReadyPromise_ = ensureBfgServiceWorkerForWeather_()
+                .catch((error) => {
+                    console.warn('Service Worker météo non activé :', error);
+                    return false;
+                });
         }
         
 
@@ -4947,7 +5053,7 @@ const tdfStages = [
         async function requestGaarImportViaNas_() {
             const query = new URLSearchParams();
             query.set('t', String(Date.now()));
-            query.set('source', 'bfg-v2026.21');
+            query.set('source', 'bfg-v2026.22');
 
             const url = `${GAAR_IMPORT_REQUEST_API_URL}?${query.toString()}`;
             const response = await fetchWithTimeout_(url, { cache: 'no-store' }, 65000);
@@ -5327,7 +5433,7 @@ const tdfStages = [
         }
 
         async function requestRiskMapGeneration_() {
-            const response = await fetch(`${BFG_RISK_MAP_REQUEST_URL}?source=bfg-test&v=${Date.now()}`, {
+            const response = await fetch(`${BFG_RISK_MAP_REQUEST_URL}?source=bfg-v2026.22&v=${Date.now()}`, {
                 cache: 'no-store',
                 headers: {
                     'Accept': 'application/json'
@@ -5489,7 +5595,7 @@ const tdfStages = [
     initializeManualMetarFetch();
     initializeForeFlightButton();
 
-    // v2026.21 : restaurer d’abord les dernières données locales, puis seulement lancer
+    // v4.45 : restaurer d’abord les dernières données locales, puis seulement lancer
     // les actualisations automatiques. Cela évite les rubriques vides au démarrage.
     initializeSessionManagement();
     Promise.resolve(window.__bfgLocalRestorePromise).catch(() => {}).finally(() => {
@@ -6024,10 +6130,25 @@ const tdfStages = [
             const metarContainer = airportContainer.querySelector('.metar-container');
             const tafContainer = airportContainer.querySelector('.taf-container');
 
-            if (!metarContainer || !tafContainer) return;
+            if (!metarContainer || !tafContainer) {
+                return { icao, ok: false, metarOk: false, tafOk: false };
+            }
 
-            metarContainer.innerHTML = '<h4>METAR</h4><p>Chargement...</p>';
-            tafContainer.innerHTML = '<h4>TAF</h4><p>Chargement...</p>';
+            function getWeatherHtmlWithoutRefreshWarning_(container) {
+                const clone = container.cloneNode(true);
+                clone.querySelectorAll('.weather-refresh-warning').forEach(element => element.remove());
+                return clone.innerHTML;
+            }
+
+            const hadPreviousWeather = airportContainer.dataset.loaded === 'true';
+            const previousMetarHtml = getWeatherHtmlWithoutRefreshWarning_(metarContainer);
+            const previousTafHtml = getWeatherHtmlWithoutRefreshWarning_(tafContainer);
+
+            if (!hadPreviousWeather) {
+                metarContainer.innerHTML = '<h4>METAR</h4><p>Chargement...</p>';
+                tafContainer.innerHTML = '<h4>TAF</h4><p>Chargement...</p>';
+            }
+            airportContainer.classList.add('weather-refreshing');
 
             function escapeWeatherText_(value) {
                 return String(value || '')
@@ -6038,12 +6159,13 @@ const tdfStages = [
                     .replace(/'/g, '&#039;');
             }
 
-            function formatCheckwxError_(type, status, details) {
+            function formatCheckwxError_(type, status, details, secondAttemptDone = false) {
                 const statusText = status ? ` HTTP ${status}` : '';
                 const detailText = details ? `<br><small>${escapeWeatherText_(details)}</small>` : '';
+                const retryText = secondAttemptDone ? ' Une seconde tentative a été effectuée.' : '';
 
                 if (status === 429) {
-                    return `<p class="error-msg">CheckWX : limite de requêtes atteinte${statusText}. Réessayez plus tard.${detailText}</p>`;
+                    return `<p class="error-msg">CheckWX : limite de requêtes atteinte${statusText}. Réessayez plus tard.${retryText}${detailText}</p>`;
                 }
 
                 if (status === 401 || status === 403) {
@@ -6055,14 +6177,18 @@ const tdfStages = [
                 }
 
                 if (status && status >= 500) {
-                    return `<p class="error-msg">CheckWX : serveur temporairement indisponible${statusText}.${detailText}</p>`;
+                    return `<p class="error-msg">CheckWX : serveur temporairement indisponible${statusText}.${retryText}${detailText}</p>`;
                 }
 
                 if (status) {
-                    return `<p class="error-msg">CheckWX : erreur ${type}${statusText}.${detailText}</p>`;
+                    return `<p class="error-msg">CheckWX : erreur ${type}${statusText}.${retryText}${detailText}</p>`;
                 }
 
-                return `<p class="error-msg">CheckWX : erreur réseau ou blocage navigateur/CORS. Vérifier la connexion, l'accès au proxy météo NAS et réessayer.${detailText}</p>`;
+                return `<p class="error-msg">CheckWX : accès direct au proxy météo NAS impossible ou interrompu.${retryText}${detailText}</p>`;
+            }
+
+            function isCheckwxRetryable_(status) {
+                return ![401, 403, 404].includes(Number(status || 0));
             }
 
             async function readCheckwxPayload_(response) {
@@ -6076,106 +6202,170 @@ const tdfStages = [
                 }
             }
 
-            async function fetchCheckwx_(type, icao) {
-                const proxyUrl = `${CHECKWX_PROXY_URL}?type=${encodeURIComponent(type.toLowerCase())}&icao=${encodeURIComponent(icao)}&v=${Date.now()}`;
+            async function fetchCheckwxAttempt_(type, icao, attempt) {
+                const serviceWorkerReady = await bfgServiceWorkerWeatherReadyPromise_;
+                if (!serviceWorkerReady) {
+                    throw new Error('Le service worker v2026.22 n’a pas encore pris le contrôle de la page.');
+                }
 
-                const response = await fetch(proxyUrl, {
-                    cache: 'no-store'
+                const proxyUrl = `${CHECKWX_PROXY_URL}?type=${encodeURIComponent(type.toLowerCase())}&icao=${encodeURIComponent(icao)}&v=${Date.now()}&attempt=${attempt}`;
+                const controller = new AbortController();
+                const timer = setTimeout(() => controller.abort(), CHECKWX_REQUEST_TIMEOUT_MS);
+
+                try {
+                    return await fetch(proxyUrl, {
+                        method: 'GET',
+                        mode: 'cors',
+                        credentials: 'omit',
+                        cache: 'no-store',
+                        signal: controller.signal
+                    });
+                } finally {
+                    clearTimeout(timer);
+                }
+            }
+
+            async function fetchCheckwx_(type, icao, attempt = 1) {
+                return runCheckwxRequestQueued_(async () => {
+                    try {
+                        const response = await fetchCheckwxAttempt_(type, icao, attempt);
+                        const payload = await readCheckwxPayload_(response);
+                        const details = payload.json && payload.json.error
+                            ? payload.json.error
+                            : payload.json && payload.json.message
+                                ? payload.json.message
+                                : payload.raw.slice(0, 180);
+
+                        if (!response.ok) {
+                            return {
+                                ok: false,
+                                retryable: isCheckwxRetryable_(response.status),
+                                type,
+                                status: response.status,
+                                details
+                            };
+                        }
+
+                        if (!payload.json) {
+                            return {
+                                ok: false,
+                                retryable: true,
+                                type,
+                                status: response.status,
+                                details: `Réponse ${type} illisible ou non JSON via proxy NAS. ${payload.raw.slice(0, 180)}`
+                            };
+                        }
+
+                        if (payload.json.ok === false) {
+                            const payloadStatus = payload.json.status || response.status;
+                            return {
+                                ok: false,
+                                retryable: isCheckwxRetryable_(payloadStatus),
+                                type,
+                                status: payloadStatus,
+                                details: payload.json.message || payload.json.error || ''
+                            };
+                        }
+
+                        return {
+                            ok: true,
+                            retryable: false,
+                            type,
+                            status: payload.json.status || response.status,
+                            json: payload.json.data ? payload.json.data : payload.json
+                        };
+                    } catch (error) {
+                        return {
+                            ok: false,
+                            retryable: true,
+                            type,
+                            status: 0,
+                            details: error && error.message ? error.message : String(error || '')
+                        };
+                    }
                 });
+            }
 
-                const payload = await readCheckwxPayload_(response);
-                const details = payload.json && payload.json.error
-                    ? payload.json.error
-                    : payload.json && payload.json.message
-                        ? payload.json.message
-                        : payload.raw.slice(0, 180);
-
-                if (!response.ok) {
-                    return {
-                        ok: false,
-                        type,
-                        status: response.status,
-                        errorHtml: formatCheckwxError_(type, response.status, details)
-                    };
+            function formatWeatherReportForDisplay_(weatherJson, fallbackLabel) {
+                if (!weatherJson || !weatherJson.results || !Array.isArray(weatherJson.data) || weatherJson.data.length === 0) {
+                    return `${fallbackLabel} non disponible.`;
                 }
 
-                if (!payload.json) {
-                    return {
-                        ok: false,
-                        type,
-                        status: response.status,
-                        errorHtml: `<p class="error-msg">CheckWX : réponse ${type} illisible ou non JSON via proxy NAS.<br><small>${escapeWeatherText_(payload.raw.slice(0, 180))}</small></p>`
-                    };
+                const firstReport = weatherJson.data[0];
+
+                if (typeof firstReport === 'string') return firstReport;
+
+                if (firstReport && typeof firstReport === 'object') {
+                    if (firstReport.raw_text) return firstReport.raw_text;
+                    if (firstReport.raw) return firstReport.raw;
+                    if (firstReport.text) return firstReport.text;
+                    return JSON.stringify(firstReport, null, 2);
                 }
 
-                if (payload.json.ok === false) {
-                    return {
-                        ok: false,
-                        type,
-                        status: payload.json.status || response.status,
-                        errorHtml: formatCheckwxError_(type, payload.json.status || response.status, payload.json.message || payload.json.error || '')
-                    };
+                return String(firstReport);
+            }
+
+            function displayWeatherResult_(container, label, result, previousHtml) {
+                if (result.ok) {
+                    const display = formatWeatherReportForDisplay_(result.json, label);
+                    container.innerHTML = `<h4>${label}</h4><pre>${escapeWeatherText_(display)}</pre>`;
+                    return;
                 }
 
-                return {
-                    ok: true,
-                    type,
-                    status: payload.json.status || response.status,
-                    json: payload.json.data ? payload.json.data : payload.json
-                };
+                if (hadPreviousWeather && previousHtml) {
+                    container.innerHTML = `${previousHtml}<p class="error-msg weather-refresh-warning"><small>Actualisation impossible : dernière donnée conservée.</small></p>`;
+                    return;
+                }
+
+                container.innerHTML = `<h4>${label}</h4>${formatCheckwxError_(label, result.status, result.details, result.attempt === 2)}`;
             }
 
             try {
-                const [metarResult, tafResult] = await Promise.all([
-                    fetchCheckwx_('METAR', icao),
-                    fetchCheckwx_('TAF', icao)
+                // Premier passage : toutes les requêtes de tous les terrains sont mises en file immédiatement.
+                let [metarResult, tafResult] = await Promise.all([
+                    fetchCheckwx_('METAR', icao, 1),
+                    fetchCheckwx_('TAF', icao, 1)
                 ]);
+                metarResult.attempt = 1;
+                tafResult.attempt = 1;
 
-                function formatWeatherReportForDisplay_(weatherJson, fallbackLabel) {
-                    if (!weatherJson || !weatherJson.results || !Array.isArray(weatherJson.data) || weatherJson.data.length === 0) {
-                        return `${fallbackLabel} non disponible.`;
-                    }
-
-                    const firstReport = weatherJson.data[0];
-
-                    if (typeof firstReport === 'string') {
-                        return firstReport;
-                    }
-
-                    if (firstReport && typeof firstReport === 'object') {
-                        if (firstReport.raw_text) return firstReport.raw_text;
-                        if (firstReport.raw) return firstReport.raw;
-                        if (firstReport.text) return firstReport.text;
-                        return JSON.stringify(firstReport, null, 2);
-                    }
-
-                    return String(firstReport);
+                // Les nouvelles tentatives sont ajoutées en fin de file : elles ne bloquent donc plus
+                // les premières tentatives des aérodromes situés à la fin de la liste.
+                const retryTasks = [];
+                if (!metarResult.ok && metarResult.retryable) {
+                    retryTasks.push(async () => {
+                        metarResult = await fetchCheckwx_('METAR', icao, 2);
+                        metarResult.attempt = 2;
+                    });
+                }
+                if (!tafResult.ok && tafResult.retryable) {
+                    retryTasks.push(async () => {
+                        tafResult = await fetchCheckwx_('TAF', icao, 2);
+                        tafResult.attempt = 2;
+                    });
                 }
 
-                if (!metarResult.ok) {
-                    metarContainer.innerHTML = `<h4>METAR</h4>${metarResult.errorHtml}`;
-                } else {
-                    const metarDisplay = formatWeatherReportForDisplay_(metarResult.json, 'METAR');
-                    metarContainer.innerHTML = `<h4>METAR</h4><pre>${escapeWeatherText_(metarDisplay)}</pre>`;
+                if (retryTasks.length > 0) {
+                    await waitCheckwxRetry_(CHECKWX_RETRY_DELAY_MS);
+                    await Promise.all(retryTasks.map(task => task()));
                 }
 
-                if (!tafResult.ok) {
-                    tafContainer.innerHTML = `<h4>TAF</h4>${tafResult.errorHtml}`;
-                } else {
-                    const tafDisplay = formatWeatherReportForDisplay_(tafResult.json, 'TAF');
-                    tafContainer.innerHTML = `<h4>TAF</h4><pre>${escapeWeatherText_(tafDisplay)}</pre>`;
-                }
+                displayWeatherResult_(metarContainer, 'METAR', metarResult, previousMetarHtml);
+                displayWeatherResult_(tafContainer, 'TAF', tafResult, previousTafHtml);
 
-                if (metarResult.ok || tafResult.ok) {
+                if (metarResult.ok || tafResult.ok || hadPreviousWeather) {
                     airportContainer.dataset.loaded = 'true';
                     checkWeatherValidity();
                 }
 
-            } catch (error) {
-                const message = error && error.message ? error.message : '';
-                const errorHtml = formatCheckwxError_('METAR/TAF', 0, message);
-                metarContainer.innerHTML = `<h4>METAR</h4>${errorHtml}`;
-                tafContainer.innerHTML = `<h4>TAF</h4>${errorHtml}`;
+                return {
+                    icao,
+                    ok: metarResult.ok || tafResult.ok,
+                    metarOk: metarResult.ok,
+                    tafOk: tafResult.ok
+                };
+            } finally {
+                airportContainer.classList.remove('weather-refreshing');
             }
         }
         
@@ -6774,7 +6964,7 @@ const tdfStages = [
                 const finalCssWidth = Math.max(1, pinchBaseCanvasWidth * finalRatio);
                 const finalCssHeight = Math.max(1, pinchBaseCanvasHeight * finalRatio);
 
-                // v2026.21 : on conserve directement l'aperçu CSS au relâchement.
+                // v4.45 : on conserve directement l'aperçu CSS au relâchement.
                 // Aucun rendu PDF.js lourd n'est déclenché ici : le geste reste disponible
                 // immédiatement, même sur les FDS et GAAR volumineux.
                 scale = Math.round(finalScale * 1000) / 1000;
@@ -9162,14 +9352,54 @@ window.__notamTextFull = notamInput.value;
 
             const manualLoadWeatherBtn = document.getElementById('manual-load-weather-btn');
             if (manualLoadWeatherBtn) {
-                manualLoadWeatherBtn.addEventListener('click', () => {
-                    const airportContainers = document.querySelectorAll('#notam-display .airport-section-container');
-                    airportContainers.forEach(container => {
-                        const icao = container.dataset.icao;
-                        if (icao) {
-                            fetchAndDisplayWeather(icao, container);
+                const defaultWeatherButtonText = manualLoadWeatherBtn.textContent || 'Charger Météo';
+                manualLoadWeatherBtn.disabled = true;
+                manualLoadWeatherBtn.textContent = 'Initialisation météo…';
+
+                bfgServiceWorkerWeatherReadyPromise_.then((ready) => {
+                    manualLoadWeatherBtn.disabled = false;
+                    manualLoadWeatherBtn.textContent = ready
+                        ? defaultWeatherButtonText
+                        : 'Réactiver météo';
+                });
+
+                manualLoadWeatherBtn.addEventListener('click', async () => {
+                    manualLoadWeatherBtn.disabled = true;
+                    const previousText = manualLoadWeatherBtn.textContent || defaultWeatherButtonText;
+                    manualLoadWeatherBtn.textContent = 'Vérification…';
+
+                    let ready = await bfgServiceWorkerWeatherReadyPromise_;
+                    if (!ready) {
+                        bfgServiceWorkerWeatherReadyPromise_ = ensureBfgServiceWorkerForWeather_()
+                            .catch(() => false);
+                        ready = await bfgServiceWorkerWeatherReadyPromise_;
+                    }
+
+                    if (!ready) {
+                        manualLoadWeatherBtn.disabled = false;
+                        manualLoadWeatherBtn.textContent = 'Réactiver météo';
+                        alert('Le nouveau service worker météo n’est pas encore actif. Ferme complètement le BFG puis rouvre-le une fois.');
+                        return;
+                    }
+
+                    const airportContainers = Array.from(document.querySelectorAll('#notam-display .airport-section-container'))
+                        .filter(container => Boolean(container.dataset.icao));
+                    const totalAirports = airportContainers.length;
+                    let completedAirports = 0;
+
+                    manualLoadWeatherBtn.textContent = `Chargement météo 0/${totalAirports}…`;
+                    const tasks = airportContainers.map(async (container) => {
+                        try {
+                            return await fetchAndDisplayWeather(container.dataset.icao, container);
+                        } finally {
+                            completedAirports += 1;
+                            manualLoadWeatherBtn.textContent = `Chargement météo ${completedAirports}/${totalAirports}…`;
                         }
                     });
+
+                    await Promise.allSettled(tasks);
+                    manualLoadWeatherBtn.disabled = false;
+                    manualLoadWeatherBtn.textContent = defaultWeatherButtonText || previousText;
                 });
             }
 
