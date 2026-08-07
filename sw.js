@@ -1,4 +1,5 @@
-const CACHE_NAME = 'briefing-fdf-v2026-21-selection-notams-r1';
+const BFG_SW_VERSION = '2026.22';
+const CACHE_NAME = 'briefing-fdf-v2026-22-meteo-equilibree-r1';
 
 const LOCAL_ASSETS = [
   './manifest.json',
@@ -79,6 +80,20 @@ async function cacheFirst(request) {
   }
   return networkRes;
 }
+
+
+self.addEventListener('message', (event) => {
+  const data = event && event.data ? event.data : {};
+
+  if (data.type === 'BFG_SKIP_WAITING') {
+    self.skipWaiting();
+    return;
+  }
+
+  if (data.type === 'BFG_GET_VERSION' && event.ports && event.ports[0]) {
+    event.ports[0].postMessage({ version: BFG_SW_VERSION });
+  }
+});
 
 self.addEventListener('install', (event) => {
   event.waitUntil((async () => {
@@ -191,6 +206,15 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
   const sameOrigin = url.origin === self.location.origin;
 
+  // v2026.22 — METAR/TAF : ne surtout pas appeler event.respondWith().
+  // Le navigateur effectue alors la requête réseau native directement vers le proxy NAS.
+  // Cette exclusion doit précéder la règle NAS et la règle générique des ressources externes.
+  if (!sameOrigin &&
+      url.hostname === 'grisonb.synology.me' &&
+      url.pathname.includes('/briefing-api/get-metar-taf.php')) {
+    return;
+  }
+
   // Ressources externes spéciales stockées sur le NAS BFG.
   if (!sameOrigin && url.hostname === 'grisonb.synology.me' && (
       url.pathname.includes('/briefing-data/risk-maps/') ||
@@ -204,8 +228,7 @@ self.addEventListener('fetch', (event) => {
       url.pathname.includes('/briefing-api/request-risk-map-generation.php') ||
       url.pathname.includes('/briefing-api/get-risk-map-generation-status.php') ||
       url.pathname.includes('/briefing-api/get-gaar-pdf.php') ||
-      url.pathname.includes('/briefing-api/get-gaar-status.php') ||
-      url.pathname.includes('/briefing-api/get-metar-taf.php')
+      url.pathname.includes('/briefing-api/get-gaar-status.php')
     )) {
     event.respondWith((async () => {
       const normalizedRequest = normalizedBfgCacheRequest(event.request);
@@ -218,7 +241,9 @@ self.addEventListener('fetch', (event) => {
           url.pathname.includes('/briefing-data/risk-maps/') ||
           url.pathname.includes('/briefing-data/gaar/') ||
           url.pathname.includes('/briefing-data/feuille-service/');
-        const timeoutMs = isLongGenerationRequest ? 65000 : (isPdfOrDataRequest ? 15000 : 5000);
+        const timeoutMs = isLongGenerationRequest
+          ? 65000
+          : (isPdfOrDataRequest ? 15000 : 5000);
         const networkRes = await fetchWithTimeout(event.request, { cache: 'no-store' }, timeoutMs, true);
         if (networkRes && networkRes.ok) {
           const cache = await caches.open(CACHE_NAME);
@@ -263,7 +288,6 @@ self.addEventListener('fetch', (event) => {
   const isNavigation = event.request.mode === 'navigate';
   const isIndex =
     url.pathname.endsWith('/index.html') ||
-    url.pathname.endsWith('/Briefing_fdf_TEST/') ||
     url.pathname.endsWith('/Briefing-fdf/');
 
   if (isNavigation || isIndex) {
