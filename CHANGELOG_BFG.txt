@@ -1,36 +1,38 @@
-BFG - Version pérenne v2026.21
-Date : 2026-07-30
-Base : TEST v4.46 sélection NOTAMs verte et rouge
+BFG — Version pérenne v2026.22
+Date : 2026-08-07
+Base validée : v4.51
 
-Cette livraison remplace la précédente version pérenne v2026.21.
+Évolutions reprises depuis la version pérenne v2026.21 :
 
-Nouveautés NOTAMs reprises des TEST v4.45 et v4.46 :
-- Ajout d’une deuxième case de sélection rouge sous la case verte de chaque NOTAM.
-- Case verte : NOTAM à conserver dans la sélection.
-- Case rouge : NOTAM identifié comme ne devant plus être affiché à l’avenir tant que son contenu ne change pas.
-- La case rouge est décalée vers le bas pour mieux distinguer les deux actions.
-- Un NOTAM sélectionné en vert passe sur fond vert.
-- Un NOTAM sélectionné en rouge reste visible et passe sur fond rouge.
-- Les sélections verte et rouge sont exclusives : cocher l’une décoche l’autre.
-- « Garder la sélection » affiche uniquement les NOTAMs verts et masque les NOTAMs rouges et non sélectionnés.
-- « Tout afficher » réaffiche les NOTAMs rouges et les NOTAMs non sélectionnés.
-- « Annuler sélection » annule toutes les sélections vertes et rouges et réaffiche tous les NOTAMs.
-- Suppression du bouton « Afficher les NOTAMs masqués ».
-- La sélection rouge reste mémorisée tant que le NOTAM ne change pas ; un NOTAM modifié réapparaît comme nouveau.
+NOTAMs :
+- Conservation de la sélection verte des NOTAMs à garder.
+- Sélection rouge persistante des NOTAMs à masquer.
+- Les sélections verte et rouge sont mutuellement exclusives.
+- « Garder la sélection » n’affiche que les NOTAMs verts.
+- « Tout afficher » réaffiche les NOTAMs rouges et non sélectionnés.
+- « Annuler sélection » efface les sélections verte et rouge.
 
-Fonctions déjà intégrées depuis la précédente v2026.21 :
-- Filtres NOTAMs ADMINISTRATION et VDF.
-- Sauvegarde hors ligne des annotations PDF liée au contenu du PDF.
-- Reprise automatique en réseau très dégradé.
-- Barre d’annotation PDF améliorée, couleur blanche identifiable et bouton « Tout Effacer ».
-- Navigation et zoom à deux doigts pendant l’écriture au Pencil.
-- Conservation de la dernière FDS, des données CNCASC et des cartes des risques pendant leur actualisation.
+METAR / TAF :
+- Accès direct au proxy météo NAS sans interception par le service worker.
+- Chargement équilibré avec jusqu’à 8 requêtes simultanées.
+- Délai maximum de 15 secondes par tentative.
+- Premier passage prioritaire pour tous les METAR et TAF de tous les aérodromes.
+- Seconde tentative placée en fin de file uniquement pour les erreurs récupérables.
+- Pas de nouvelle tentative pour les erreurs 401, 403 et 404.
+- Progression affichée pendant le chargement : « Chargement météo x/27… ».
+- Conservation de la dernière météo connue lorsqu’une actualisation échoue.
+- Rafraîchissement individuel METAR/TAF conservé.
+
+Données locales / réseau :
+- Conservation des améliorations de la v2026.21 : restauration locale prioritaire, conservation des PDF FDS/GAAR/risques et fonctionnement en réseau dégradé.
 
 Paramètres pérennes :
-- Version affichée et interne : 2026.21.
-- Tour de France : forçage TEST désactivé.
-- Identifiant GAAR : bfg-v2026.21.
-- Cache : briefing-fdf-v2026-21-selection-notams-r1.
+- Version affichée : 2026.22.
+- Tour de France : forçage désactivé ; affichage uniquement pendant la période prévue.
+- Source GAAR : bfg-v2026.22.
+- Source demande cartes risques : bfg-v2026.22.
+- Service worker : version 2026.22.
+- Nouveau cache : briefing-fdf-v2026-22-meteo-equilibree-r1.
 - Aucun fichier NAS à remplacer.
 
 Fichiers à remplacer :
