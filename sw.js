@@ -1,5 +1,5 @@
-const BFG_SW_VERSION = '2026.22';
-const CACHE_NAME = 'briefing-fdf-v2026-22-meteo-equilibree-r1';
+const BFG_SW_VERSION = '2026.23';
+const CACHE_NAME = 'briefing-fdf-v2026-23-meteo-directe-persistance-r1';
 
 const LOCAL_ASSETS = [
   './manifest.json',
@@ -206,7 +206,7 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
   const sameOrigin = url.origin === self.location.origin;
 
-  // v2026.22 — METAR/TAF : ne surtout pas appeler event.respondWith().
+  // v4.51 — METAR/TAF : ne surtout pas appeler event.respondWith().
   // Le navigateur effectue alors la requête réseau native directement vers le proxy NAS.
   // Cette exclusion doit précéder la règle NAS et la règle générique des ressources externes.
   if (!sameOrigin &&
@@ -288,6 +288,7 @@ self.addEventListener('fetch', (event) => {
   const isNavigation = event.request.mode === 'navigate';
   const isIndex =
     url.pathname.endsWith('/index.html') ||
+    url.pathname.endsWith('/Briefing_fdf_TEST/') ||
     url.pathname.endsWith('/Briefing-fdf/');
 
   if (isNavigation || isIndex) {
