@@ -1,7 +1,7 @@
 {
   "name": "Briefing FDF",
   "short_name": "Briefing",
-  "description": "Briefing FDF v2026.23",
+  "description": "Briefing FDF v2026.24 — persistance GAAR, météo quotidienne et logique visuelle NOTAMs",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
