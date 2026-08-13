@@ -1,6 +1,6 @@
-CHANGELOG CUMULATIF — BFG v2026.23
-Date : 2026-08-11
-Base pérenne : TEST v4.53
+CHANGELOG CUMULATIF — BFG v2026.24
+Date : 2026-08-13
+Base pérenne : TEST v4.56
 
 RÈGLE DU FICHIER
 - Ce CHANGELOG est cumulatif.
@@ -348,7 +348,139 @@ Adaptations pérennes :
 - Aucun fichier NAS à remplacer.
 
 ===============================================================================
-FICHIERS DE LA VERSION ACTUELLE v2026.23
+TEST v4.54 — 2026-08-13
+Base : TEST v4.53 / version pérenne v2026.23
+===============================================================================
+
+GAAR — diagramme et circuits :
+- Correction de la restauration du diagramme GAAR importé manuellement : en mode GAAR Manuel, le PDF sauvegardé est restauré même si son nom de fichier ne contient pas de date exploitable.
+- Les circuits GAAR de la carte deviennent indépendants du PDF GAAR : ils sont restaurés même si aucun diagramme PDF n’est présent ou si le PDF automatique quotidien n’est plus restaurable.
+- Les snapshots de circuits ignorent désormais les entrées vides ou nulles.
+- Sauvegarde locale automatique après ajout d’un point/circuit manuel, modification d’un point, suppression d’un point ou suppression de tous les circuits.
+- La reconstruction d’un circuit sauvegardé ne déclenche pas de sauvegarde temporaire vide.
+- À l’ouverture de la carte, cadrage automatique sur tous les circuits existants.
+- S’il n’existe qu’un seul circuit, le cadrage se fait uniquement sur ce circuit et ne revient plus à la vue France.
+- S’il n’existe qu’un seul point, centrage local au zoom 10.
+- Les rafraîchissements Leaflet/iPad conservent le cadrage des circuits au lieu de réinitialiser la carte sur toute la France.
+
+METAR / TAF — expiration quotidienne :
+- Les METAR/TAF sauvegardés ne sont restaurés que s’ils ont été chargés le jour courant (heure France) et avant l’heure de déconnexion quotidienne.
+- À l’expiration de la connexion Briefing du soir (23h00), les METAR/TAF affichés sont effacés.
+- L’effacement est répercuté dans la sauvegarde locale afin d’éviter la réapparition d’une météo de la veille au lancement suivant.
+- Si la PWA était en arrière-plan au moment de l’expiration, le contrôle est rejoué au retour au premier plan.
+- Une météo partagée provenant d’une journée précédente n’est pas restaurée comme météo opérationnelle.
+
+NOTAMs — état des boutons :
+- Lors d’un nouvel import ou d’une nouvelle analyse NOTAM, l’affichage repart en mode complet.
+- Lorsque tous les NOTAMs sont affichés, le bouton visible est « Garder la sélection ».
+- « Tout afficher » n’est visible que lorsqu’un filtrage de sélection a réellement été appliqué.
+- Les sélections sauvegardées restent restaurées ; si une sauvegarde impose réellement un filtrage par sélection, l’état « Tout afficher » reste cohérent avec ce filtrage.
+
+NOTAMs — nouvelle logique visuelle :
+- NOTAM non sélectionné : trait latéral bleu à la place du trait jaune.
+- NOTAM à garder : comportement vert conservé.
+- Case « non désirable » : cercle noir à la place du cercle rouge.
+- Case cochée « non désirable » : coche/accent noir.
+- NOTAM « non désirable » : trait latéral noir et fond gris foncé.
+- Texte blanc sur le fond gris foncé afin de conserver la lisibilité.
+- La logique persistante existante reste compatible : un NOTAM classé non désirable reste mémorisé jusqu’à modification de son contenu.
+
+Fichiers modifiés :
+- index.html
+- manifest.json
+- sw.js
+
+Fichier NAS :
+- Aucun fichier NAS à remplacer.
+
+Tests recommandés :
+1. Importer manuellement un diagramme GAAR, créer au moins un circuit, sauvegarder, fermer complètement la PWA puis rouvrir : diagramme et circuits doivent être restaurés.
+2. Tester un circuit unique puis plusieurs circuits : la carte doit cadrer uniquement les circuits présents et ne pas revenir à la vue France.
+3. Ajouter, modifier ou supprimer un point GAAR, fermer puis rouvrir sans appuyer à nouveau sur Sauvegarder : le dernier état doit être conservé.
+4. Charger METAR/TAF et vérifier qu’ils restent restaurés pendant la même journée.
+5. À l’expiration de la connexion du soir, vérifier que la météo disparaît et ne réapparaît pas au prochain lancement.
+6. Importer automatiquement les NOTAMs : lorsque tous sont affichés, « Garder la sélection » doit être visible et « Tout afficher » masqué.
+7. Vérifier les couleurs NOTAM : neutre bleu, garder vert, non désirable noir + gris foncé.
+
+
+===============================================================================
+TEST v4.55 — 2026-08-13
+Base : TEST v4.54
+===============================================================================
+
+NOTAMs — ajustement des teintes :
+- NOTAM non sélectionné : le trait latéral devient bleu clair (#7fb3d5), moins soutenu que le bleu principal de l'application.
+- NOTAM « non désirable » : le trait latéral reste noir.
+- NOTAM « non désirable » : le fond gris foncé de la v4.54 est remplacé par un gris pastel plus estompé (#d9dde2).
+- Le texte des NOTAMs non désirables redevient foncé (#2f3439) pour conserver un contraste naturel sur le fond pastel.
+- Les liens présents dans un NOTAM non désirable utilisent un bleu assombri lisible sur le fond pastel.
+- La logique fonctionnelle de sélection/persistance des NOTAMs est inchangée.
+- Toutes les corrections GAAR, météo quotidienne et état des boutons NOTAMs de la v4.54 sont conservées.
+
+Fichiers modifiés :
+- index.html
+- manifest.json
+- sw.js
+
+Fichier NAS :
+- Aucun fichier NAS à remplacer.
+
+
+===============================================================================
+TEST v4.56 — 2026-08-13
+Base : TEST v4.55
+===============================================================================
+
+NOTAMs — fond des éléments non sélectionnés :
+- Les NOTAMs non sélectionnés conservent leur trait latéral bleu clair.
+- Leur fond blanc/gris très neutre est remplacé par un bleu très léger (#f3f8fc).
+- L'objectif est de distinguer visuellement les NOTAMs neutres sans donner l'impression qu'ils sont sélectionnés.
+- Les NOTAMs à garder restent verts.
+- Les NOTAMs non désirables conservent le trait noir et le fond gris pastel de la v4.55.
+- Toute la logique fonctionnelle de la v4.55 est inchangée.
+
+Fichiers modifiés :
+- index.html
+- manifest.json
+- sw.js
+
+Fichier NAS :
+- Aucun fichier NAS à remplacer.
+
+
+===============================================================================
+VERSION PÉRENNE v2026.24 — 2026-08-13
+Base : TEST v4.56
+===============================================================================
+
+Reprise fonctionnelle :
+- Reprise intégrale des corrections TEST v4.54, v4.55 et v4.56.
+- GAAR : diagramme manuel et circuits sauvegardés/restaurés ; circuits indépendants du PDF ; sauvegarde automatique des modifications ; cadrage automatique sur le ou les circuits présents.
+- METAR/TAF : persistance uniquement pendant la journée opérationnelle ; effacement à la déconnexion du soir afin de ne pas restaurer une météo obsolète le lendemain.
+- NOTAMs : état des boutons corrigé après import automatique.
+- NOTAMs à garder : affichage vert conservé.
+- NOTAMs non sélectionnés : trait bleu clair et fond bleu très léger.
+- NOTAMs non désirables : cercle noir, trait noir et fond gris pastel.
+
+Règles pérennes :
+- Version affichée et interne : 2026.24.
+- Suppression des mentions TEST visibles.
+- Tour de France : FORÇAGE TEST DÉSACTIVÉ.
+- Tour de France : affichage uniquement du 04/07/2026 au 26/07/2026 inclus ; en dehors de cette période, la rubrique et son entrée de navigation restent masquées.
+- Source GAAR : bfg-v2026.24.
+- Source demande cartes des risques : bfg-v2026.24.
+- Service worker : version 2026.24.
+- Cache PWA : briefing-fdf-v2026-24-gaar-meteo-notams-r1.
+- Aucun fichier NAS à remplacer.
+
+Contrôles réalisés :
+- Vérification explicite de TDF_FORCE_DISPLAY_OVERRIDE = false.
+- Vérification de la fenêtre de dates Tour de France : 2026-07-04 à 2026-07-27 exclusif.
+- Vérification de l'absence de source bfg-test dans la version pérenne.
+- Vérification syntaxique JavaScript, service worker et manifeste JSON.
+
+===============================================================================
+FICHIERS DE LA VERSION ACTUELLE v2026.24
 ===============================================================================
 
 Fichiers modifiés :
