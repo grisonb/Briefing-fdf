@@ -1,5 +1,5 @@
-const BFG_SW_VERSION = '2026.24';
-const CACHE_NAME = 'briefing-fdf-v2026-24-gaar-meteo-notams-r1';
+const BFG_SW_VERSION = '2026.25';
+const CACHE_NAME = 'briefing-fdf-v2026-25-gaar-meteo-notams-r1';
 
 const LOCAL_ASSETS = [
   './manifest.json',
