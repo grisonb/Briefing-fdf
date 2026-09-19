@@ -1,5 +1,5 @@
-const BFG_SW_VERSION = '2026.25';
-const CACHE_NAME = 'briefing-fdf-v2026-25-gaar-meteo-notams-r1';
+const BFG_SW_VERSION = '2026.26';
+const CACHE_NAME = 'briefing-fdf-v2026-26-npf-fds-supaip-r1';
 
 const LOCAL_ASSETS = [
   './manifest.json',
@@ -170,7 +170,12 @@ self.addEventListener('activate', (event) => {
     // de l'application, puis seulement supprimer les anciens caches.
     await migratePreviousBfgDataCaches_();
     const keys = await caches.keys();
-    await Promise.all(keys.map((key) => (key === CACHE_NAME ? null : caches.delete(key))));
+    // v4.62 : ne supprimer que les anciens caches applicatifs BFG.
+    // Le cache local partagé BFG/NPF-Q400 des NOTAM et les caches NPF-Q400 doivent rester intacts.
+    const oldBfgCaches = keys.filter((key) =>
+      key.startsWith('briefing-fdf-v') && key !== CACHE_NAME
+    );
+    await Promise.all(oldBfgCaches.map((key) => caches.delete(key)));
     await self.clients.claim();
   })());
 });
@@ -288,7 +293,7 @@ self.addEventListener('fetch', (event) => {
   const isNavigation = event.request.mode === 'navigate';
   const isIndex =
     url.pathname.endsWith('/index.html') ||
-    url.pathname.endsWith('/Briefing_fdf_TEST/') ||
+    url.pathname.endsWith('/Briefing_fdf/') ||
     url.pathname.endsWith('/Briefing-fdf/');
 
   if (isNavigation || isIndex) {
