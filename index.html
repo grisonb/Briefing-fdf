@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
     <title>Briefing Fdf</title>
-    <link rel="manifest" href="./manifest.json?v=2026.25">
+    <link rel="manifest" href="./manifest.json?v=2026.26">
     <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png?v=4.24">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="Briefing">
@@ -734,6 +734,36 @@
         }
 
         .sup-aip-item { margin-bottom: 30px; border-top: 2px solid var(--sc-blue); padding-top: 20px; }
+        .sup-aip-item h3 {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+        .sup-aip-delete-btn {
+            margin-left: 10px;
+            min-width: 46px;
+            min-height: 46px;
+            padding: 4px 12px;
+            border-radius: 10px;
+            border: 1px solid #a31515;
+            background: linear-gradient(180deg, #ff8c8c 0%, #e53935 100%);
+            color: #111111;
+            font-size: 2rem;
+            font-weight: 900;
+            line-height: 1;
+            cursor: pointer;
+            box-shadow: 0 1px 0 rgba(255,255,255,0.75) inset, 0 2px 5px rgba(60, 0, 0, 0.18);
+            -webkit-appearance: none;
+            appearance: none;
+        }
+        .sup-aip-delete-btn:hover {
+            background: linear-gradient(180deg, #ff9d9d 0%, #ef5350 100%);
+            transform: translateY(-1px);
+        }
+        .sup-aip-delete-btn:active {
+            transform: translateY(0);
+        }
         
         .dropzone.drag-over { background-color: #fff8e1; border-color: var(--sc-yellow); border-style: dashed; }
         
@@ -1069,7 +1099,7 @@
             font-weight: bold;
         }
 
-        /* --- TOUR DE FRANCE --- */
+        /* --- TOUR DE FRANCE 2026 --- */
         #tdf-section .tdf-controls {
             display: flex;
             flex-wrap: wrap;
@@ -2177,7 +2207,7 @@
         <h1 id="main-title">Briefing Fdf</h1>
         <p id="current-time-display"></p>
         <p style="position: relative; z-index: 2; text-align: center; color: #333; font-size: 1em; margin-top: -25px; margin-bottom: 30px;">
-    v<span id="app-version">2026.25</span>
+    v<span id="app-version">2026.26</span>
     <button id="force-update-btn" class="link-button" style="background-color: #34495e; padding: 4px 10px; font-size: 0.8em; margin-left: 10px; vertical-align: middle;">
         Forcer MAJ
     </button>
@@ -2195,6 +2225,23 @@
         </div>
         <p id="cncasc-auth-status">Accès Briefing verrouillé.</p>
         <p id="cncasc-warning" class="cncasc-warning"></p>
+        <div id="bfg-npf-bridge-panel" style="margin-top:12px;padding-top:10px;border-top:1px solid #d7dee8;">
+            <details id="bfg-npf-bridge-collapsible" style="margin-top:0;">
+                <summary style="cursor:pointer;font-weight:800;color:#0a2c5a;line-height:1.35;user-select:none;">Association NPF-Q400</summary>
+                <div style="margin-top:12px;">
+                    <div class="cncasc-auth-row" style="margin-top:0;">
+                        <button id="bfg-npf-associate-btn" class="link-button" style="background-color:#0a2c5a;">Associer NPF-Q400</button>
+                        <button id="bfg-npf-check-btn" class="link-button" style="background-color:#6c757d;">Vérifier association</button>
+                    </div>
+                    <p id="bfg-npf-bridge-status" style="margin:10px 0 0 0;font-weight:800;color:#0a2c5a;line-height:1.35;"></p>
+                    <div id="bfg-npf-pair-code-display" style="display:none;margin:10px 0;padding:10px 14px;text-align:center;background:#eef5ff;border:2px solid #0a2c5a;border-radius:8px;color:#0a2c5a;font-size:2em;font-weight:900;letter-spacing:.18em;font-variant-numeric:tabular-nums;"></div>
+                    <div id="bfg-npf-diagnostic" style="margin-top:10px;">
+                        <div style="font-weight:700;color:#34495e;">Diagnostic association NPF-Q400</div>
+                        <pre id="bfg-npf-diagnostic-output" style="white-space:pre-wrap;margin:8px 0 0 0;padding:8px;background:#f5f7f9;border:1px solid #dfe5ea;border-radius:6px;font:12px/1.45 monospace;"></pre>
+                    </div>
+                </div>
+            </details>
+        </div>
     </div>
 
     <div class="session-management" id="session-section">
@@ -2550,7 +2597,7 @@
     <footer>Données : Météo-France, SIA, Windy.com, CheckWX.com. Page non commerciale, à usage personnel.</footer>
     
     <script>
-        const APP_VERSION = "2026.25";
+        const APP_VERSION = "2026.26";
 
         // --- Proxy NAS pour la source de données météo CheckWX ---
         const CHECKWX_PROXY_URL = "https://grisonb.synology.me/briefing-api/get-metar-taf.php";
@@ -2600,7 +2647,7 @@
 
 
 
-        // --- TOUR DE FRANCE ---
+        // --- TOUR DE FRANCE 2026 ---
 // --- DONNÉES TOUR DE FRANCE 2026 ---
 const tdfStages = [
     { stage: 1, type: "C.L.M par équipe", name: "Barcelone > Barcelone", date: "2026-07-04", distance: "19 km", mapUrl: "./tdf2026/stage01.jpg", supAipUrl: null },
@@ -2800,6 +2847,7 @@ const tdfStages = [
         const CNCASC_DISPO_API_URL = 'https://grisonb.synology.me/briefing-api/dispo-cncasc.php';
         const CNCASC_FDF_API_URL = 'https://grisonb.synology.me/briefing-api/get-cncasc-fdf.php';
         const CNCASC_AUTH_API_URL = 'https://grisonb.synology.me/briefing-api/auth-cncasc.php';
+        const NPF_BRIDGE_API_URL = 'https://grisonb.synology.me/briefing-api/npf-docs-api.php';
         const NOTAMS_AUTO_PDF_API_URL = 'https://grisonb.synology.me/briefing-api/get-notams-pdf.php';
         const NOTAMS_GENERATION_REQUEST_API_URL = 'https://grisonb.synology.me/briefing-api/request-notams-generation.php';
         const NOTAMS_GENERATION_STATUS_API_URL = 'https://grisonb.synology.me/briefing-api/get-notams-generation-status.php';
@@ -2883,6 +2931,538 @@ const tdfStages = [
         const CNCASC_TOKEN_STORAGE_KEY = 'bfg_cncasc_token_v1';
         const CNCASC_TOKEN_EXP_STORAGE_KEY = 'bfg_cncasc_token_exp_v1';
         const BFG_LOGIN_END_HOUR_LOCAL = 23;
+
+        // v4.64 — pont d'autorisation BFG -> NPF-Q400 via NAS uniquement ; réassociation explicite forcée.
+        // BFG et NPF-Q400 restent deux PWA indépendantes : aucun localStorage/CacheStorage
+        // partagé entre les applications n'est utilisé pour l'association.
+        // Le pont est maintenant authentifié directement par le jeton de session BFG existant.
+        const BFG_NPF_BRIDGE_ID_KEY = 'bfgNpfBridgeIdV1';
+        const BFG_NPF_BRIDGE_PAIR_CODE_KEY = 'bfgNpfBridgePairCodeV1';
+        const BFG_NPF_BRIDGE_PAIR_CODE_EXP_KEY = 'bfgNpfBridgePairCodeExpV1';
+        const BFG_NPF_BRIDGE_GRANT_EXP_KEY = 'bfgNpfBridgeGrantExpV1';
+        const BFG_NPF_BRIDGE_PAIRED_KEY = 'bfgNpfBridgePairedV1';
+        // Session NPF-Q400 Docs obtenue après authentification BFG ; elle reste utilisée
+        // uniquement pour le snapshot NOTAM. L'association NPF-Q400 utilise la session BFG elle-même.
+        const BFG_NPF_NOTAMS_NAS_TOKEN_KEY = 'bfgNpfNotamsNasTokenV1';
+        const BFG_NPF_NOTAMS_NAS_TOKEN_EXP_KEY = 'bfgNpfNotamsNasTokenExpV1';
+
+        const bfgNpfDiagnosticState_ = {
+            bfgAuthenticated: false,
+            requestSent: false,
+            httpStatus: null,
+            jsonValid: null,
+            codeCreated: null,
+            bridgeCreated: null,
+            consumed: null,
+            lastError: ''
+        };
+
+        let bfgNpfBridgePollTimer_ = null;
+
+        function bfgNpfYesNo_(value) {
+            return value === true ? 'OUI' : (value === false ? 'NON' : '—');
+        }
+
+        function renderBfgNpfDiagnostic_() {
+            bfgNpfDiagnosticState_.bfgAuthenticated = !!getStoredCncascToken_();
+            const el = document.getElementById('bfg-npf-diagnostic-output');
+            if (!el) return;
+            const httpLabel = Number.isFinite(bfgNpfDiagnosticState_.httpStatus)
+                ? String(bfgNpfDiagnosticState_.httpStatus)
+                : '—';
+            const jsonLabel = bfgNpfDiagnosticState_.jsonValid === true
+                ? 'VALIDE'
+                : (bfgNpfDiagnosticState_.jsonValid === false ? 'INVALIDE' : '—');
+            const codeCreatedLabel = bfgNpfDiagnosticState_.consumed === true
+                ? 'OUI (consommé)'
+                : bfgNpfYesNo_(bfgNpfDiagnosticState_.codeCreated);
+            const lines = [
+                `BFG authentifié : ${bfgNpfYesNo_(bfgNpfDiagnosticState_.bfgAuthenticated)}`,
+                `Demande association NPF-Q400 envoyée : ${bfgNpfYesNo_(bfgNpfDiagnosticState_.requestSent)}`,
+                `Réponse serveur HTTP : ${httpLabel}`,
+                `Réponse JSON : ${jsonLabel}`,
+                `Code NPF-Q400 créé : ${codeCreatedLabel}`,
+                `Pont NAS créé : ${bfgNpfYesNo_(bfgNpfDiagnosticState_.bridgeCreated)}`,
+                `Association consommée : ${bfgNpfYesNo_(bfgNpfDiagnosticState_.consumed)}`
+            ];
+            if (bfgNpfDiagnosticState_.lastError) {
+                lines.push(`Dernière erreur : ${bfgNpfDiagnosticState_.lastError}`);
+            }
+            el.textContent = lines.join('\n');
+        }
+
+        function setBfgNpfDiagnostic_(patch = {}) {
+            Object.assign(bfgNpfDiagnosticState_, patch || {});
+            renderBfgNpfDiagnostic_();
+            console.info('[BFG -> NPF-Q400][diagnostic]', {
+                bfgAuthenticated: bfgNpfDiagnosticState_.bfgAuthenticated,
+                requestSent: bfgNpfDiagnosticState_.requestSent,
+                httpStatus: bfgNpfDiagnosticState_.httpStatus,
+                jsonValid: bfgNpfDiagnosticState_.jsonValid,
+                codeCreated: bfgNpfDiagnosticState_.codeCreated,
+                bridgeCreated: bfgNpfDiagnosticState_.bridgeCreated,
+                consumed: bfgNpfDiagnosticState_.consumed,
+                lastError: bfgNpfDiagnosticState_.lastError || ''
+            });
+        }
+
+        function clearBfgNpfNotamsNasSession_() {
+            try {
+                localStorage.removeItem(BFG_NPF_NOTAMS_NAS_TOKEN_KEY);
+                localStorage.removeItem(BFG_NPF_NOTAMS_NAS_TOKEN_EXP_KEY);
+            } catch (_) {}
+        }
+
+        function getBfgNpfNotamsNasSession_() {
+            try {
+                const token = String(localStorage.getItem(BFG_NPF_NOTAMS_NAS_TOKEN_KEY) || '');
+                const exp = Number(localStorage.getItem(BFG_NPF_NOTAMS_NAS_TOKEN_EXP_KEY) || 0);
+                if (!token || !Number.isFinite(exp) || exp <= Date.now()) {
+                    clearBfgNpfNotamsNasSession_();
+                    return null;
+                }
+                return { token, exp };
+            } catch (_) { return null; }
+        }
+
+        function storeBfgNpfNotamsNasSession_(token, expiresAt) {
+            const exp = Date.parse(String(expiresAt || ''));
+            if (!token || !Number.isFinite(exp) || exp <= Date.now()) return false;
+            try {
+                localStorage.setItem(BFG_NPF_NOTAMS_NAS_TOKEN_KEY, String(token));
+                localStorage.setItem(BFG_NPF_NOTAMS_NAS_TOKEN_EXP_KEY, String(exp));
+                return true;
+            } catch (_) { return false; }
+        }
+
+        async function authorizeNpfNotamsNasFromBfgPassword_(password) {
+            const cleanPassword = String(password || '');
+            if (!cleanPassword || !navigator.onLine) return false;
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), 9000);
+            try {
+                const response = await fetch(`${NPF_BRIDGE_API_URL}?action=login&t=${Date.now()}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password: cleanPassword }),
+                    cache: 'no-store',
+                    signal: controller.signal
+                });
+                const text = await response.text();
+                let payload = null;
+                try { payload = JSON.parse(text); } catch (_) {}
+                if (!response.ok || !payload || payload.ok !== true || !payload.token || !payload.expiresAt) {
+                    console.warn('[BFG NPF-Q400 Docs] Autorisation refusée ou réponse invalide.', response.status, payload || text.slice(0, 160));
+                    return false;
+                }
+                return storeBfgNpfNotamsNasSession_(payload.token, payload.expiresAt);
+            } catch (error) {
+                console.warn('[BFG NOTAMS -> NAS] Autorisation de publication indisponible:', error);
+                return false;
+            } finally { clearTimeout(timer); }
+        }
+
+        function getStoredBfgNpfBridgeId_() {
+            try {
+                const value = String(localStorage.getItem(BFG_NPF_BRIDGE_ID_KEY) || '').trim().toLowerCase();
+                return /^[a-f0-9]{32}$/.test(value) ? value : '';
+            } catch (_) {
+                return '';
+            }
+        }
+
+        function isStoredBfgNpfBridgePaired_() {
+            try { return localStorage.getItem(BFG_NPF_BRIDGE_PAIRED_KEY) === '1'; }
+            catch (_) { return false; }
+        }
+
+        function updateBfgNpfBridgeButtons_() {
+            const authenticated = !!getStoredCncascToken_();
+            const online = navigator.onLine;
+            const associateBtn = document.getElementById('bfg-npf-associate-btn');
+            const checkBtn = document.getElementById('bfg-npf-check-btn');
+
+            // v4.64 : l'association dépend uniquement de la session BFG existante.
+            // La session NPF-Q400 Docs (utilisée pour les NOTAMs) ne doit plus bloquer ces boutons.
+            if (associateBtn) {
+                associateBtn.disabled = !authenticated || !online;
+                associateBtn.title = authenticated
+                    ? 'Créer un code NPF-Q400 à 8 chiffres via le NAS.'
+                    : 'Connexion Briefing requise avant association NPF-Q400.';
+            }
+            if (checkBtn) {
+                // Laisser le bouton disponible même sans bridgeId : un clic explique alors
+                // explicitement qu'aucune association n'a encore été créée.
+                checkBtn.disabled = !authenticated || !online;
+                checkBtn.title = authenticated
+                    ? 'Vérifier l’état de l’association NPF-Q400 sur le NAS.'
+                    : 'Connexion Briefing requise avant vérification.';
+            }
+            renderBfgNpfDiagnostic_();
+        }
+
+        function setBfgNpfPairCodeDisplay_(code) {
+            const el = document.getElementById('bfg-npf-pair-code-display');
+            if (!el) return;
+            const clean = /^\d{8}$/.test(String(code || '')) ? String(code) : '';
+            el.textContent = clean;
+            el.style.display = clean ? 'block' : 'none';
+        }
+
+        function updateBfgNpfBridgeStatus_() {
+            const el = document.getElementById('bfg-npf-bridge-status');
+            if (!el) return;
+            let bridgeId = '';
+            let code = '';
+            let codeExp = 0;
+            let grantExp = 0;
+            let paired = false;
+            try {
+                bridgeId = getStoredBfgNpfBridgeId_();
+                code = String(localStorage.getItem(BFG_NPF_BRIDGE_PAIR_CODE_KEY) || '');
+                codeExp = Number(localStorage.getItem(BFG_NPF_BRIDGE_PAIR_CODE_EXP_KEY) || 0);
+                grantExp = Number(localStorage.getItem(BFG_NPF_BRIDGE_GRANT_EXP_KEY) || 0);
+                paired = isStoredBfgNpfBridgePaired_();
+            } catch (_) {}
+
+            setBfgNpfPairCodeDisplay_('');
+
+            if (!getStoredCncascToken_()) {
+                el.textContent = 'NPF-Q400 : connexion Briefing requise pour créer ou vérifier une association.';
+                updateBfgNpfBridgeButtons_();
+                return;
+            }
+            if (code && /^\d{8}$/.test(code) && codeExp > Date.now() && !paired) {
+                setBfgNpfPairCodeDisplay_(code);
+                el.textContent = `NPF-Q400 : code d’association à saisir dans NPF-Q400 — valable jusqu’à ${new Date(codeExp).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}.`;
+                updateBfgNpfBridgeButtons_();
+                return;
+            }
+            if (paired && grantExp > Date.now()) {
+                el.textContent = `NPF-Q400 : association confirmée — autorisation BFG active jusqu’à ${new Date(grantExp).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}.`;
+                updateBfgNpfBridgeButtons_();
+                return;
+            }
+            if (bridgeId && paired) {
+                el.textContent = 'NPF-Q400 : association confirmée. Elle sera réautorisée automatiquement lors d’une connexion Briefing.';
+                updateBfgNpfBridgeButtons_();
+                return;
+            }
+            if (bridgeId) {
+                el.textContent = 'NPF-Q400 : association en attente. Cliquer sur « Associer NPF-Q400 » pour créer un nouveau code à 8 chiffres.';
+                updateBfgNpfBridgeButtons_();
+                return;
+            }
+            el.textContent = 'NPF-Q400 : non associé. Cliquer sur « Associer NPF-Q400 » après connexion Briefing.';
+            updateBfgNpfBridgeButtons_();
+        }
+
+        function bfgNpfFriendlyServerError_(payload, fallback) {
+            const err = String(payload?.error || '');
+            const map = {
+                bridge_session_required: 'Session d’association absente ou expirée.',
+                bfg_auth_config_missing: 'Configuration d’authentification BFG introuvable sur le NAS.',
+                bfg_auth_config_invalid: 'Configuration d’authentification BFG invalide sur le NAS.',
+                bfg_token_secret_missing: 'Secret de validation de session BFG absent sur le NAS.',
+                bfg_session_missing: 'Session BFG absente.',
+                bfg_session_invalid: 'Session BFG invalide : reconnecter l’accès Briefing.',
+                bfg_session_expired: 'Session BFG expirée : reconnecter l’accès Briefing.',
+                bridge_state_dir_unavailable: 'Le dossier briefing-data du NAS ne peut pas être créé.',
+                bridge_state_dir_not_writable: 'Le dossier briefing-data du NAS n’est pas accessible en écriture.',
+                bridge_state_file_not_writable: 'Le fichier de pont NAS existe mais n’est pas accessible en écriture.',
+                bridge_state_unavailable: 'Le fichier de pont NAS ne peut pas être ouvert.',
+                bridge_state_lock_failed: 'Le fichier de pont NAS ne peut pas être verrouillé.',
+                bridge_state_invalid_json: 'Le fichier de pont NAS contient un JSON invalide.',
+                bridge_state_encode_failed: 'Le NAS ne peut pas encoder l’état du pont.',
+                bridge_state_truncate_failed: 'Le NAS ne peut pas préparer le fichier de pont en écriture.',
+                bridge_state_write_failed: 'Écriture du fichier de pont impossible sur le NAS.',
+                bridge_state_flush_failed: 'Le NAS n’a pas pu finaliser l’écriture du pont.',
+                bridge_state_verify_failed: 'Le pont a été écrit mais sa relecture de contrôle a échoué.',
+                bridge_record_verify_failed: 'Le pont NAS existe mais l’association créée n’a pas été retrouvée.',
+                pairing_record_verify_failed: 'Le code a été généré mais son état n’a pas été confirmé dans le pont NAS.',
+                pairing_code_not_generated: 'Le NAS n’a pas généré de code NPF-Q400 à 8 chiffres.',
+                repair_previous_bridge_not_revoked: 'L’ancienne association NPF-Q400 n’a pas été invalidée sur le NAS.',
+                repair_new_bridge_not_created: 'Le NAS n’a pas créé la nouvelle association NPF-Q400.',
+                pairing_required: 'Association NPF-Q400 non encore réalisée.'
+            };
+            return String(payload?.message || map[err] || fallback || err || 'Erreur association NPF-Q400.');
+        }
+
+        async function bfgNpfFetchJson_(action, body, options = {}) {
+            const bfgSession = getStoredCncascToken_();
+            if (!bfgSession || !bfgSession.token) {
+                const error = new Error('Session BFG absente ou expirée. Reconnecter l’accès Briefing.');
+                error.code = 'bfg_session_missing';
+                throw error;
+            }
+
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), 10000);
+            try {
+                if (options.markAssociationRequest) {
+                    setBfgNpfDiagnostic_({
+                        requestSent: true,
+                        httpStatus: null,
+                        jsonValid: null,
+                        codeCreated: null,
+                        bridgeCreated: null,
+                        consumed: null,
+                        lastError: ''
+                    });
+                    console.info('[BFG -> NPF-Q400] Demande association NPF-Q400 envoyée');
+                }
+
+                // v4.64 : le NAS valide directement le jeton BFG existant.
+                // Le token est envoyé dans Authorization et également dans le JSON comme
+                // secours pour les configurations Synology qui retireraient cet en-tête.
+                const requestBody = {
+                    ...(body || {}),
+                    bfgSessionToken: String(bfgSession.token)
+                };
+
+                const response = await fetch(`${NPF_BRIDGE_API_URL}?action=${encodeURIComponent(action)}&t=${Date.now()}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${bfgSession.token}`
+                    },
+                    body: JSON.stringify(requestBody),
+                    cache: 'no-store',
+                    signal: controller.signal
+                });
+
+                if (options.updateDiagnostic !== false) {
+                    setBfgNpfDiagnostic_({ httpStatus: response.status });
+                    console.info('[BFG -> NPF-Q400] Réponse serveur HTTP', response.status);
+                }
+
+                const text = await response.text();
+                let payload = null;
+                try {
+                    payload = JSON.parse(text);
+                    if (options.updateDiagnostic !== false) setBfgNpfDiagnostic_({ jsonValid: true });
+                } catch (_) {
+                    if (options.updateDiagnostic !== false) {
+                        setBfgNpfDiagnostic_({ jsonValid: false, lastError: 'Réponse PHP invalide : JSON attendu.' });
+                    }
+                    const error = new Error(`Réponse PHP invalide (HTTP ${response.status}) : JSON attendu.`);
+                    error.code = 'invalid_json';
+                    throw error;
+                }
+
+                if (!response.ok || !payload || payload.ok !== true) {
+                    const message = bfgNpfFriendlyServerError_(payload, `Erreur HTTP ${response.status}`);
+                    if (options.updateDiagnostic !== false) setBfgNpfDiagnostic_({ lastError: message });
+                    const error = new Error(message);
+                    error.code = payload?.error || `http_${response.status}`;
+                    throw error;
+                }
+
+                return { response, payload };
+            } catch (error) {
+                if (error?.name === 'AbortError') {
+                    const timeoutError = new Error('Erreur réseau : délai dépassé lors de l’appel au NAS.');
+                    timeoutError.code = 'network_timeout';
+                    if (options.updateDiagnostic !== false) setBfgNpfDiagnostic_({ lastError: timeoutError.message });
+                    throw timeoutError;
+                }
+                if (error instanceof TypeError) {
+                    const networkError = new Error('Erreur réseau : impossible de joindre npf-docs-api.php.');
+                    networkError.code = 'network_error';
+                    if (options.updateDiagnostic !== false) setBfgNpfDiagnostic_({ lastError: networkError.message });
+                    throw networkError;
+                }
+                throw error;
+            } finally {
+                clearTimeout(timer);
+            }
+        }
+
+        function storeBfgNpfGrantPayload_(payload) {
+            const bridgeId = String(payload?.bridgeId || '').trim().toLowerCase();
+            if (!/^[a-f0-9]{32}$/.test(bridgeId)) throw new Error('Réponse NAS invalide : identifiant de pont absent.');
+            const grantExp = Date.parse(String(payload?.grantExpiresAt || ''));
+            const pairExp = Date.parse(String(payload?.pairingExpiresAt || ''));
+            const paired = payload?.paired === true || payload?.associationConsumed === true;
+            const code = String(payload?.pairingCode || '');
+
+            localStorage.setItem(BFG_NPF_BRIDGE_ID_KEY, bridgeId);
+            if (Number.isFinite(grantExp)) localStorage.setItem(BFG_NPF_BRIDGE_GRANT_EXP_KEY, String(grantExp));
+            localStorage.setItem(BFG_NPF_BRIDGE_PAIRED_KEY, paired ? '1' : '0');
+
+            if (paired) {
+                localStorage.removeItem(BFG_NPF_BRIDGE_PAIR_CODE_KEY);
+                localStorage.removeItem(BFG_NPF_BRIDGE_PAIR_CODE_EXP_KEY);
+            } else if (/^\d{8}$/.test(code)) {
+                localStorage.setItem(BFG_NPF_BRIDGE_PAIR_CODE_KEY, code);
+                if (Number.isFinite(pairExp)) localStorage.setItem(BFG_NPF_BRIDGE_PAIR_CODE_EXP_KEY, String(pairExp));
+            }
+        }
+
+        async function requestNpfAssociation_() {
+            if (!getStoredCncascToken_()) {
+                const msg = 'Session BFG non authentifiée : connecter d’abord l’accès Briefing.';
+                setBfgNpfDiagnostic_({ bfgAuthenticated: false, lastError: msg });
+                const el = document.getElementById('bfg-npf-bridge-status');
+                if (el) el.textContent = `NPF-Q400 : ${msg}`;
+                return false;
+            }
+            if (!navigator.onLine) {
+                const msg = 'Erreur réseau : association NPF-Q400 impossible hors ligne.';
+                setBfgNpfDiagnostic_({ lastError: msg });
+                const el = document.getElementById('bfg-npf-bridge-status');
+                if (el) el.textContent = `NPF-Q400 : ${msg}`;
+                return false;
+            }
+
+            const btn = document.getElementById('bfg-npf-associate-btn');
+            if (btn) btn.disabled = true;
+            try {
+                const bridgeId = getStoredBfgNpfBridgeId_();
+                // v4.64 : un clic volontaire sur « Associer NPF-Q400 » signifie toujours
+                // « créer une nouvelle association ». Même si le NAS possède déjà un pont
+                // paired=true, l'ancien secret NPF-Q400 doit être invalidé et un nouveau code créé.
+                const { payload } = await bfgNpfFetchJson_('bridge-grant', {
+                    bridgeId,
+                    createPairingCode: true,
+                    forceRePair: true
+                }, { markAssociationRequest: true });
+
+                const bridgeCreated = payload.bridgeStatePersisted === true
+                    && payload.bridgeFileExists === true
+                    && payload.bridgeRecordExists === true;
+                const paired = payload.paired === true || payload.associationConsumed === true;
+                const code = String(payload.pairingCode || '');
+                const codeCreated = paired ? false : (/^\d{8}$/.test(code) && payload.pairingCodeCreated === true);
+
+                if (!bridgeCreated) throw new Error('Le serveur a répondu OK mais le pont NAS n’a pas été confirmé après écriture.');
+                // Un clic explicite doit TOUJOURS revenir avec une association en attente et un nouveau code.
+                // Une réponse paired=true sans code est considérée comme un échec de réassociation.
+                if (paired) throw new Error('Le NAS a conservé l’ancienne association au lieu de créer un nouveau code NPF-Q400.');
+                if (!codeCreated) throw new Error('Le serveur n’a pas créé un code NPF-Q400 valide de 8 chiffres.');
+                if (payload.repairPerformed === true && payload.previousBridgeRevoked !== true) {
+                    throw new Error('L’ancienne association NPF-Q400 n’a pas été invalidée sur le NAS.');
+                }
+
+                storeBfgNpfGrantPayload_(payload);
+                setBfgNpfDiagnostic_({
+                    codeCreated,
+                    bridgeCreated: true,
+                    consumed: paired,
+                    lastError: ''
+                });
+                updateBfgNpfBridgeStatus_();
+                if (!paired) scheduleBfgNpfBridgePoll_();
+                return true;
+            } catch (error) {
+                console.warn('[BFG -> NPF-Q400] Association impossible:', error);
+                const msg = error?.message || 'Association NPF-Q400 impossible.';
+                setBfgNpfDiagnostic_({ lastError: msg });
+                const el = document.getElementById('bfg-npf-bridge-status');
+                if (el) el.textContent = `NPF-Q400 : ${msg}`;
+                return false;
+            } finally {
+                updateBfgNpfBridgeButtons_();
+            }
+        }
+
+        async function checkNpfAssociationStatus_(options = {}) {
+            const bridgeId = getStoredBfgNpfBridgeId_();
+            if (!bridgeId) {
+                if (!options.silent) {
+                    const msg = 'Aucune association NPF-Q400 n’a encore été créée. Cliquer sur « Associer NPF-Q400 » pour générer le code à 8 chiffres.';
+                    setBfgNpfDiagnostic_({ bridgeCreated: false, codeCreated: false, consumed: false, lastError: msg });
+                    const el = document.getElementById('bfg-npf-bridge-status');
+                    if (el) el.textContent = `NPF-Q400 : ${msg}`;
+                }
+                return false;
+            }
+            if (!getStoredCncascToken_()) {
+                if (!options.silent) setBfgNpfDiagnostic_({ bfgAuthenticated: false, lastError: 'Session BFG non authentifiée.' });
+                return false;
+            }
+            try {
+                const { payload } = await bfgNpfFetchJson_('bridge-status', { bridgeId }, {
+                    updateDiagnostic: !options.silent
+                });
+                const bridgeCreated = payload.bridgeFileExists === true && payload.bridgeRecordExists === true;
+                const consumed = payload.associationConsumed === true || payload.paired === true;
+                localStorage.setItem(BFG_NPF_BRIDGE_PAIRED_KEY, consumed ? '1' : '0');
+                if (consumed) {
+                    localStorage.removeItem(BFG_NPF_BRIDGE_PAIR_CODE_KEY);
+                    localStorage.removeItem(BFG_NPF_BRIDGE_PAIR_CODE_EXP_KEY);
+                }
+                const grantExp = Date.parse(String(payload.grantExpiresAt || ''));
+                if (Number.isFinite(grantExp)) localStorage.setItem(BFG_NPF_BRIDGE_GRANT_EXP_KEY, String(grantExp));
+                setBfgNpfDiagnostic_({
+                    bridgeCreated,
+                    consumed,
+                    codeCreated: consumed === true
+                        ? true
+                        : (payload.pairingPending === true ? true : bfgNpfDiagnosticState_.codeCreated),
+                    lastError: ''
+                });
+                updateBfgNpfBridgeStatus_();
+                return consumed;
+            } catch (error) {
+                if (!options.silent) {
+                    const msg = error?.message || 'Vérification association NPF-Q400 impossible.';
+                    setBfgNpfDiagnostic_({ lastError: msg });
+                    const el = document.getElementById('bfg-npf-bridge-status');
+                    if (el) el.textContent = `NPF-Q400 : ${msg}`;
+                }
+                return false;
+            }
+        }
+
+        function stopBfgNpfBridgePoll_() {
+            if (bfgNpfBridgePollTimer_ !== null) {
+                clearTimeout(bfgNpfBridgePollTimer_);
+                bfgNpfBridgePollTimer_ = null;
+            }
+        }
+
+        function scheduleBfgNpfBridgePoll_() {
+            stopBfgNpfBridgePoll_();
+            let codeExp = 0;
+            try { codeExp = Number(localStorage.getItem(BFG_NPF_BRIDGE_PAIR_CODE_EXP_KEY) || 0); } catch (_) {}
+            if (!codeExp || codeExp <= Date.now() || isStoredBfgNpfBridgePaired_()) return;
+            bfgNpfBridgePollTimer_ = setTimeout(async () => {
+                bfgNpfBridgePollTimer_ = null;
+                if (!document.hidden && navigator.onLine && getStoredCncascToken_()) {
+                    const consumed = await checkNpfAssociationStatus_({ silent: true });
+                    if (consumed) return;
+                }
+                scheduleBfgNpfBridgePoll_();
+            }, 15000);
+        }
+
+        async function refreshExistingNpfBridgeGrant_(options = {}) {
+            const bridgeId = getStoredBfgNpfBridgeId_();
+            if (!bridgeId || !navigator.onLine || !getStoredCncascToken_()) return false;
+            try {
+                const { payload } = await bfgNpfFetchJson_('bridge-grant', {
+                    bridgeId,
+                    createPairingCode: false
+                }, { updateDiagnostic: options.silent !== true });
+                if (payload.bridgeStatePersisted !== true || payload.bridgeFileExists !== true || payload.bridgeRecordExists !== true) {
+                    throw new Error('Le pont NAS existant n’a pas été confirmé après autorisation.');
+                }
+                storeBfgNpfGrantPayload_(payload);
+                setBfgNpfDiagnostic_({
+                    bridgeCreated: true,
+                    consumed: payload.paired === true || payload.associationConsumed === true,
+                    lastError: ''
+                });
+                updateBfgNpfBridgeStatus_();
+                return true;
+            } catch (error) {
+                if (error?.code !== 'pairing_required' && !options.silent) {
+                    setBfgNpfDiagnostic_({ lastError: error?.message || 'Réautorisation NPF-Q400 impossible.' });
+                }
+                return false;
+            }
+        }
 
         function getBfgLoginExpiryForToday_() {
             const expiry = new Date();
@@ -3072,6 +3652,7 @@ const tdfStages = [
         function clearCncascToken_() {
             localStorage.removeItem(CNCASC_TOKEN_STORAGE_KEY);
             localStorage.removeItem(CNCASC_TOKEN_EXP_STORAGE_KEY);
+            clearBfgNpfNotamsNasSession_();
         }
 
         let bfgDailyWeatherExpiryTimer_ = null;
@@ -3568,8 +4149,13 @@ const tdfStages = [
                     });
 
                     await window.performBfgLocalSave_();
+                    if (typeof window.publishBfgNpfNotamsSharedSnapshot_ === 'function') {
+                        await window.publishBfgNpfNotamsSharedSnapshot_().catch(error => {
+                            console.warn('BFG NOTAMS -> NAS : publication immédiate après import impossible.', error);
+                        });
+                    }
 
-                    setNotamsAutoStatus_(status, `Importation automatique terminée : ${count} NOTAM(s) affiché(s) et sauvegardé(s) localement.`, {
+                    setNotamsAutoStatus_(status, `Importation automatique terminée : ${count} NOTAM(s) affiché(s), sauvegardé(s) localement et synchronisés pour NPF-Q400.`, {
                         timestampText: pdfTimestampText
                     });
                 } else if (status) {
@@ -3614,6 +4200,7 @@ const tdfStages = [
             } else {
                 status.textContent = 'Accès Briefing déconnecté : saisir le code accès puis cliquer sur Connexion.';
             }
+            updateBfgNpfBridgeStatus_();
         }
 
         async function unlockCncascAndSync_() {
@@ -3652,6 +4239,16 @@ const tdfStages = [
                     throw new Error('Jeton CNCASC invalide.');
                 }
 
+                // v4.63 — la session NPF-Q400 Docs reste demandée uniquement pour la publication NOTAM.
+                // L'association NPF-Q400 n'en dépend plus : elle utilisera directement le jeton BFG déjà stocké.
+                // Aucun code d'association n'est créé automatiquement.
+                const npfDocsAuthorized = await authorizeNpfNotamsNasFromBfgPassword_(password);
+                // Si une association NPF-Q400 existe déjà, la connexion BFG renouvelle silencieusement
+                // son autorisation quotidienne. Une association initiale reste une action utilisateur.
+                if (npfDocsAuthorized) {
+                    await refreshExistingNpfBridgeGrant_({ silent: true });
+                }
+
                 if (input) input.value = '';
                 clearCncascWarning_();
                 updateCncascAuthUi_();
@@ -3659,6 +4256,12 @@ const tdfStages = [
 
                 // Dès que le code accès est accepté, toutes les données CNCASC sont actualisées.
                 await fetchAllCncascData_();
+
+                // v4.61 — à la première ouverture nécessitant la saisie du mot de passe,
+                // lancer automatiquement la génération/téléchargement NOTAM.
+                setCncascWarning_('Connexion Briefing réussie. Actualisation automatique des NOTAMs...');
+                await importAutomaticNotamsFromNas_(null);
+                clearCncascWarning_();
             } catch (error) {
                 clearCncascToken_();
                 updateCncascAuthUi_();
@@ -4324,6 +4927,8 @@ const tdfStages = [
             const fdfRefreshBtn = document.getElementById('cncasc-fdf-refresh-btn');
             const unlockBtn = document.getElementById('cncasc-unlock-btn');
             const lockBtn = document.getElementById('cncasc-lock-btn');
+            const npfAssociateBtn = document.getElementById('bfg-npf-associate-btn');
+            const npfCheckBtn = document.getElementById('bfg-npf-check-btn');
             const passwordInput = document.getElementById('cncasc-password-input');
 
             if (refreshBtn) refreshBtn.addEventListener('click', fetchAbeDispo_);
@@ -4331,9 +4936,13 @@ const tdfStages = [
             if (fdfRefreshBtn) fdfRefreshBtn.addEventListener('click', fetchCncascFdf_);
             if (globalRefreshBtn) globalRefreshBtn.addEventListener('click', actualiserToutBriefing_);
             if (unlockBtn) unlockBtn.addEventListener('click', unlockCncascAndSync_);
+            if (npfAssociateBtn) npfAssociateBtn.addEventListener('click', requestNpfAssociation_);
+            if (npfCheckBtn) npfCheckBtn.addEventListener('click', () => checkNpfAssociationStatus_({ silent: false }));
             if (lockBtn) {
                 lockBtn.addEventListener('click', () => {
                     clearCncascToken_();
+                    stopBfgNpfBridgePoll_();
+                    setBfgNpfDiagnostic_({ bfgAuthenticated: false, lastError: '' });
                     updateCncascAuthUi_();
                     setCncascWarning_('Accès Briefing déconnecté sur cet appareil.');
                 });
@@ -4349,6 +4958,8 @@ const tdfStages = [
 
             initPelicModal_();
             updateCncascAuthUi_();
+            updateBfgNpfBridgeStatus_();
+            scheduleBfgNpfBridgePoll_();
 
             // Si une session du jour est encore valide sur cet iPad, les données sont actualisées automatiquement.
             if (getStoredCncascToken_()) {
@@ -4357,6 +4968,18 @@ const tdfStages = [
         }
 
         
+        window.addEventListener('online', () => {
+            updateBfgNpfBridgeButtons_();
+            scheduleBfgNpfBridgePoll_();
+        });
+        window.addEventListener('offline', () => updateBfgNpfBridgeButtons_());
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) {
+                updateBfgNpfBridgeButtons_();
+                scheduleBfgNpfBridgePoll_();
+            }
+        });
+
         // --- CORE INITIALIZATION ---
         let pdfJsWaitAttempts = 0;
         function waitForPdfJsAndInitialize() {
@@ -4373,7 +4996,7 @@ const tdfStages = [
             }
         }
         window.onload = waitForPdfJsAndInitialize;
-        const BFG_REQUIRED_SW_VERSION_ = '2026.25';
+        const BFG_REQUIRED_SW_VERSION_ = '2026.26';
 
         function queryBfgControllerVersion_(timeoutMs = 1800) {
             return new Promise((resolve) => {
@@ -4413,7 +5036,7 @@ const tdfStages = [
             }
 
             const registration = await navigator.serviceWorker.register(
-                './sw.js?v=2026.25',
+                './sw.js?v=2026.26',
                 { updateViaCache: 'none' }
             );
 
@@ -4882,6 +5505,53 @@ const tdfStages = [
             throw lastError || new Error('Statut feuille de service indisponible après attente');
         }
 
+        async function waitForTodayFdsStatusAtStartup_(initialPayload = null) {
+            // v4.68 : au démarrage, on attend spécifiquement l'apparition de la FDS
+            // du jour. Un changement sans rapport (ex. FDS du lendemain) ne suffit pas.
+            const maxAttempts = 45; // environ 90 secondes
+            const retryGmailAttempts = new Set([8, 20, 32]);
+            const visibleProgressAttempts = new Set([0, 5, 10, 15, 20, 30, 40]);
+            let lastPayload = initialPayload;
+            let lastError = null;
+
+            if (lastPayload) {
+                updateFdsTomorrowButton_(lastPayload);
+                if (getFdsTodayEntry_(lastPayload)) return lastPayload;
+            }
+
+            for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+                await waitFds_(attempt === 0 ? 2500 : 2000);
+
+                if (retryGmailAttempts.has(attempt)) {
+                    setFdsAutoStatus_('FDS du jour toujours recherchée — relance automatique Gmail/NAS...');
+                    await callFdsGmailRefreshWithoutBlocking_().catch(() => {});
+                }
+
+                try {
+                    lastPayload = await fetchFdsStatus_(Date.now());
+                    updateFdsTomorrowButton_(lastPayload);
+
+                    if (getFdsTodayEntry_(lastPayload)) {
+                        return lastPayload;
+                    }
+
+                    if (visibleProgressAttempts.has(attempt)) {
+                        setFdsAutoStatus_('Recherche automatique de la FDS du jour dans Gmail/NAS...');
+                    }
+                } catch (error) {
+                    lastError = error;
+                    if (visibleProgressAttempts.has(attempt)) {
+                        setFdsAutoStatus_('Recherche automatique FDS : statut NAS temporairement indisponible...', { warning: true });
+                    }
+                }
+            }
+
+            if (lastPayload) return lastPayload;
+            throw lastError || new Error('Statut feuille de service indisponible après attente');
+        }
+
+        let bfgFdsStartupSyncPromise_ = null;
+
         async function actualiserFeuilleServiceDepuisGmail_() {
             const btn = document.getElementById('fds-auto-refresh-btn');
             const originalText = btn ? btn.textContent : '';
@@ -4938,38 +5608,65 @@ const tdfStages = [
         }
 
         async function chargerDerniereFeuilleServiceAuDemarrage_() {
-            if (isBfgOffline_()) {
-                setFdsAutoStatus_('Mode hors ligne : aucune requête NAS FDS lancée. Dernière FDS locale conservée si disponible.', { warning: true });
-                return;
-            }
-            if (getFdsMode_() === FDS_MODE_MANUAL) {
-                setFdsAutoStatus_('Mode FDS manuel : aucune feuille NAS chargée automatiquement. Utiliser Importation manuelle ou repasser en Auto.', { warning: true });
-                return;
-            }
+            if (bfgFdsStartupSyncPromise_) return bfgFdsStartupSyncPromise_;
 
-            try {
-                const statusPayload = await fetchFdsStatus_(Date.now());
-                const todayEntry = getFdsTodayEntry_(statusPayload);
-                const tomorrowEntry = getFdsTomorrowEntry_(statusPayload);
-                if (todayEntry) {
-                    const emailDate = todayEntry.mailDate ? formatFdsMetaDate_(todayEntry.mailDate) : formatFdsMetaDate_(todayEntry.updatedAt);
-                    if (shouldKeepDisplayedFds_(todayEntry)) {
+            bfgFdsStartupSyncPromise_ = (async () => {
+                if (isBfgOffline_()) {
+                    setFdsAutoStatus_('Mode hors ligne : aucune requête NAS FDS lancée. Dernière FDS locale conservée si disponible.', { warning: true });
+                    return;
+                }
+                if (getFdsMode_() === FDS_MODE_MANUAL) {
+                    setFdsAutoStatus_('Mode FDS manuel : aucune feuille NAS chargée automatiquement. Utiliser Importation manuelle ou repasser en Auto.', { warning: true });
+                    return;
+                }
+
+                let statusPayload = null;
+                try {
+                    statusPayload = await fetchFdsStatus_(Date.now());
+                    let todayEntry = getFdsTodayEntry_(statusPayload);
+
+                    // v4.68 : si la FDS du jour n'est pas encore sur le NAS, ne pas
+                    // attendre un clic sur « Actualiser ». On lance automatiquement
+                    // la même recherche Gmail/NAS que le bouton manuel.
+                    if (!todayEntry) {
                         updateFdsTomorrowButton_(statusPayload);
-                        setFdsAutoStatus_(`FDS déjà à jour et conservée à l’écran : ${todayEntry.originalFilename || 'PDF'} — email du ${emailDate}.`);
-                    } else {
-                        await loadFdsPdfFromNas_(statusPayload, Date.now(), todayEntry.dateKey || todayEntry.fileDate, todayEntry);
-                        setFdsAutoStatus_(`FDS du jour chargée : ${todayEntry.originalFilename || 'PDF'} — email du ${emailDate}.`);
+                        setFdsAutoStatus_('FDS du jour absente du NAS — recherche automatique dans Gmail...');
+                        await callFdsGmailRefreshWithoutBlocking_();
+                        setFdsAutoStatus_('Recherche automatique de la FDS du jour — attente de l’import Gmail/NAS...');
+                        statusPayload = await waitForTodayFdsStatusAtStartup_(statusPayload);
+                        todayEntry = getFdsTodayEntry_(statusPayload);
                     }
-                } else {
+
+                    const tomorrowEntry = getFdsTomorrowEntry_(statusPayload);
+
+                    if (todayEntry) {
+                        const emailDate = todayEntry.mailDate ? formatFdsMetaDate_(todayEntry.mailDate) : formatFdsMetaDate_(todayEntry.updatedAt);
+                        if (shouldKeepDisplayedFds_(todayEntry)) {
+                            updateFdsTomorrowButton_(statusPayload);
+                            setFdsAutoStatus_(`FDS du jour déjà à jour : ${todayEntry.originalFilename || 'PDF'} — email du ${emailDate}.`);
+                        } else {
+                            await loadFdsPdfFromNas_(statusPayload, Date.now(), todayEntry.dateKey || todayEntry.fileDate, todayEntry);
+                            setFdsAutoStatus_(`FDS du jour chargée automatiquement : ${todayEntry.originalFilename || 'PDF'} — email du ${emailDate}.`);
+                        }
+                        return;
+                    }
+
                     updateFdsTomorrowButton_(statusPayload);
                     if (tomorrowEntry) {
-                        setFdsAutoStatus_('Aucune FDS du jour disponible. Une FDS du lendemain est disponible mais non affichée automatiquement.', { warning: true });
+                        setFdsAutoStatus_('Aucune FDS du jour trouvée après recherche automatique. Une FDS du lendemain est disponible mais non affichée automatiquement.', { warning: true });
                     } else {
-                        setFdsAutoStatus_('Aucune feuille de service NAS chargée automatiquement. Utiliser Actualiser ou Importation manuelle.', { warning: true });
+                        setFdsAutoStatus_('Aucune FDS du jour trouvée après recherche automatique Gmail/NAS.', { warning: true });
                     }
+                } catch (error) {
+                    console.warn('Recherche automatique FDS au démarrage impossible :', error);
+                    setFdsAutoStatus_('Recherche automatique FDS indisponible. Utiliser Actualiser si nécessaire.', { warning: true });
                 }
-            } catch (error) {
-                setFdsAutoStatus_('Aucune feuille de service NAS chargée automatiquement. Utiliser Actualiser ou Importation manuelle.', { warning: true });
+            })();
+
+            try {
+                return await bfgFdsStartupSyncPromise_;
+            } finally {
+                bfgFdsStartupSyncPromise_ = null;
             }
         }
 
@@ -4992,6 +5689,30 @@ const tdfStages = [
             if (btn) {
                 btn.addEventListener('click', actualiserFeuilleServiceDepuisGmail_);
             }
+
+            // v4.68 : iPadOS peut simplement réveiller la PWA le lendemain sans
+            // recharger index.html. Dans ce cas on doit recontrôler la FDS du jour.
+            if (!window.__bfgFdsLifecycleBound) {
+                window.__bfgFdsLifecycleBound = true;
+                window.__bfgFdsLifecycleDateKey = fdsParisDateKey_(0);
+
+                const refreshFdsIfOperationalDayChanged = () => {
+                    if (document.hidden || isBfgOffline_() || getFdsMode_() === FDS_MODE_MANUAL) return;
+                    const todayKey = fdsParisDateKey_(0);
+                    if (window.__bfgFdsLifecycleDateKey === todayKey) return;
+                    window.__bfgFdsLifecycleDateKey = todayKey;
+                    setFdsAutoStatus_('Nouveau jour détecté — recherche automatique de la FDS du jour...');
+                    void chargerDerniereFeuilleServiceAuDemarrage_();
+                };
+
+                window.addEventListener('pageshow', () => {
+                    setTimeout(refreshFdsIfOperationalDayChanged, 150);
+                });
+                document.addEventListener('visibilitychange', () => {
+                    if (!document.hidden) setTimeout(refreshFdsIfOperationalDayChanged, 150);
+                });
+            }
+
             chargerDerniereFeuilleServiceAuDemarrage_();
         }
 
@@ -5121,7 +5842,7 @@ const tdfStages = [
         async function requestGaarImportViaNas_() {
             const query = new URLSearchParams();
             query.set('t', String(Date.now()));
-            query.set('source', 'bfg-v2026.25');
+            query.set('source', 'bfg-v2026.26');
 
             const url = `${GAAR_IMPORT_REQUEST_API_URL}?${query.toString()}`;
             const response = await fetchWithTimeout_(url, { cache: 'no-store' }, 65000);
@@ -5501,7 +6222,7 @@ const tdfStages = [
         }
 
         async function requestRiskMapGeneration_() {
-            const response = await fetch(`${BFG_RISK_MAP_REQUEST_URL}?source=bfg-v2026.25&v=${Date.now()}`, {
+            const response = await fetch(`${BFG_RISK_MAP_REQUEST_URL}?source=bfg-v2026.26&v=${Date.now()}`, {
                 cache: 'no-store',
                 headers: {
                     'Accept': 'application/json'
@@ -6893,6 +7614,7 @@ const tdfStages = [
             let pinchLastLocalX = 0;
             let pinchLastLocalY = 0;
             let pendingPdfScrollAnchor = null;
+            const isSupAipViewer = !!viewerContainer.closest('.sup-aip-item');
 
             const annotationsEnabledForViewer = viewerContainer && (
                 viewerContainer.id === 'pdf-interactive-container-fds' ||
@@ -7090,6 +7812,16 @@ const tdfStages = [
                 });
             }
 
+            function computeSupAipFitScale_(page) {
+                if (!isSupAipViewer || !page) return initialScale;
+                const availableWidth = Math.max(220, (wrapper.clientWidth || viewerContainer.clientWidth || 0) - 24);
+                const baseViewport = page.getViewport({ scale: 1, rotation: 0 });
+                if (!availableWidth || !baseViewport.width) return initialScale;
+                const fitScale = (availableWidth / baseViewport.width) * 0.96;
+                return Math.max(0.6, Math.min(4.2, Math.round(fitScale * 100) / 100));
+            }
+
+
             function resetPdfCanvasState_() {
                 try { ctx.setTransform(1, 0, 0, 1, 0, 0); } catch (error) {}
                 try { ctx.clearRect(0, 0, canvas.width || 1, canvas.height || 1); } catch (error) {}
@@ -7124,6 +7856,26 @@ const tdfStages = [
 
             function forceCleanPdfRerender_(reason = 'manual') {
                 if (!isCurrentPdfHandler_() || !pdfDoc) return;
+
+                if (isSupAipViewer) {
+                    waitForStablePdfLayout_()
+                        .then(() => {
+                            if (!isCurrentPdfHandler_() || !pdfDoc) return null;
+                            return pdfDoc.getPage(pageNum);
+                        })
+                        .then(page => {
+                            if (!page || !isCurrentPdfHandler_()) return;
+                            initialScale = computeSupAipFitScale_(page);
+                            pageRendering = false;
+                            pageNumPending = null;
+                            scale = initialScale;
+                            resetPdfCanvasState_();
+                            renderPage(pageNum, reason);
+                        })
+                        .catch(error => console.warn('BFG SUP AIP : recalage du rendu impossible.', error));
+                    return;
+                }
+
                 pageRendering = false;
                 pageNumPending = null;
                 scale = initialScale;
@@ -7587,15 +8339,32 @@ const tdfStages = [
                 Promise.all([
                     pdfjsLib.getDocument(buffer).promise,
                     annotationReadyPromise
-                ]).then(([pdfDoc_]) => {
+                ]).then(async ([pdfDoc_]) => {
                     if (!isCurrentPdfHandler_()) return;
                     pdfDoc = pdfDoc_;
                     const pageCountEl = controls.querySelector('.page-count');
                     if (pageCountEl) pageCountEl.textContent = pdfDoc.numPages;
                     pageNum = 1;
+
+                    if (isSupAipViewer) {
+                        try {
+                            await waitForStablePdfLayout_();
+                            if (!isCurrentPdfHandler_()) return;
+                            const firstPage = await pdfDoc.getPage(1);
+                            if (!isCurrentPdfHandler_()) return;
+                            initialScale = computeSupAipFitScale_(firstPage);
+                        } catch (error) {
+                            console.warn('BFG SUP AIP : calcul du zoom initial impossible.', error);
+                        }
+                    }
+
                     scale = initialScale;
                     renderPage(pageNum, 'initial');
-                    scheduleCleanPdfRerender_('post-initial', 500);
+                    scheduleCleanPdfRerender_('post-initial', isSupAipViewer ? 700 : 500);
+                    if (isSupAipViewer) {
+                        setTimeout(() => scheduleCleanPdfRerender_('post-restore-repair-1', 0), 1500);
+                        setTimeout(() => scheduleCleanPdfRerender_('post-restore-repair-2', 0), 2800);
+                    }
                     if (callback) callback(file);
                 }).catch(error => {
                     console.warn('BFG PDF : chargement impossible.', error);
@@ -8061,31 +8830,181 @@ const tdfStages = [
             setupDropzone('notam-pdf-dropzone', notamHandler);
         }
         
+
+        // v4.70 : stockage persistant dédié aux SUP AIP.
+        // Contrairement à la sauvegarde générale de session BFG, ces PDF ne sont
+        // jamais supprimés automatiquement en fonction de leur âge.
+        const BFG_SUP_AIP_DB_NAME_ = 'bfgSupAipPersistentDB';
+        const BFG_SUP_AIP_DB_VERSION_ = 1;
+        const BFG_SUP_AIP_STORE_ = 'supAipFiles';
+
+        function openBfgSupAipDb_() {
+            return new Promise((resolve, reject) => {
+                if (!('indexedDB' in window)) {
+                    reject(new Error('IndexedDB indisponible'));
+                    return;
+                }
+                const request = indexedDB.open(BFG_SUP_AIP_DB_NAME_, BFG_SUP_AIP_DB_VERSION_);
+                request.onupgradeneeded = () => {
+                    const db = request.result;
+                    if (!db.objectStoreNames.contains(BFG_SUP_AIP_STORE_)) {
+                        db.createObjectStore(BFG_SUP_AIP_STORE_, { keyPath: 'name' });
+                    }
+                };
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => reject(request.error || new Error('Ouverture IndexedDB SUP AIP impossible'));
+            });
+        }
+
+        async function persistSupAipFile_(file) {
+            if (!file || !file.name) return;
+            const db = await openBfgSupAipDb_();
+            try {
+                const buffer = await file.arrayBuffer();
+                await new Promise((resolve, reject) => {
+                    const tx = db.transaction(BFG_SUP_AIP_STORE_, 'readwrite');
+                    tx.objectStore(BFG_SUP_AIP_STORE_).put({
+                        name: file.name,
+                        type: file.type || 'application/pdf',
+                        lastModified: Number(file.lastModified || Date.now()),
+                        size: Number(file.size || buffer.byteLength || 0),
+                        buffer
+                    });
+                    tx.oncomplete = resolve;
+                    tx.onerror = () => reject(tx.error || new Error('Sauvegarde SUP AIP impossible'));
+                    tx.onabort = () => reject(tx.error || new Error('Sauvegarde SUP AIP annulée'));
+                });
+            } finally {
+                db.close();
+            }
+        }
+
+        async function deletePersistedSupAip_(fileName) {
+            if (!fileName) return;
+            const db = await openBfgSupAipDb_();
+            try {
+                await new Promise((resolve, reject) => {
+                    const tx = db.transaction(BFG_SUP_AIP_STORE_, 'readwrite');
+                    tx.objectStore(BFG_SUP_AIP_STORE_).delete(fileName);
+                    tx.oncomplete = resolve;
+                    tx.onerror = () => reject(tx.error || new Error('Suppression SUP AIP impossible'));
+                    tx.onabort = () => reject(tx.error || new Error('Suppression SUP AIP annulée'));
+                });
+            } finally {
+                db.close();
+            }
+        }
+
+        async function loadPersistedSupAips_() {
+            const db = await openBfgSupAipDb_();
+            try {
+                const records = await new Promise((resolve, reject) => {
+                    const tx = db.transaction(BFG_SUP_AIP_STORE_, 'readonly');
+                    const request = tx.objectStore(BFG_SUP_AIP_STORE_).getAll();
+                    request.onsuccess = () => resolve(Array.isArray(request.result) ? request.result : []);
+                    request.onerror = () => reject(request.error || new Error('Lecture SUP AIP impossible'));
+                });
+
+                return records
+                    .filter(record => record && record.name && record.buffer)
+                    .map(record => new File(
+                        [record.buffer],
+                        record.name,
+                        {
+                            type: record.type || 'application/pdf',
+                            lastModified: Number(record.lastModified || Date.now())
+                        }
+                    ));
+            } finally {
+                db.close();
+            }
+        }
+
+        async function clearPersistedSupAips_() {
+            if (!('indexedDB' in window)) return;
+            const db = await openBfgSupAipDb_();
+            try {
+                await new Promise((resolve, reject) => {
+                    const tx = db.transaction(BFG_SUP_AIP_STORE_, 'readwrite');
+                    tx.objectStore(BFG_SUP_AIP_STORE_).clear();
+                    tx.oncomplete = resolve;
+                    tx.onerror = () => reject(tx.error || new Error('Effacement SUP AIP impossible'));
+                    tx.onabort = () => reject(tx.error || new Error('Effacement SUP AIP annulé'));
+                });
+            } finally {
+                db.close();
+            }
+        }
+
         function initializeSupAipLoader() {
             const loadBtn = document.getElementById('pdf-load-sup-aip-btn'), addBtn = document.getElementById('pdf-add-sup-aip-btn');
             const fileInput = document.getElementById('pdf-input-sup-aip'), container = document.getElementById('sup-aip-container');
             loadBtn.addEventListener('click', () => fileInput.click()); addBtn.addEventListener('click', () => fileInput.click());
-            container.addEventListener('click', (e) => {
+
+            container.addEventListener('click', async (e) => {
                 if (e.target && e.target.matches('.sup-aip-delete-btn')) {
-                    const itemToRemove = e.target.closest('.sup-aip-item'), fileName = itemToRemove.dataset.fileName;
-                    window.supAipFileObjects = window.supAipFileObjects.filter(f => f.name !== fileName); itemToRemove.remove();
+                    const itemToRemove = e.target.closest('.sup-aip-item');
+                    const fileName = itemToRemove ? itemToRemove.dataset.fileName : '';
+                    window.supAipFileObjects = window.supAipFileObjects.filter(f => f.name !== fileName);
+                    if (itemToRemove) itemToRemove.remove();
+
+                    // v4.70 : le × supprime aussi le PDF de la mémoire persistante.
+                    try {
+                        await deletePersistedSupAip_(fileName);
+                    } catch (error) {
+                        console.warn('Suppression persistante SUP AIP impossible :', error);
+                    }
                 }
             });
-            const addSupAipFiles = (files) => {
-                if (!files.length) return;
-                for (const file of files) {
-                    if (file.type !== 'application/pdf' || window.supAipFileObjects.some(f => f.name === file.name)) continue;
+
+            const addSupAipFiles = async (files, options = {}) => {
+                const persist = options.persist !== false;
+                const fileList = Array.from(files || []);
+                if (!fileList.length) return;
+
+                for (const file of fileList) {
+                    if (!file || file.type !== 'application/pdf' || window.supAipFileObjects.some(f => f.name === file.name)) continue;
+
                     window.supAipFileObjects.push(file);
                     const item = document.createElement('div');
-                    item.className = 'sup-aip-item'; item.dataset.fileName = file.name;
+                    item.className = 'sup-aip-item';
+                    item.dataset.fileName = file.name;
                     item.innerHTML = `<h3>${file.name}<button class="sup-aip-delete-btn" title="Supprimer">×</button></h3><div class="interactive-pdf-viewer"><div class="interactive-pdf-controls"><button class="pdf-nav-btn" data-action="prev">Préc.</button><span>Page <span class="page-num">1</span>/<span class="page-count">1</span></span><button class="pdf-nav-btn" data-action="next">Suiv.</button><div class="zoom-controls"><button class="pdf-nav-btn" data-action="zoom-out">-</button><span>Zoom</span><button class="pdf-nav-btn" data-action="zoom-in">+</button></div></div><div class="pdf-canvas-wrapper"><canvas class="pdf-canvas"></canvas></div></div>`;
                     container.appendChild(item);
                     createInteractivePdfHandler(item.querySelector('.interactive-pdf-viewer'), file);
+
+                    if (persist) {
+                        try {
+                            await persistSupAipFile_(file);
+                        } catch (error) {
+                            console.warn(`Sauvegarde persistante du SUP AIP ${file.name} impossible :`, error);
+                        }
+                    }
                 }
-                loadBtn.style.display = 'none'; addBtn.style.display = 'inline-block';
+
+                // v4.69 : le bouton conserve toujours son libellé d'origine.
+                loadBtn.style.display = 'inline-block';
+                addBtn.style.display = 'none';
             };
-            fileInput.addEventListener('change', (e) => addSupAipFiles(e.target.files));
-            setupDropzone('sup-aip-section', addSupAipFiles); window.addSupAipFiles = addSupAipFiles;
+
+            fileInput.addEventListener('change', async (e) => {
+                await addSupAipFiles(e.target.files);
+                // Permet de recharger le même nom après l'avoir supprimé.
+                e.target.value = '';
+            });
+
+            setupDropzone('sup-aip-section', addSupAipFiles);
+            window.addSupAipFiles = addSupAipFiles;
+
+            // v4.70 : restauration indépendante de la session générale BFG.
+            // Les SUP AIP restent donc présents après fermeture/réouverture.
+            loadPersistedSupAips_()
+                .then(files => {
+                    if (files.length > 0) {
+                        setTimeout(() => { void addSupAipFiles(files, { persist: false }); }, 180);
+                    }
+                })
+                .catch(error => console.warn('Restauration persistante SUP AIP impossible :', error));
         }
 
         function initializeForeFlightButton() { document.getElementById('foreflight-btn').href = 'foreflightmobile://'; }
@@ -9174,6 +10093,7 @@ let activeShareApiBase = SHARE_API_BASE;
     async function resetBfgLocalStorage_() {
         await clearLocalSession_();
         await clearBfgLocalCaches_();
+        await clearPersistedSupAips_().catch(error => console.warn('Effacement persistant SUP AIP impossible :', error));
 
         // Remise à zéro des préférences qui peuvent forcer un ancien état local.
         localStorage.removeItem('briefingFdfDoNotAutoRestore');
@@ -9645,6 +10565,96 @@ window.__notamTextFull = notamInput.value;
                 }
             }
 
+            /* v4.61 — snapshot NOTAM BFG -> NAS -> NPF-Q400.
+             * Les PWA installées iPad pouvant isoler leurs stockages, le NAS devient
+             * le canal de synchronisation fiable. CacheStorage/localStorage restent
+             * uniquement des copies de secours locales pour navigateur/desktop.
+             */
+            const BFG_NPF_NOTAMS_SHARED_CACHE_NAME_ = 'bfg-npf-shared-notams-v1';
+            const BFG_NPF_NOTAMS_SHARED_LOCAL_KEY_ = 'bfgNpfSharedNotamsV1';
+            const BFG_NPF_NOTAMS_SHARED_URL_PATH_ = '/__bfg_npf_shared__/notams-v1.json';
+            let bfgNpfNotamsSharedPublishTimer_ = null;
+
+            function getBfgNpfNotamsSharedUrl_() {
+                try {
+                    return new URL(BFG_NPF_NOTAMS_SHARED_URL_PATH_, window.location.origin).toString();
+                } catch (_) {
+                    return BFG_NPF_NOTAMS_SHARED_URL_PATH_;
+                }
+            }
+
+            async function publishBfgNpfNotamsSharedSnapshot_() {
+                const notamText = String(window.__notamTextFull || notamInput?.value || '').trim();
+                if (!notamText) return false;
+
+                const payload = {
+                    version: 'bfgNpfNotamsV1',
+                    source: 'BFG',
+                    publishedAt: new Date().toISOString(),
+                    notamsAutoPdfStatus: loadNotamsAutoPdfStatus_() || null,
+                    notamText,
+                    state: readPersistentNotamState_()
+                };
+                const serialized = JSON.stringify(payload);
+                let written = false;
+
+                // Canal principal v4.61 : NAS.
+                const nasSession = getBfgNpfNotamsNasSession_();
+                if (nasSession && navigator.onLine) {
+                    try {
+                        const response = await fetch(`${NPF_BRIDGE_API_URL}?action=notams-publish&t=${Date.now()}`, {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': `Bearer ${nasSession.token}`,
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json'
+                            },
+                            body: serialized,
+                            cache: 'no-store'
+                        });
+                        if (response.status === 401) clearBfgNpfNotamsNasSession_();
+                        if (!response.ok) {
+                            const result = await response.json().catch(() => null);
+                            throw new Error(result?.message || result?.error || `HTTP ${response.status}`);
+                        }
+                        written = true;
+                    } catch (error) {
+                        console.warn('BFG NOTAMS -> NAS : publication impossible.', error);
+                    }
+                }
+
+                // Copies de secours locales : non utilisées comme dépendance principale sur iPad.
+                if ('caches' in window) {
+                    try {
+                        const cache = await caches.open(BFG_NPF_NOTAMS_SHARED_CACHE_NAME_);
+                        await cache.put(
+                            getBfgNpfNotamsSharedUrl_(),
+                            new Response(serialized, {
+                                headers: {
+                                    'Content-Type': 'application/json; charset=utf-8',
+                                    'Cache-Control': 'no-store'
+                                }
+                            })
+                        );
+                        written = true;
+                    } catch (_) {}
+                }
+                try { localStorage.setItem(BFG_NPF_NOTAMS_SHARED_LOCAL_KEY_, serialized); written = true; } catch (_) {}
+                return written;
+            }
+
+            function scheduleBfgNpfNotamsSharedPublish_(delayMs = 220) {
+                if (bfgNpfNotamsSharedPublishTimer_ !== null) clearTimeout(bfgNpfNotamsSharedPublishTimer_);
+                bfgNpfNotamsSharedPublishTimer_ = setTimeout(() => {
+                    bfgNpfNotamsSharedPublishTimer_ = null;
+                    publishBfgNpfNotamsSharedSnapshot_().catch(error => {
+                        console.warn('BFG NOTAMS -> NPF-Q400 : publication différée impossible.', error);
+                    });
+                }, Math.max(100, Number(delayMs) || 220));
+            }
+
+            window.publishBfgNpfNotamsSharedSnapshot_ = publishBfgNpfNotamsSharedSnapshot_;
+
             function captureCurrentNotamStateForPersistence_() {
                 const byId = {};
                 document.querySelectorAll('#notam-display .notam-item').forEach(item => {
@@ -9679,6 +10689,7 @@ window.__notamTextFull = notamInput.value;
 
             function persistCurrentNotamState_() {
                 writePersistentNotamState_(captureCurrentNotamStateForPersistence_());
+                scheduleBfgNpfNotamsSharedPublish_(180);
             }
 
             function stateEntryMatchesCurrentNotam_(item, entry) {
@@ -9841,6 +10852,7 @@ window.__notamTextFull = notamInput.value;
                     if (hasCheckedSavedState) applySelectionFilter();
                 }
                 updatePersistentHiddenNotamsVisibility_();
+                scheduleBfgNpfNotamsSharedPublish_(260);
             }
             
             function applySelectionFilter() {
