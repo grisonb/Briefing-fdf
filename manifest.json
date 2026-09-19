@@ -1,7 +1,7 @@
 {
   "name": "Briefing FDF",
   "short_name": "Briefing",
-  "description": "Briefing FDF v2026.25 — persistance GAAR, météo quotidienne, NOTAMs et expiration silencieuse au démarrage",
+  "description": "Briefing FDF v2026.26 — association NPF-Q400, synchronisation NOTAM, FDS automatique et SUP AIP persistants",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
