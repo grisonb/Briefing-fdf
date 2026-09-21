@@ -1,42 +1,1635 @@
-CHANGELOG CUMULATIF — BFG v2026.26
-Date : 2026-09-19
-Base pérenne : TEST v4.71
+VERSION PÉRENNE v2026.27 — 2026-09-21
+Base : TEST v5.15
+===============================================================================
+
+PASSAGE EN VERSION PÉRENNE
+- Nouvelle version pérenne construite directement sur la TEST v5.15.
+- Nom PWA : « Briefing FDF » ; nom court : « Briefing ».
+- Suppression des libellés TEST visibles dans le titre, l'en-tête et la version affichée sous l'heure.
+- Version affichée : v2026.27.
+- Source GAAR : bfg-v2026.27.
+- Source demande cartes des risques : bfg-v2026.27.
+- Service worker : version 2026.27.
+- Cache PWA : briefing-fdf-v2026-27-notam-supaip-r1.
+
+ACCÈS BRIEFING — ÉLÉMENTS MASQUÉS EN VERSION PÉRENNE
+- « Association NPF-Q400 » est masquée dans l'interface pérenne.
+- « Diagnostic BFG » est masqué dans l'interface pérenne.
+- Le code correspondant est conservé dans l'application : seule la présentation utilisateur est masquée.
+
+TOUR DE FRANCE
+- Forçage TEST désactivé.
+- Retour au comportement pérenne déjà utilisé : affichage uniquement du 04/07/2026 au 26/07/2026 inclus.
+- En dehors de cette période, la rubrique Tour de France et son entrée dans la navigation restent masquées.
+
+ANALYSE NOTAM — BOUTONS DE FIN DE LISTE
+- Uniquement à la fin de la liste des NOTAM, inversion de « Sauvegarder en Pdf » et « Annuler Surlignage ».
+- Ordre inférieur : « Garder la Sélection », « Tout Afficher » si nécessaire, « Annuler Sélection », « Annuler Surlignage », « Sauvegarder en Pdf ».
+- Le bloc de commandes situé en haut des NOTAM conserve sa disposition actuelle.
+- Cette disposition devra être reprise comme référence lors de la prochaine version TEST.
+
+AZBA / SUP AIP
+- Le bouton « Charger SUP AIP » est renommé « Charger Pdf SUP AIP ».
+- Aucune modification du fonctionnement de chargement des PDF SUP AIP.
+- Cette modification devra également être conservée lors de la prochaine version TEST.
+
+BASE TEST v5.15 CONSERVÉE
+- Correction définitive de « Annuler Surlignage » et « Annuler Sélection » conservée.
+- Espacement des paragraphes NOTAM, positionnement des cases, présentation de validité, météo manuelle, carte SUP AIP, Windy et toutes les autres fonctions de la TEST v5.15 sont conservés.
+- Aucun changement NAS / PHP / worker VPS requis pour cette version pérenne.
+
+CONTRÔLES AVANT LIVRAISON
+- Syntaxe JavaScript inline vérifiée.
+- Manifeste JSON vérifié.
+- Service worker vérifié.
+- TDF_FORCE_DISPLAY_OVERRIDE = false vérifié.
+- Panneaux Association NPF-Q400 et Diagnostic BFG masqués vérifiés.
+- Ordre des boutons NOTAM inférieur vérifié.
+- Libellé « Charger Pdf SUP AIP » vérifié.
+- Sources de production bfg-v2026.27 vérifiées.
+- Historique cumulatif TEST v5.15 et antérieur conservé ci-dessous.
+
+TEST v5.15 — 2026-09-21
+Base : TEST v5.14
+===============================================================================
+
+NOTAM — ANNULER SURLIGNAGE DÉFINITIF
+- Correction de la réapparition des surlignages après fermeture/réouverture de BFG.
+- « Annuler Surlignage » supprime toujours les marques visibles puis enregistre un marqueur d'effacement horodaté pour la source NOTAM courante.
+- Les anciens snapshots locaux/portables antérieurs à cet effacement ne sont plus autorisés à réinjecter des surlignages.
+- L'effacement est mémorisé même si aucun surlignage n'est visible au moment du clic, afin de neutraliser un ancien snapshot résiduel.
+- Après l'effacement, le snapshot IndexedDB local est réécrit immédiatement et l'état NOTAM partagé est republié sans attendre la sauvegarde automatique différée.
+
+NOTAM — ANNULER SÉLECTION DÉFINITIF
+- Même sécurisation pour « Annuler Sélection ».
+- Les cases vertes et noires sont décochées comme auparavant.
+- Un marqueur d'effacement horodaté empêche un ancien `checkedIds`, `checked` ou `hiddenUntilChanged` de recocher les NOTAMs lors d'une réouverture.
+- L'état « Garder la Sélection » reste désactivé après l'annulation.
+- Le snapshot IndexedDB et l'état partagé sont mis à jour immédiatement.
+
+PERSISTANCE / COMPATIBILITÉ
+- `notamState` contient désormais `capturedAt` et la source NOTAM afin de pouvoir distinguer un snapshot récent d'un ancien état antérieur à une annulation.
+- L'état persistant conserve des `clearMarkers` séparés pour NATS et SDVFR.
+- Les snapshots créés après une annulation restent restaurables normalement ; seuls les états plus anciens que l'annulation sont bloqués.
+- Compatibilité maintenue avec les anciens snapshots sans horodatage : après une annulation explicite, ils sont considérés comme anciens pour la catégorie concernée.
+
+NON-RÉGRESSION
+- Espacement des paragraphes NOTAM v5.14 conservé.
+- Positionnement des cases v5.13 conservé.
+- Ordre des boutons v5.12/v5.13 conservé.
+- Aucune modification SUP AIP, Windy, météo ou RTBA dans cette version.
+
+CONTRÔLES AVANT LIVRAISON
+- JavaScript inline vérifié.
+- Manifeste JSON vérifié.
+- Service worker aligné sur v5.15.
+- Historique cumulatif conservé.
+
+TEST v5.14 — 2026-09-21
+Base : TEST v5.13
+===============================================================================
+
+VERSION AFFICHÉE — SOURCE UNIQUE DANS INDEX.HTML
+- Correction du numéro affiché sous l'heure : l'ancienne constante interne restée à « 5.09 » est supprimée.
+- Le numéro de version de l'interface est désormais défini une seule fois par APP_VERSION_NUMBER = « 5.14 ».
+- La ligne de version sous l'heure et le titre principal utilisent tous deux cette même constante afin d'éviter une nouvelle désynchronisation.
+- Les valeurs statiques de version dans le HTML sont supprimées ; elles sont renseignées au chargement par JavaScript.
+
+NOTAM — ESPACEMENT ENTRE LES PARAGRAPHES
+- Léger agrandissement de l'espace vertical entre les champs internes d'un même NOTAM : A), D), E), F), G), etc.
+- Ajout d'environ 5 px avant chaque nouveau champ afin d'améliorer la lecture sans créer une ligne blanche complète.
+- Les lignes techniques Q), B) et C) restent masquées comme précédemment.
+- Aucun changement du texte opérationnel ni de la logique de filtrage, sélection, surlignage ou persistance.
+
+NON-RÉGRESSION
+- Positionnement v5.13 des cases conservé : verte sur la référence du NOTAM, noire sur la ligne « au … ».
+- Espacement horizontal renforcé entre les cases et le texte conservé.
+- Ordre des boutons v5.12/v5.13 conservé : « Sauvegarder en Pdf » au-dessus de « Annuler Surlignage ».
+- Présentation « Validité du … / au … », météo manuelle sans mention visible de SDVFR et clignotement SUP AIP conservés.
+- Aucun changement NAS / worker VPS / RTBA.
+
+CONTRÔLES AVANT LIVRAISON
+- Cohérence de version contrôlée dans index.html.
+- Manifeste JSON vérifié.
+- Service worker aligné sur v5.14 avec nouveau nom de cache.
+- Historique v5.13 et antérieur conservé intégralement.
+
+TEST v5.13 — 2026-09-21
+Base : TEST v5.12
+===============================================================================
+
+NOTAM — POSITION DES CASES ET ESPACEMENT LATÉRAL
+- Retour au positionnement validé en v5.11 pour la case noire « Non désirable ».
+- La case verte « Garder ce NOTAM » reste alignée avec la ligne de référence du NOTAM (ex. « B4168/26 »).
+- La case noire est de nouveau alignée avec la seconde ligne de validité « au … ».
+- L'essai v5.12 qui plaçait la case noire sur la dernière ligne du NOTAM est abandonné.
+- L'espace horizontal entre la colonne des deux cases à cocher et le bloc texte du NOTAM est augmenté de 10 px à 22 px afin d'aérer la lecture.
+- Aucun changement du fonctionnement ni de la persistance des deux cases.
+
+ANALYSE NOTAM — COMMANDES
+- L'ordre introduit en v5.12 est conservé : « Sauvegarder en Pdf » au-dessus de « Annuler Surlignage ».
+- « Garder la Sélection », « Annuler Sélection » et l'écart renforcé après les boutons « Actualiser » restent inchangés.
+
+NON-RÉGRESSION
+- Présentation « Validité du … / au … » conservée.
+- Météo manuelle sans référence visible à SDVFR conservée.
+- Clignotement SUP AIP des validités futures conservé.
+- Aucun changement NAS / worker VPS / RTBA.
+
+CONTRÔLES AVANT LIVRAISON
+- Syntaxe JavaScript inline vérifiée.
+- Manifeste JSON vérifié.
+- Service worker aligné sur v5.13 avec nouveau nom de cache.
+- Historique v5.12 et antérieur conservé intégralement.
+
+TEST v5.12 — 2026-09-21
+Base : TEST v5.11
+===============================================================================
+
+NOTAM — ESSAI D’ALIGNEMENT DE LA CASE NOIRE
+- La case verte « Garder ce NOTAM » reste alignée avec la ligne de référence du NOTAM (ex. « B4168/26 »).
+- La colonne des cases occupe maintenant toute la hauteur utile du bloc NOTAM.
+- La case noire « Non désirable » est placée en bas de cette colonne afin de l’aligner visuellement avec la dernière ligne du NOTAM, quelle que soit la longueur du texte.
+- Un léger ajustement vertical de 5 px est appliqué pour rapprocher le centre de la case du centre de la dernière ligne de texte.
+- Il s’agit volontairement d’un essai de présentation ; le fonctionnement et la persistance des cases restent inchangés.
+
+ANALYSE NOTAM — INVERSION DE DEUX COMMANDES
+- « Sauvegarder en Pdf » prend la position haute précédemment occupée par « Annuler Surlignage ».
+- « Annuler Surlignage » est désormais placé directement sous « Sauvegarder en Pdf ».
+- Le même ordre est appliqué au groupe de commandes inférieur.
+- « Garder la Sélection », « Annuler Sélection » et l’écart renforcé après les boutons « Actualiser » restent inchangés.
+
+NON-RÉGRESSION
+- Présentation « Validité du … / au … » conservée.
+- Météo manuelle sans référence visible à SDVFR conservée.
+- Clignotement SUP AIP des validités futures conservé.
+- Aucun changement NAS / worker VPS / RTBA.
+
+CONTRÔLES AVANT LIVRAISON
+- Syntaxe JavaScript inline vérifiée.
+- Manifeste JSON vérifié.
+- Service worker aligné sur v5.12 avec nouveau nom de cache.
+- Historique v5.11 et antérieur conservé intégralement.
+
+TEST v5.11 — 2026-09-21
+Base : TEST v5.10
+===============================================================================
+
+NOTAM — ALIGNEMENT DES CASES
+- La case verte « Garder ce NOTAM » est remontée afin d'être alignée avec la ligne de référence du NOTAM (ex. « B4168/26 »).
+- La case noire « Non désirable » est décalée vers le bas afin d'être alignée avec la seconde ligne de validité « au … ».
+- Aucun changement du fonctionnement des deux cases ni de leur persistance.
+
+ANALYSE NOTAM — RÉORGANISATION DES COMMANDES
+- « Garder la Sélection » prend la position précédemment occupée par « Annuler Sélection ».
+- « Annuler Sélection » est placé directement sous « Garder la Sélection ».
+- « Annuler Surlignage » reste sur la ligne haute et « Sauvegarder en Pdf » reste directement en dessous.
+- « Actualiser NOTAM » et « Actualiser Météo » restent dans leur colonne à gauche.
+- L'espace horizontal entre la colonne des boutons « Actualiser » et le groupe des autres actions est volontairement plus grand que l'espace entre les autres boutons.
+
+NON-RÉGRESSION
+- Présentation « Validité du … / au … » v5.10 conservée.
+- Météo manuelle sans référence visible à SDVFR conservée.
+- Clignotement SUP AIP des validités futures conservé.
+- Bandeau de chargement NOTAM et autres fonctions v5.09 conservés.
+- Aucun changement NAS / worker VPS / RTBA.
+
+CONTRÔLES AVANT LIVRAISON
+- Syntaxe JavaScript inline vérifiée.
+- Manifeste JSON vérifié.
+- Service worker aligné sur v5.11 avec nouveau nom de cache.
+- Historique v5.10 et antérieur conservé intégralement.
+
+TEST v5.10 — 2026-09-21
+Base : TEST v5.09
+===============================================================================
+
+NOTAM — CRÉNEAU DE VALIDITÉ
+- « Validité » est désormais placé sur la même première ligne que « du » et la date/heure de début.
+- La seconde ligne commence sous la colonne « du » avec « au » puis la date/heure de fin.
+- Rendu attendu :
+      Validité   du   21/09/2026 à 12h00
+                 au   24/09/2026 à 10h00
+- « du » et « au » restent parfaitement alignés dans une colonne fixe ; les dates/heures restent alignées dans leur propre colonne.
+- Le surlignage du bloc de validité est conservé.
+
+MÉTÉO MANUELLE — LIBELLÉS NEUTRES
+- Suppression de toute référence visible à « SDVFR » pendant une recherche météo manuelle.
+- Le bouton affiche « Recherche météo… » pendant la requête.
+- Les états affichés deviennent « Chargement météo… », « Aucun METAR/TAF disponible », « Aucune donnée météo disponible » ou un message d'erreur générique.
+- La chaîne technique de récupération reste inchangée en arrière-plan ; seule la présentation utilisateur est neutralisée.
+
+CARTE SUP AIP — CLIGNOTEMENT DES VALIDITÉS FUTURES
+- La pulsation des zones dont la période de validité commence plus tard est remplacée par un clignotement léger et régulier.
+- Aucun changement de taille ni effet de zoom : seule l'opacité alterne entre l'état normal et un état atténué.
+- Période de clignotement : environ 0,85 s par état.
+- Les couleurs par catégorie SUP AIP restent inchangées.
+- Ce clignotement indique uniquement une période de validité future du SUP AIP, pas une activation opérationnelle RTBA.
+
+NON-RÉGRESSION
+- Réorganisation des boutons, bandeau de chargement NOTAM et météo manuelle v5.09 conservés.
+- Grande carte SUP AIP v5.08 conservée.
+- Filtre altitude strict v5.07 conservé : plancher = FL max masqué.
+- Cadrage France métropolitaine + Corse conservé.
+- Aucun changement RTBA/AZBA.
+- Aucun changement NAS / worker VPS.
+
+CONTRÔLES AVANT LIVRAISON
+- Syntaxe JavaScript inline vérifiée.
+- Manifeste JSON vérifié.
+- Service worker aligné sur v5.10 avec nouveau nom de cache.
+- Historique des modifications v5.09 et antérieures conservé intégralement.
+
+TEST v5.09 — 2026-09-21
+Base : TEST v5.08
+===============================================================================
+
+NOTAM — RÉORGANISATION DES COMMANDES
+- « Actualiser Météo » est placé directement sous « Actualiser NOTAM » dans le bloc supérieur.
+- « Sauvegarder en Pdf » est placé directement sous « Annuler Surlignage ».
+- Le bloc supérieur utilise une grille stable afin de conserver cet alignement sur iPad.
+- « Annuler Surlignage » passe en rouge plus foncé (#922b21) que « Annuler Sélection » (#c0392b).
+
+NOTAM — CRÉNEAU DE VALIDITÉ PLUS LISIBLE
+- Le créneau n'est plus affiché sur une ligne compacte en capitales.
+- Nouveau rendu sur deux lignes :
+      Validité   du   21/09/2026 à 12h00
+                 au   24/09/2026 à 10h00
+- « Validité » occupe les deux lignes ; « du » et « au » disposent d'une colonne fixe et sont centrés verticalement face à leur date/heure.
+- Les dates/heures utilisent des chiffres tabulaires pour améliorer l'alignement.
+- Le surlignage NOTAM reste disponible sur tout le bloc de validité.
+
+ACCUEIL — BANDEAU DE CHARGEMENT NOTAM
+- Le bandeau de téléchargement NOTAM est déplacé sous le statut « Accès Briefing connecté jusqu'à … ».
+- Pendant le chargement il apparaît en vert soutenu, plus foncé que le fond vert de la zone connectée, avec texte blanc.
+- Texte : « Chargement des NOTAM en cours... ».
+- Le bandeau disparaît dès que les NOTAM sont rendus ; en cas d'échec sans données affichées il passe en état erreur rouge.
+
+MÉTÉO MANUELLE — SDVFR
+- La recherche manuelle METAR/TAF n'affiche plus le message CheckWX désactivé.
+- METAR et TAF sont désormais demandés via le relais SDVFR déjà utilisé par BFG ; CheckWX reste totalement désactivé.
+- Pour les terrains BFG connus, les coordonnées locales existantes sont réutilisées.
+- Pour un OACI hors liste, BFG résout uniquement les coordonnées du terrain via le géocodage déjà présent dans l'application, les met en cache localement, puis interroge SDVFR avec ces coordonnées.
+- LFMT, LFPB et EGLL disposent en plus de coordonnées intégrées pour les cas usuels / exemples.
+- Le bouton ↻ d'un résultat météo manuel utilise la même chaîne SDVFR.
+- Aucun changement NAS / worker VPS n'est nécessaire.
+
+NON-RÉGRESSION
+- Carte SUP AIP grand format v5.08 conservée.
+- Filtre altitude strict v5.07 conservé : plancher = FL max masqué.
+- Couleurs et pulsation SUP AIP conservées.
+- Boutons Windy et état bleu v5.06 conservés.
+- Q), B) et C) restent masqués dans le corps des NOTAM tout en restant disponibles dans les données brutes.
+- Aucun changement RTBA/AZBA dans cette version.
+
+CONTRÔLES AVANT LIVRAISON
+- Syntaxe JavaScript inline vérifiée.
+- Manifeste JSON vérifié.
+- Service worker aligné sur v5.09 avec nouveau nom de cache.
+- Vérification ciblée du placement du bandeau NOTAM et des commandes supérieures.
+- Historique des modifications conservé intégralement.
+
+TEST v5.08 — 2026-09-21
+Base : TEST v5.07
+===============================================================================
+
+CARTE SUP AIP — AFFICHAGE GRAND FORMAT
+- Réorganisation verticale de la zone AZBA / SUP AIP pour privilégier immédiatement la carte.
+- La légende reste placée directement au-dessus de la carte.
+- Les champs « Du », « au », « FL max » et le bouton « Actualiser SUP AIP » sont déplacés sous la carte : ils restent toujours présents et accessibles par simple défilement, sans panneau repliable ni masquage fonctionnel.
+- Le statut de chargement / nombre de zones affichées est lui aussi placé sous la carte afin de ne pas réduire la surface visible au-dessus.
+- Hauteur de carte fortement augmentée et adaptée à la hauteur réelle de l'écran (`100dvh` avec repli `100vh`) ; minimum renforcé sur iPad / écran tactile.
+- Marges internes du panneau réduites pour consacrer davantage de surface à la carte.
+
+NON-RÉGRESSION
+- Filtre altitude strict v5.07 conservé : une zone dont le plancher est exactement égal au FL max sélectionné reste masquée.
+- FL max SUP AIP par défaut : FL115.
+- Couleurs SUP AIP et pulsation légère de validité future conservées.
+- Cadrage France métropolitaine + Corse conservé.
+- Aucun changement RTBA/AZBA dans cette version.
+- Backend NAS / worker VPS inchangé : aucun fichier PHP/Python à remplacer.
+
+CONTRÔLES AVANT LIVRAISON
+- Syntaxe JavaScript inline vérifiée.
+- Manifeste JSON vérifié.
+- Service worker aligné sur v5.08 avec nouveau nom de cache.
+- Vérification ciblée : la légende précède directement la carte ; statut et réglages sont placés après la carte.
+- Historique des modifications conservé intégralement.
+
+TEST v5.07 — 2026-09-21
+Base : TEST v5.06
+===============================================================================
+
+CARTE SUP AIP — FILTRE D'ALTITUDE
+- Correction du filtre « FL max » conformément à la logique opérationnelle demandée.
+- La limite supérieure est désormais stricte sur le plancher de la zone : une zone dont le plancher est exactement égal au FL max sélectionné est masquée.
+- Exemple avec MAX = FL115 :
+  - plancher FL114 ou inférieur : zone conservée ;
+  - plancher FL115 : zone masquée ;
+  - plancher FL116 ou supérieur : zone masquée.
+- Une zone qui commence sous le FL max et se prolonge au-dessus reste affichée : le filtrage porte sur le plancher de la zone.
+- Les filtres de dates et les autres règles d'affichage SUP AIP sont inchangés.
+
+NON-RÉGRESSION
+- FL max SUP AIP par défaut conservé à FL115.
+- Couleurs SUP AIP par type et pulsation légère des zones à validité future conservées.
+- Cadrage France métropolitaine + Corse conservé.
+- Sélection Windy bleue stabilisée conservée.
+- Masquage visuel NOTAM Q), B) et C) conservé.
+- Aucun changement RTBA/AZBA dans cette version.
+- Backend NAS / worker VPS inchangé : aucun fichier PHP/Python à remplacer.
+
+CONTRÔLES AVANT LIVRAISON
+- Syntaxe JavaScript inline vérifiée.
+- Manifeste JSON vérifié.
+- Service worker aligné sur v5.07 avec nouveau nom de cache.
+- Vérification ciblée : le test du plancher utilise désormais `zone.lowerFl >= maxFl` pour masquer la zone.
+- Historique des modifications conservé intégralement.
+
+TEST v5.06 — 2026-09-21
+Base : TEST v5.05
+===============================================================================
+
+WINDY — ÉTAT BLEU STABLE SUR IPAD
+- Correction du retard d'affichage signalé sur iPad/Safari : un bouton Windy sélectionné reste désormais bleu immédiatement, sans devoir déplacer la carte.
+- L'état actif est renforcé par CSS et le rechargement de l'iframe Windy est différé de deux frames graphiques afin de laisser Safari peindre la sélection avant le changement de couche.
+- Cette correction s'applique aux filtres principaux ainsi qu'aux choix AROME / ECMWF et niveaux de vent.
+- Aucun changement de source ou de logique météo dans cette version.
+- « Danger d'incendie » n'est pas ajouté dans v5.06 : aucune couche Windy Embed fiable n'a été validée pour ce filtre.
+
+CARTE SUP AIP — COULEURS PAR TYPE
+- Les zones ne sont plus toutes violettes. La couleur dépend désormais du libellé opérationnel de la zone :
+  - ZIT : rouge ;
+  - ZRT : orange ;
+  - ZDT : jaune ;
+  - ZRT/ZDT : rouge-orangé ;
+  - CTR/TMA temporaires : bleu ;
+  - autres SUP AIP : violet.
+- Les contours restent exclusivement en traits pleins : aucun pointillé n'est utilisé afin d'éviter toute confusion avec les conventions graphiques des cartes aéronautiques.
+- Ajout d'une légende compacte au-dessus de la carte.
+
+CARTE SUP AIP — VALIDITÉ FUTURE
+- Une zone dont `start_validity` est postérieur à l'heure actuelle conserve sa couleur de catégorie et présente une pulsation légère d'opacité.
+- Cette pulsation signifie uniquement « début de période de validité à venir » ; elle ne prétend pas indiquer une activation opérationnelle réelle lorsqu'aucun créneau d'activité n'est fourni.
+- La pulsation est volontairement lente et modérée (environ 1,25 s entre états) pour rester lisible sans attirer excessivement l'attention.
+- Le système de pulsation est arrêté/recréé proprement à chaque changement de filtre ou actualisation pour éviter l'accumulation de timers.
+
+RTBA / AZBA
+- Aucun changement RTBA/AZBA dans v5.06.
+- Aucun clignotement RTBA n'est ajouté.
+- La logique et les couleurs RTBA seront définies ultérieurement.
+
+NON-RÉGRESSION
+- FL max SUP AIP par défaut conservé à FL115.
+- Cadrage France métropolitaine + Corse conservé ; zones ultramarines ignorées sur cette carte.
+- Masquage visuel NOTAM Q), B) et C) conservé avec maintien des données brutes pour le traitement.
+- Backend NAS / worker VPS SUP AIP inchangé : aucun fichier PHP/Python à remplacer.
+- Sources NOTAM, METAR/TAF, TEMSI, FDS, GAAR, Tour de France et autres modules non modifiés.
+
+CONTRÔLES AVANT LIVRAISON
+- Syntaxe JavaScript inline vérifiée.
+- Manifeste JSON vérifié.
+- Service worker aligné sur v5.06 avec nouveau nom de cache.
+- Vérification : aucune propriété `dashArray` / aucun contour pointillé ajouté aux SUP AIP.
+- Vérification : aucune logique RTBA ajoutée.
+- Historique des modifications conservé intégralement.
+
+TEST v5.05 — 2026-09-21
+Base : TEST v5.04
+===============================================================================
+
+WINDY — COMMANDES DIRECTEMENT SUR LA CARTE
+- Suppression de la roue dentée : les raccourcis Windy sont maintenant visibles directement dans la partie haute de la carte.
+- Nouvelle ligne principale : VENT, Sécheresse, Radar Météo, Radar, Satellite, Orage.
+- Le bouton VENT est le mode vent ; un appui affiche/masque les sous-commandes du vent.
+- Les sous-commandes VENT conservent les choix AROME / ECMWF et les niveaux SFC, 330 ft, 2500 ft, 5000 ft et FL100.
+- Tout bouton sélectionné est affiché en bleu.
+- Lorsqu'un filtre autre que VENT est choisi, les sous-commandes vent sont automatiquement repliées.
+- Radar Météo utilise la couche radar temps réel de l'embed Windy (`overlay=radar`, `product=radar`).
+- Le bouton Radar utilise la couche précipitations Windy (`overlay=rain`, produit ECMWF), afin de rester distinct du Radar Météo.
+- Le comportement historique AROME est conservé : avec AROME, seul SFC est disponible ; le choix d'un niveau supérieur bascule automatiquement vers ECMWF.
+
+NOTAM — AFFICHAGE ÉPURÉ
+- Les lignes Q), B) et C) ne sont plus affichées dans le corps des NOTAM.
+- Les données brutes restent intégralement conservées : Q/B/C continuent donc à servir au parsing, à l'identification stable, aux filtres de dates, à la persistance et à la sauvegarde.
+- Les lignes D), E), F) et G) restent affichées lorsqu'elles existent.
+- La période B)/C) reste présentée sous la forme synthétique déjà utilisée : `VALIDE DU ... AU ...`.
+- Le numéro du NOTAM est affiché séparément au-dessus de la validité afin qu'il ne disparaisse pas avec la ligne Q).
+- Les liens automatiques vers les PDF SUP AIP officiels SIA continuent d'être créés dans le texte utile du NOTAM.
+
+CARTE SUP AIP
+- FL max par défaut abaissé de FL195 à FL115.
+- Le cadrage de la carte reste désormais volontairement fixé sur la France métropolitaine + Corse.
+- Les zones ultramarines restent présentes dans les données reçues mais ne sont plus dessinées sur cette carte ; elles ne peuvent donc plus provoquer un zoom monde.
+- Après chargement ou actualisation, la carte revient toujours sur le cadrage métropole + Corse.
+- Les messages visibles de chargement SUP AIP ne citent plus la source technique ; le diagnostic BFG conserve les informations techniques nécessaires au dépannage.
+- Le backend NAS / worker VPS validé en v5.04 n'est pas modifié.
+
+RTBA / AZBA
+- L'investigation de l'API SIA AZBA a confirmé l'accès aux géométries et aux créneaux `timeSlots`.
+- L'intégration graphique RTBA n'est pas encore activée dans cette version ; v5.05 se limite aux modifications d'interface demandées sur la version actuellement validée.
+
+NON-RÉGRESSION
+- Sources NOTAM NATS/SDVFR, mémoire « Garder la sélection », masquage persistant, METAR/TAF, TEMSI, FDS, GAAR, Tour de France et autres modules conservés.
+- Aucun fichier serveur PHP/Python n'est à remplacer pour v5.05.
+
+CONTRÔLES AVANT LIVRAISON
+- Syntaxe JavaScript inline vérifiée.
+- Manifeste JSON vérifié.
+- Service worker aligné sur v5.05 avec nouveau nom de cache.
+- Absence de la roue dentée et des anciens gestionnaires Windy vérifiée.
+- FL max SUP AIP par défaut = 115 vérifié.
+- Historique des modifications conservé intégralement.
+
+TEST v5.04 — 2026-09-21
+Base : TEST v5.03
+===============================================================================
+
+CARTE FRANCE SUP AIP — CHAÎNE VPS AUTHENTIFIÉE VALIDÉE
+- Le test manuel depuis le VPS a confirmé l'appel SDVFR Next `/auto-temporary-airspaces` : HTTP 200, JSON `application/json`, environ 383 ko reçus.
+- Le contrat réel SDVFR est désormais reproduit : POST JSON, session `PHPSESSID` authentifiée et en-tête `X-Requested-With: XMLHttpRequest`.
+- Payload V1 SUP AIP : `ceiling` issu du FL max BFG, `azbaEnabled:false`, `supAipEnabled:true`, `zsmEnabled:false`, `anticipation:120`.
+- Les identifiants SDVFR et le cookie PHPSESSID restent exclusivement sur le VPS.
+
+ARCHITECTURE
+- BFG n'appelle plus SDVFR directement pour la carte.
+- Flux : BFG -> `get-sdvfr-temporary-airspaces.php` sur NAS -> file d'attente NAS -> `bfg-sdvfr-worker.py` sur VPS -> SDVFR -> retour NAS -> BFG.
+- Deux nouveaux endpoints NAS réservés au worker sont ajoutés :
+  - `get-sdvfr-temporary-airspaces-request.php` ;
+  - `update-sdvfr-temporary-airspaces-result.php`.
+- Ils réutilisent le `upload_token` existant de `notams_config.php`.
+- Le worker existant conserve intégralement la récupération NOTAM + METAR/TAF et surveille en plus la file SUP AIP.
+
+ROBUSTESSE
+- Le relais public conserve un cache NAS de la dernière carte valide (TTL nominal 15 min).
+- Une actualisation forcée déclenche une nouvelle demande au worker.
+- Si le worker est momentanément trop lent, la dernière carte valide peut être renvoyée en secours.
+- Les erreurs applicatives du relais public restent en HTTP 200 avec `ok:false` afin d'éviter que Synology remplace le JSON par une page HTML générique.
+- Timeout navigateur porté à 25 s pour laisser au NAS le temps d'attendre le worker VPS.
+
+SCHÉMA SDVFR RÉEL PRIS EN CHARGE
+- Géométrie : champ `coordinates` WKT (`SRID=4326;POLYGON(...)`).
+- Validité : `start_validity` / `end_validity`.
+- Limites verticales : `lower_limit`, `upper_limit`, unités et références associées.
+- Type `SUPAIP` reconnu directement.
+- Code SDVFR `LF_26_194` converti en SUP AIP 194/26 pour construire le lien PDF officiel SIA.
+
+INTERFACE
+- Carte France, période, FL max, popups, lien PDF SIA et cache local conservés.
+- Diagnostic carte mis à jour pour afficher la chaîne NAS + worker VPS et le statut `VPS -> SDVFR`.
+- Les fonctions NOTAM, météo, FDS, GAAR, Tour de France et autres modules ne sont pas modifiées.
+
+FICHIERS SERVEUR À DÉPLOYER
+- NAS `/volume1/web/briefing-api/` :
+  - remplacer `get-sdvfr-temporary-airspaces.php` ;
+  - ajouter `get-sdvfr-temporary-airspaces-request.php` ;
+  - ajouter `update-sdvfr-temporary-airspaces-result.php`.
+- VPS `/home/ubuntu/bfg-worker/` : remplacer `bfg-sdvfr-worker.py`, puis redémarrer `bfg-sdvfr-worker.service`.
+
+CONTRÔLES AVANT LIVRAISON
+- Syntaxe JavaScript inline v5.04 : OK.
+- Syntaxe PHP des 3 endpoints : OK.
+- Syntaxe Python worker : OK.
+- Manifeste JSON : OK.
+- Version service worker v5.04 et exclusion du relais SUP AIP : OK.
+- Historique des modifications conservé intégralement.
+
+TEST v5.03 — 2026-09-21
+Base : TEST v5.02
+===============================================================================
+
+DIAGNOSTIC CONTRAT SDVFR — MÉTHODE HTTP
+- Le diagnostic v5.02 a confirmé que le NAS atteint correctement `https://sdvfr-next.skydreamsoft.fr/auto-temporary-airspaces` mais que GET renvoie HTTP 405 `Method Not Allowed`.
+- v5.03 ne modifie pas encore les filtres ou la cartographie : elle identifie précisément la méthode attendue par l'endpoint SDVFR.
+- Le relais effectue d'abord une requête `OPTIONS` et relève notamment le code HTTP, l'en-tête `Allow`, le type de contenu et les erreurs cURL éventuelles.
+- Le relais effectue ensuite un essai `POST` avec `Content-Type: application/json` et le corps minimal `{}`.
+- Si ce POST renvoie immédiatement un JSON HTTP 2xx, les données sont utilisées et mises en cache pour la carte SUP AIP.
+- Sinon le diagnostic conserve le code HTTP POST, le type de contenu, la validité JSON et un extrait de la réponse afin de déterminer les paramètres requis ou une éventuelle authentification.
+
+DIAGNOSTIC BFG
+- Ajout des lignes `SDVFR OPTIONS` et de la méthode réellement testée pour `NAS -> SDVFR` dans l'export diagnostic.
+- La chronologie SUP AIP enregistre également le statut OPTIONS, l'en-tête Allow et la méthode amont utilisée.
+- Le timeout BFG -> NAS de 20 s de v5.02 est conservé.
+
+RELAIS NAS
+- Version du relais : 5.03.
+- Le fichier opérationnel complet doit remplacer `/web/briefing-api/get-sdvfr-temporary-airspaces.php`.
+- Le mode `diag=1` continue de répondre HTTP 200 même lorsque le statut logique est 502, afin que DSM ne masque jamais le JSON de diagnostic.
+- Timeouts cURL : connexion 8 s, requête 15 s.
+
+NON-RÉGRESSION
+- Carte France SUP AIP, période, FL max, popups et liens PDF SIA inchangés.
+- NOTAM, mémoire « Garder la Sélection », météo et autres modules BFG inchangés.
+- Service worker aligné sur v5.03 avec cache `briefing-fdf-test-v5.03-supaip-method-diag-r1`.
+
+Contrôles avant livraison :
+- syntaxe JavaScript inline ;
+- manifeste JSON ;
+- syntaxe service worker ;
+- syntaxe PHP du relais ;
+- cohérence des versions actives v5.03 ;
+- présence du diagnostic OPTIONS + POST `{}` ;
+- conservation du mode diagnostic HTTP 200 ;
+- conservation de l'historique cumulatif.
+
+TEST v5.02 — 2026-09-21
+Base : TEST v5.01
+===============================================================================
+
+DIAGNOSTIC CARTE SUP AIP — ERREURS NAS LISIBLES
+- Le test direct Safari a confirmé que le relais NAS répond par HTTP 502 lorsque l'appel NAS -> SDVFR échoue.
+- Synology remplace les réponses HTTP 5xx par sa page générique « Une erreur s'est produite lors du traitement de cette demande », ce qui masquait le JSON de diagnostic du relais.
+- En v5.02, lorsque `diag=1` est demandé, le relais renvoie toujours HTTP 200 mais conserve le statut qui aurait dû être renvoyé dans `diagnosticHttpStatus`.
+- Le JSON de diagnostic reste donc lisible dans Safari et par BFG même lorsque SDVFR renvoie 401/403/404/5xx, une erreur TLS/DNS ou un timeout cURL.
+
+TIMEOUTS
+- Le relais NAS utilise désormais 8 s maximum pour établir la connexion et 15 s maximum pour l'appel SDVFR complet.
+- BFG applique également un timeout explicite de 20 s sur l'appel du relais NAS.
+- Le message « Chargement des zones SUP AIP SDVFR... » ne peut donc plus rester indéfiniment en attente ; en cas de dépassement BFG journalise « Timeout relais NAS après 20 s » puis tente le cache local.
+
+RELAIS NAS
+- Version du relais : 5.02.
+- Le fichier opérationnel doit remplacer `/web/briefing-api/get-sdvfr-temporary-airspaces.php` sur le NAS.
+- Le cache serveur de secours et les en-têtes CORS existants sont conservés.
+
+NON-RÉGRESSION
+- Carte France SUP AIP, filtres période / FL max, popups et liens PDF SIA inchangés.
+- Service worker conserve l'exclusion directe du relais SUP AIP introduite en v5.01.
+- NOTAM / météo / diagnostic général inchangés.
+- Service worker aligné sur v5.02 avec cache `briefing-fdf-test-v5.02-supaip-relay-diag200-r1`.
+
+Contrôles avant livraison :
+- syntaxe JavaScript inline ;
+- manifeste JSON ;
+- syntaxe service worker ;
+- syntaxe PHP du relais ;
+- cohérence des versions actives v5.02 ;
+- présence du timeout BFG 20 s ;
+- mode `diag=1` HTTP 200 avec statut réel conservé dans le JSON ;
+- conservation de l'historique cumulatif.
+
+TEST v5.01 — 2026-09-21
+Base : TEST v5.00
+===============================================================================
+
+CORRECTION CARTE SUP AIP — SERVICE WORKER
+- Diagnostic v5.00 : l'appel BFG -> NAS échouait avant toute réponse HTTP (`HTTP null`) avec `FetchEvent.respondWith ... TypeError: Load failed`.
+- Cause confirmée : le service worker interceptait encore le nouvel endpoint `/briefing-api/get-sdvfr-temporary-airspaces.php` via la règle générique des ressources externes.
+- v5.01 exclut explicitement ce relais de `event.respondWith()`, exactement comme le proxy METAR/TAF déjà validé.
+- La requête BFG -> NAS est donc désormais effectuée directement par le navigateur.
+- Le relais PHP v5.00 sur le NAS reste inchangé et ne doit pas être remplacé pour cette version.
+
+DIAGNOSTIC SUP AIP
+- Le diagnostic v5.00 est conservé pour obtenir enfin le vrai statut HTTP BFG -> NAS puis le statut NAS -> SDVFR.
+- Si SDVFR refuse l'appel serveur, BFG pourra maintenant distinguer clairement un 401/403/404/5xx amont d'un problème d'accès au NAS.
+
+NON-RÉGRESSION
+- Carte France SUP AIP, période, FL max, polygones, popup et liens PDF SIA inchangés.
+- Toute la logique NOTAM / METAR / TAF validée reste inchangée.
+- Relais NAS PHP v5.00 inchangé.
+- Service worker aligné sur v5.01 avec cache `briefing-fdf-test-v5.01-supaip-relay-direct-r1`.
+
+Contrôles avant livraison :
+- syntaxe JavaScript inline ;
+- manifeste JSON ;
+- syntaxe service worker ;
+- cohérence des versions actives v5.01 ;
+- exclusion explicite du relais SUP AIP dans le service worker ;
+- conservation de l'historique cumulatif.
+
+TEST v5.00 — 2026-09-21
+Base : TEST v4.99
+===============================================================================
+
+DIAGNOSTIC CARTE SUP AIP — BFG / NAS / SDVFR
+- Le diagnostic BFG exporté contient désormais une rubrique dédiée « CARTE SUP AIP / RELAIS NAS ».
+- BFG enregistre le code HTTP et le type de contenu de l'appel BFG -> NAS, ainsi que sa durée.
+- Le relais NAS v5.00 renvoie un diagnostic structuré du second trajet NAS -> SDVFR : code HTTP amont, type de contenu, durée, validité JSON, éventuelle erreur cURL et extrait court de la réponse amont.
+- En cas de 401/403/404/5xx SDVFR, le diagnostic permet donc de distinguer immédiatement l'échec amont d'un problème CORS/BFG -> NAS.
+- Une réponse HTML/non JSON est identifiée explicitement et un court extrait est intégré au diagnostic pour reconnaître une page d'erreur ou d'authentification.
+- Aucun code d'accès BFG, token, cookie ou secret n'est exporté.
+
+CARTE SUP AIP
+- L'interface, les filtres période/FL max, les polygones, les popups et les liens PDF SIA restent inchangés par rapport à v4.99.
+- En cas d'échec du relais, le message visible inclut maintenant le HTTP NAS et, lorsqu'il est connu, le HTTP SDVFR.
+- Le cache local de carte reste utilisé en secours sans masquer le résultat du dernier test réseau dans le diagnostic.
+
+RELAIS NAS
+- Nouveau relais diagnostic v5.00 à installer à la place du fichier v4.99 : `/web/briefing-api/get-sdvfr-temporary-airspaces.php`.
+- Le relais conserve son cache serveur de secours mais renvoie également les informations du dernier échec SDVFR lorsqu'il doit l'utiliser.
+- Le paramètre `diag=1` est accepté ; aucune information sensible n'est renvoyée.
+
+NON-RÉGRESSION
+- Toute la logique NOTAM / METAR / TAF validée en v4.97-v4.99 reste inchangée.
+- Diagnostic général BFG conservé.
+- Couche AZBA/RTBA dynamique toujours non intégrée dans cette version.
+- Service worker aligné sur v5.00 avec cache `briefing-fdf-test-v5.00-supaip-relay-diag-r1`.
+
+Contrôles avant livraison :
+- syntaxe JavaScript inline ;
+- manifeste JSON ;
+- syntaxe service worker ;
+- syntaxe PHP du relais ;
+- cohérence des versions actives v5.00 ;
+- présence du diagnostic SUP AIP dans l'export BFG ;
+- conservation de l'historique cumulatif.
+
+TEST v4.99 — 2026-09-21
+Base : TEST v4.98
+===============================================================================
+
+CARTE FRANCE SUP AIP — RELAIS NAS
+- L'appel direct BFG -> SDVFR Next de la v4.98 est supprimé : il est bloqué depuis la PWA par les contraintes d'accès navigateur (CORS/authentification côté SDVFR).
+- BFG appelle désormais uniquement le relais NAS `https://grisonb.synology.me/briefing-api/get-sdvfr-temporary-airspaces.php`.
+- Le relais NAS récupère côté serveur l'endpoint SDVFR Next `/auto-temporary-airspaces`, contrôle que la réponse est du JSON valide puis la renvoie à BFG.
+- Le relais autorise explicitement l'origine GitHub Pages de BFG et gère les requêtes OPTIONS/CORS.
+- En cas d'échec amont, le relais renvoie un message JSON explicite avec le code HTTP SDVFR lorsqu'il est disponible.
+
+ROBUSTESSE / HORS LIGNE
+- Le cache local de carte SUP AIP introduit en v4.98 est conservé : si le relais NAS est momentanément indisponible, BFG tente la dernière carte locale valide.
+- Le relais NAS conserve également une copie serveur de la dernière réponse SDVFR valide dans `/tmp` et peut la restituer en secours en cas d'échec temporaire de SDVFR.
+- Le bouton « Actualiser SUP AIP » force un nouvel appel au relais NAS ; les filtres période et FL max restent entièrement locaux et instantanés.
+
+DIAGNOSTIC D'ERREUR
+- BFG distingue désormais une erreur du relais NAS d'une réponse SDVFR invalide.
+- Le relais refuse les réponses HTML/non JSON et renvoie une erreur structurée au lieu de transmettre une page d'erreur à la carte.
+
+NON-RÉGRESSION
+- Carte France, filtres « Du / au », FL max, polygones SUP AIP, popup et liens PDF SIA inchangés.
+- Toute la logique NOTAM/METAR/TAF validée en v4.97 reste inchangée.
+- Couche AZBA/RTBA dynamique toujours réservée à la version 2.
+- Service worker aligné sur v4.99 avec nouveau cache `briefing-fdf-test-v4.99-supaip-nas-relay-r1`.
+
+FICHIER NAS À INSTALLER
+- `5_Relais_NAS_SUP_AIP_v4.99.txt` doit être copié sur le NAS sous :
+  `/web/briefing-api/get-sdvfr-temporary-airspaces.php`
+- Ce fichier est nécessaire : sans lui, la carte SUP AIP v4.99 ne peut pas interroger SDVFR.
+
+Contrôles avant livraison :
+- syntaxe JavaScript inline ;
+- manifeste JSON ;
+- syntaxe du service worker ;
+- syntaxe PHP du relais ;
+- cohérence des versions actives v4.99 ;
+- suppression de l'appel navigateur direct à `sdvfr-next.skydreamsoft.fr` ;
+- appel BFG vers le relais NAS ;
+- maintien du cache local de carte SUP AIP.
+
+TEST v4.98 — 2026-09-20
+Base : TEST v4.97
+===============================================================================
+
+CARTE FRANCE SUP AIP — VERSION 1
+- Ajout d'une carte de France directement dans la rubrique « AZBA / SUP AIP ».
+- La carte utilise Leaflet et un fond OpenStreetMap ; l'affichage initial cadre la France métropolitaine.
+- Source prévue : endpoint SDVFR Next `/auto-temporary-airspaces`, avec lecture tolérante des formats GeoJSON/WKT et des principaux noms de champs possibles.
+- La version 1 affiche uniquement les zones reconnues comme SUP AIP ; la couche AZBA/RTBA dynamique reste réservée à la version 2.
+
+FILTRES DE CARTE
+- Deux calendriers natifs « Du / au » permettent de choisir la période à afficher ; par défaut les deux dates sont celles du jour.
+- Ajout d'une cellule « FL max » (FL195 par défaut).
+- Une zone est conservée si sa période de validité recoupe la période choisie et si son plancher n'est pas au-dessus du FL maximum choisi.
+- La carte est recalculée immédiatement lors d'un changement de date ou de FL.
+
+INFORMATIONS AU TAP
+- Un appui sur une zone ouvre une fiche avec référence/nom, type, période de validité, plancher et plafond lorsque ces données sont disponibles.
+- Lorsque la référence SUP AIP est reconnue, la fiche propose « Ouvrir le PDF officiel SIA ».
+- Les deux conventions SIA sont prises en charge : SUP AIP classique `lf_sup_YYYY_NNN_fr.pdf` et SUP AIP AIRAC `lf_sup_a_YYYY_NNN_fr.pdf`.
+
+ACTUALISATION / HORS LIGNE
+- Bouton « Actualiser SUP AIP » pour forcer une nouvelle récupération SDVFR.
+- Le dernier payload de zones correctement reçu est mémorisé dans un CacheStorage dédié afin de pouvoir réafficher la dernière carte disponible si le réseau est absent.
+- Si SDVFR refuse l'accès direct depuis la PWA (authentification/CORS), un message explicite est affiché dans la carte au lieu d'un écran vide.
+
+NON-RÉGRESSION
+- Boutons historiques « Carte SUP AIP / AZBA », « AZBA SIA », « ForeFlight » et chargeur manuel de PDF SUP AIP conservés.
+- Toute la logique NOTAM/METAR/TAF validée en v4.97 est inchangée.
+- SDVFR reste la source NOTAM par défaut ; NATS reste optionnel ; CheckWX reste désactivé.
+- Diagnostic BFG conservé.
+- Service worker aligné sur v4.98 avec nouveau cache `briefing-fdf-test-v4.98-supaip-map-v1-r1`.
+
+Contrôles avant livraison :
+- syntaxe JavaScript inline ;
+- manifeste JSON ;
+- syntaxe du service worker ;
+- cohérence des versions actives v4.98 ;
+- présence des contrôles période / FL max ;
+- filtrage temporel et vertical ;
+- ouverture fiche zone + construction du PDF SIA ;
+- maintien de la couche AZBA dynamique hors de cette version 1.
+
+TEST v4.97 — 2026-09-20
+Base : TEST v4.96
+===============================================================================
+
+PLAGE DE VALIDITÉ NOTAM — REMISE À ZÉRO QUOTIDIENNE
+- La plage choisie est mémorisée uniquement pour la journée civile en cours.
+- Une réouverture de BFG le même jour conserve la plage éventuellement choisie par l'utilisateur.
+- Au premier lancement d'une nouvelle journée, les deux cellules reviennent automatiquement à la date du jour : « aujourd'hui → aujourd'hui ».
+- La plage est normalisée si la date de début devient postérieure à la date de fin.
+
+NOTAM SÉLECTIONNÉS — VISIBILITÉ PRIORITAIRE
+- Un NOTAM sélectionné en vert reste toujours visible, même s'il est hors de la plage de validité courante.
+- Cette priorité s'applique aussi aux préfiltres mots-clés afin qu'un NOTAM explicitement sélectionné ne disparaisse pas de l'affichage.
+- Si le NOTAM est désélectionné, il redevient immédiatement soumis à la plage de dates et aux préfiltres normaux.
+- Les sélections persistantes de la veille sont conservées : un NOTAM futur sélectionné reste donc visible le lendemain même après le retour automatique de la plage à la date du jour.
+
+NON-RÉGRESSION
+- Mémoire explicite « Garder la Sélection » séparée SDVFR / NATS conservée.
+- SDVFR reste la source NOTAM par défaut ; NATS reste optionnel.
+- Triple persistance SDVFR localStorage + IndexedDB + CacheStorage conservée.
+- Ordre et style des boutons NOTAM de v4.96 conservés.
+- CheckWX reste désactivé.
+- Diagnostic BFG conservé.
+- Service worker aligné sur v4.97 avec nouveau cache briefing-fdf-test-v4.97-notam-daily-range-r1.
+
+Contrôles avant livraison :
+- syntaxe JavaScript inline ;
+- manifeste JSON ;
+- syntaxe du service worker ;
+- cohérence des versions actives v4.97 ;
+- plage même jour persistante / nouvelle journée réinitialisée ;
+- NOTAM sélectionné hors plage toujours visible ;
+- désélection => retour immédiat sous filtre normal.
+
+TEST v4.96 — 2026-09-20
+Base : TEST v4.95
+===============================================================================
+
+INTERFACE NOTAM / MÉTÉO
+- Le bouton « Actualiser Météo » utilise désormais exactement la même taille, hauteur, padding et typographie que les autres boutons de commande NOTAM.
+- Sa couleur verte et son fonctionnement SDVFR uniquement sont conservés.
+
+PLAGE DE VALIDITÉ NOTAM
+- Toute modification de la date de début ou de fin désactive automatiquement le mode « Garder la Sélection ».
+- BFG repasse immédiatement en affichage complet (« Tout Afficher ») avant d'appliquer la nouvelle plage de dates.
+- La préférence mémorisée « Garder la Sélection » est mise à OFF pour la source courante ; l'utilisateur peut la réactiver volontairement après le changement de dates.
+- Les sélections, masquages volontaires et surlignages mémorisés ne sont pas supprimés.
+
+METAR / TAF
+- Taille de police augmentée pour améliorer la lisibilité sur iPad.
+- Texte brut METAR/TAF porté à 1,3 em avec interligne 1,35.
+- Mise en page, actualisation individuelle ↻ et actualisation globale SDVFR inchangées.
+
+NON-RÉGRESSION
+- Ordre et libellés des boutons NOTAM de v4.95 conservés.
+- « Annuler Sélection » reste rouge.
+- Calendriers natifs de plage de validité conservés.
+- Mémoire explicite « Garder la Sélection » séparée SDVFR / NATS conservée.
+- Triple persistance SDVFR localStorage + IndexedDB + CacheStorage conservée.
+- CheckWX reste désactivé.
+- Diagnostic BFG conservé.
+- Service worker aligné sur v4.96 avec nouveau cache briefing-fdf-test-v4.96-weather-notam-ui-r1.
+
+Contrôles avant livraison :
+- syntaxe JavaScript inline ;
+- manifeste JSON ;
+- syntaxe du service worker ;
+- cohérence des versions actives v4.96 ;
+- taille du bouton « Actualiser Météo » harmonisée ;
+- changement de date => sortie de « Garder la Sélection » ;
+- police METAR/TAF agrandie.
+
+TEST v4.95 — 2026-09-20
+Base : TEST v4.94
+===============================================================================
+
+NOTAM — PLAGE DE VALIDITÉ PAR CALENDRIER
+- Remplacement de la case « Afficher uniquement les NOTAMs valides aujourd'hui » par deux cellules de date natives : « Valables du [date] au [date] ».
+- Les deux dates sont initialisées par défaut sur la date du jour à chaque ouverture de BFG.
+- Un toucher sur une cellule ouvre le sélecteur/calendrier natif iPadOS.
+- La plage est inclusive : le premier jour est pris depuis 00:00:00 et le dernier jusqu'à 23:59:59.999.
+- Un NOTAM est affiché dès lors que sa période de validité chevauche au moins une partie de la plage choisie.
+- Si la date de début devient postérieure à la date de fin, la seconde borne est automatiquement réalignée pour conserver une plage cohérente.
+- Les filtres par mots-clés continuent de s'appliquer en complément de la plage de dates.
+
+NOTAM — COMMANDES
+- Première ligne : « Actualiser NOTAM » / « Garder la Sélection » ou « Tout Afficher » / « Annuler Sélection » / « Annuler Surlignage ».
+- Deuxième ligne : « Sauvegarder en Pdf » / « Actualiser Météo ».
+- Majuscules harmonisées selon cette présentation.
+- « Annuler Sélection » est désormais rouge.
+- « Sauvegarder en Pdf » reste disponible indépendamment de l'état du filtre « Garder la Sélection » et exporte les NOTAM actuellement visibles.
+
+CORRECTION SCROLL « GARDER LA SÉLECTION »
+- Suppression du scroll automatique vers le dernier NOTAM conservé.
+- Après activation volontaire de « Garder la Sélection », la vue est repositionnée sur le premier terrain de la liste NOTAM, LFTW dans l'ordre BFG.
+- La restauration automatique du mode mémorisé reste sans scroll.
+
+NON-RÉGRESSION
+- Mémoire explicite « Garder la Sélection » séparée SDVFR / NATS conservée.
+- Triple persistance SDVFR localStorage + IndexedDB + CacheStorage conservée.
+- SDVFR reste la source NOTAM affichée par défaut ; NATS uniquement sur sélection explicite.
+- CheckWX reste désactivé.
+- Correction SUP AIP / SUP AIP AIRAC conservée.
+- Diagnostic BFG conservé.
+- Service worker aligné sur v4.95 avec nouveau cache briefing-fdf-test-v4.95-notam-date-range-controls-r1.
+
+Contrôles avant livraison :
+- syntaxe JavaScript inline ;
+- manifeste JSON ;
+- syntaxe du service worker ;
+- cohérence des versions actives v4.95 ;
+- absence de l'ancien filtre checkbox « aujourd'hui » ;
+- initialisation des deux dates sur le jour courant ;
+- filtrage inclusif par chevauchement de période ;
+- ordre et libellés des boutons ;
+- « Annuler Sélection » rouge ;
+- scroll « Garder la Sélection » vers le premier terrain et non vers le dernier NOTAM.
+
+TEST v4.94 — 2026-09-20
+Base : TEST v4.93
+===============================================================================
+
+NOTAM — MÉMOIRE EXPLICITE « GARDER LA SÉLECTION » PAR SOURCE
+- v4.93 a confirmé la restauration immédiate et hors ligne des NOTAM SDVFR, mais désactivait volontairement la restauration du filtre « Garder la sélection ».
+- v4.94 mémorise désormais explicitement l'état ON/OFF de « Garder la sélection » au lieu de le déduire de la présence de NOTAM cochés.
+- La préférence est indépendante pour SDVFR et NATS : SDVFR peut être en affichage complet pendant que NATS conserve « Garder la sélection », et inversement.
+- Si des NOTAM sont cochés sans que « Garder la sélection » soit actif, les coches restent mémorisées mais tous les NOTAM valides restent affichés à la réouverture.
+- Si l'utilisateur active « Garder la sélection », ce mode est restauré à la réouverture pour la source concernée.
+- Le bouton « Tout afficher » désactive et mémorise explicitement le mode pour la source courante.
+- « Annuler sélection » désactive également « Garder la sélection » pour la source courante.
+- Si le mode était mémorisé mais qu'aucun NOTAM sélectionné n'est encore restaurable (NOTAM disparu ou modifié), BFG désactive automatiquement le filtre afin d'éviter un écran vide.
+- SDVFR reste la source NOTAM affichée par défaut à chaque ouverture ; le choix NATS reste temporaire, mais son propre état « Garder la sélection » est retrouvé lorsqu'on le sélectionne.
+- Le diagnostic BFG indique maintenant séparément « Garder sélection SDVFR » et « Garder sélection NATS ».
+
+NON-RÉGRESSION
+- Triple persistance SDVFR localStorage + IndexedDB + CacheStorage conservée.
+- Restauration hors ligne des NOTAM conservée.
+- Coches, masquages volontaires et surlignages persistants conservés par source.
+- CheckWX reste désactivé.
+- Correction SUP AIP / SUP AIP AIRAC conservée.
+- Service worker aligné sur v4.94 avec nouveau cache briefing-fdf-test-v4.94-keep-selection-by-source-r1.
+
+Contrôles avant livraison :
+- syntaxe JavaScript inline ;
+- manifeste JSON ;
+- syntaxe du service worker ;
+- cohérence des versions actives v4.94 ;
+- aucune déduction automatique du filtre à partir des coches ;
+- restauration du filtre sans scroll automatique ;
+- état séparé SDVFR / NATS.
+
+TEST v4.93 — 2026-09-20
+Base : TEST v4.92
+===============================================================================
+
+CORRECTION NOTAM — « GARDER LA SÉLECTION »
+- Diagnostic v4.92 confirmé : les NOTAM SDVFR sont bien restaurés depuis les caches, y compris hors ligne.
+- Cause exacte de la disparition apparente : après restauration des coches NOTAM mémorisées, BFG réactivait automatiquement le filtre « Garder la sélection ».
+- Le diagnostic observait 87 NOTAM affichés juste après restauration, puis seulement 4 après application automatique de ce filtre ; les autres restaient présents dans le DOM et dans les caches.
+- v4.93 restaure toujours les coches, masquages volontaires et surlignages persistants.
+- v4.93 ne réactive plus automatiquement « Garder la sélection » lors d'une ouverture, d'une restauration locale ou d'un rendu NOTAM avec état sauvegardé.
+- « Garder la sélection » devient un filtre volontaire valable uniquement lorsqu'il est demandé par l'utilisateur pendant la session courante.
+- À chaque nouvelle ouverture, tous les NOTAM valides selon les préfiltres/date restent affichés, même si certains NOTAM sont cochés.
+- Le diagnostic BFG est conservé et journalise explicitement la restauration de l'état NOTAM sans réactivation du filtre de sélection.
+
+NON-RÉGRESSION
+- Triple persistance SDVFR localStorage + IndexedDB + CacheStorage conservée.
+- SDVFR reste la source NOTAM par défaut ; NATS uniquement sur sélection explicite.
+- CheckWX reste désactivé.
+- Correction SUP AIP / SUP AIP AIRAC conservée.
+- Service worker aligné sur v4.93 avec nouveau cache briefing-fdf-test-v4.93-notam-selection-restore-r1.
+
+Contrôles avant livraison :
+- syntaxe JavaScript inline ;
+- manifeste JSON ;
+- syntaxe du service worker ;
+- cohérence des versions actives v4.93 ;
+- absence d'appel automatique à applySelectionFilter() lors de la restauration savedState ;
+- conservation des coches/surlignages/masquages persistants.
+
+TEST v4.92 — 2026-09-20
+Base : TEST v4.91
+===============================================================================
+
+DIAGNOSTIC AFFICHAGE NOTAM
+- Le stockage NOTAM de v4.91 est conservé sans modification : les diagnostics ont confirmé la restauration SDVFR depuis localStorage, IndexedDB et CacheStorage, y compris hors ligne.
+- Le diagnostic distingue désormais : NOTAM présents dans le DOM, réellement affichés, masqués par filtre, masqués par préfiltre, masqués par CSS/section et actuellement présents dans le viewport.
+- Ajout de l'état de la zone NOTAM elle-même : display, visibility et hauteur rendue.
+- Ajout d'un MutationObserver de diagnostic sur la zone NOTAM : toute modification de structure, classe, style ou attribut hidden déclenche un instantané d'affichage dans la chronologie.
+- Les événements NOTAM-RENDER et NOTAM-BOOT enregistrent désormais l'instantané complet d'affichage au lieu d'un simple nombre d'éléments DOM.
+
+SERVICE WORKER
+- Correction de l'URL d'enregistrement restée à sw.js?v=4.90 dans la v4.91.
+- Enregistrement désormais forcé sur sw.js?v=4.92.
+- Version interne du service worker : 4.92.
+- Nouveau cache applicatif : briefing-fdf-test-v4.92-notam-display-diag-r1.
+
+NON-RÉGRESSION
+- SDVFR reste la source NOTAM affichée par défaut ; NATS uniquement sur sélection explicite.
+- Triple persistance NOTAM SDVFR de v4.91 conservée.
+- CheckWX reste désactivé.
+- Correction SUP AIP / SUP AIP AIRAC conservée.
+- Aucun contenu brut NOTAM, code d'accès ou token n'est ajouté au diagnostic.
+
+Contrôles avant livraison :
+- syntaxe JavaScript inline ;
+- manifeste JSON ;
+- syntaxe du service worker ;
+- cohérence des versions actives v4.92 ;
+- enregistrement du service worker sur sw.js?v=4.92 ;
+- référence manifeste alignée sur manifest.json?v=4.92 ;
+- présence des compteurs d'affichage NOTAM et de l'observateur de mutations.
+
+TEST v4.91 — 2026-09-20
+Base : TEST v4.90
+===============================================================================
+
+DIAGNOSTIC BFG EXPORTABLE
+- Ajout d'une rubrique « Diagnostic BFG » dans la zone Accès Briefing.
+- Bouton « Afficher diagnostic » : affiche le diagnostic dans une zone texte modifiable.
+- Bouton « Exporter diagnostic » : génère un fichier texte horodaté BFG_DIAG_v4.91_*.txt.
+- Sur iPad/iOS, utilisation prioritaire de la feuille de partage native afin de choisir Mail, Messages, AirDrop, Fichiers, etc.
+- Le diagnostic complet est pré-calculé en arrière-plan afin que l'appui sur « Exporter diagnostic » puisse ouvrir immédiatement la feuille de partage sans perdre l'activation utilisateur Safari/iPadOS.
+- Si le partage natif avec fichier n'est pas disponible, téléchargement du .txt en solution de secours.
+
+CONTENU DU DIAGNOSTIC
+- Version BFG, date/heure de démarrage, état en ligne/hors ligne, visibilité, mode PWA et User-Agent.
+- Source NOTAM affichée, sélection NATS, nombre de NOTAM visibles et taille des textes SDVFR/NATS en mémoire.
+- État, taille, date et validité des trois stockages NOTAM SDVFR : localStorage, IndexedDB et CacheStorage dédié.
+- Estimation du quota et de l'espace de stockage navigateur utilisé.
+- État du service worker et liste des caches actifs.
+- Résumé de la météo affichée et de ses sources.
+- Journal chronologique depuis le chargement du script : restauration rapide/persistante, lectures/écritures de caches, rendu NOTAM, bandeau de téléchargement, réseau, scroll fenêtre, erreurs JavaScript et promesses rejetées.
+- Les codes d'accès, tokens et contenu brut des NOTAM ne sont pas exportés ; seules les tailles, dates et états techniques sont consignés.
+
+INSTRUMENTATION NOTAM
+- Traçage du démarrage anticipé NOTAM et du résultat de la restauration rapide.
+- Traçage de la lecture IndexedDB, CacheStorage et localStorage ainsi que de la source choisie.
+- Traçage des écritures IndexedDB / CacheStorage et de leurs erreurs éventuelles.
+- Traçage des mises à jour mémoire, rendus NOTAM et affichage/masquage du bandeau de téléchargement.
+- Traçage du lancement des imports NATS sans modifier la priorité d'affichage SDVFR.
+
+NON-RÉGRESSION
+- Logique fonctionnelle NOTAM de v4.90 conservée pour obtenir un diagnostic fidèle du problème observé.
+- SDVFR reste la source NOTAM affichée par défaut ; NATS uniquement sur sélection explicite.
+- CheckWX reste désactivé.
+- Correction SUP AIP / SUP AIP AIRAC conservée.
+
+Contrôles avant livraison :
+- syntaxe JavaScript inline ;
+- manifeste JSON ;
+- syntaxe du service worker ;
+- cohérence des versions actives v4.91 ;
+- présence des commandes Afficher / Exporter diagnostic ;
+- absence d'export des codes d'accès et tokens.
+
+TEST v4.90 — 2026-09-20
+Base : TEST v4.89
+===============================================================================
+
+NOTAM SDVFR — RESTAURATION IMMÉDIATE INDÉPENDANTE DE PDF.JS
+- Diagnostic v4.89 : toute l'initialisation de BFG restait déclenchée par `window.onload`, puis attendait jusqu'à 5 s la disponibilité de PDF.js chargé depuis cdnjs.
+- Conséquence : la restauration locale des NOTAM pouvait elle aussi être retardée à chaque réouverture ; hors ligne, l'absence de PDF.js externe retardait encore le démarrage local.
+- v4.90 initialise désormais le parseur NOTAM dès `DOMContentLoaded`, sans attendre `window.onload` ni PDF.js.
+- Le cache rapide local est relu immédiatement, puis la restauration autoritaire IndexedDB / CacheStorage démarre aussitôt.
+- La promesse de restauration NOTAM est réutilisée ensuite par l'initialisation générale : aucun double parseur ni double restauration n'est créé.
+- Les actualisations réseau continuent d'attendre la fin des restaurations locales avant de démarrer.
+- PDF.js reste nécessaire uniquement aux modules PDF ; son absence ou sa lenteur ne bloque plus l'affichage des NOTAM mémorisés.
+- La triple persistance SDVFR de v4.89 (localStorage léger + IndexedDB + CacheStorage dédié) est conservée.
+
+NON-RÉGRESSION
+- SDVFR reste la source NOTAM affichée par défaut ; NATS uniquement sur sélection explicite.
+- CheckWX reste désactivé.
+- Correction SUP AIP / SUP AIP AIRAC conservée.
+- Gestion du champ code accès et stabilité du scroll conservées.
+
+Contrôles avant livraison :
+- syntaxe JavaScript inline ;
+- manifeste JSON ;
+- syntaxe du service worker ;
+- cohérence des versions actives v4.90 ;
+- changelog cumulatif conservé.
+
+===============================================================================
+
+TEST v4.89 — 2026-09-20
+Base : TEST v4.88
+===============================================================================
+
+NOTAM SDVFR — RESTAURATION AVANT RÉSEAU / HORS LIGNE RENFORCÉ
+- Correction structurelle : l'initialisation réseau attend désormais la fin de la restauration NOTAM SDVFR dédiée.
+- Les NOTAM SDVFR du jour sont restaurés et rendus avant le lancement des actualisations CNCASC, météo ou NATS.
+- Ajout d'une troisième copie persistante dans un CacheStorage dédié `briefing-fdf-sdvfr-notams-offline-v1`.
+- Ce cache NOTAM dédié n'est pas supprimé lors du remplacement du cache applicatif du service worker.
+- Au démarrage, BFG compare localStorage, IndexedDB et CacheStorage et restaure la copie valide la plus récente du jour.
+- La meilleure copie retrouvée répare automatiquement les deux autres stockages.
+- Chaque nouvelle récupération SDVFR sauvegarde désormais le texte NOTAM dans les trois stockages.
+- L'effacement local BFG supprime également le CacheStorage NOTAM dédié.
+- SDVFR reste la source affichée par défaut ; NATS reste invisible sauf sélection explicite.
+
+NON-RÉGRESSION
+- CheckWX reste désactivé.
+- Correction SUP AIP / SUP AIP AIRAC conservée.
+- Gestion du champ code accès et stabilité du scroll conservées.
+
+Contrôles avant livraison :
+- syntaxe JavaScript inline ;
+- manifeste JSON ;
+- syntaxe du service worker ;
+- cohérence des versions actives v4.89.
+
+===============================================================================
+
+TEST v4.88 — 2026-09-20
+Base : TEST v4.87
+===============================================================================
+
+CORRECTION STRUCTURELLE — PERSISTANCE HORS LIGNE DES NOTAM SDVFR :
+- Diagnostic v4.87 : les NOTAM SDVFR dépendaient encore principalement de localStorage.
+- Le texte SDVFR était dupliqué entre le cache quotidien et le cache rapide, et le cache quotidien conservait également le payload SDVFR complet.
+- Sur Safari/iPadOS, une écriture localStorage trop volumineuse peut échouer à cause du quota ; les NOTAM restent alors visibles en mémoire pendant la session mais disparaissent à la réouverture et ne sont plus disponibles hors ligne.
+- v4.88 ajoute une persistance IndexedDB dédiée « BriefingFdfSdvfrNotamsV1 » pour le texte NOTAM SDVFR du jour.
+- Chaque récupération SDVFR non vide déclenche immédiatement l'écriture de ce texte dans IndexedDB.
+- Au démarrage, BFG restaure d'abord un secours localStorage synchrone puis charge le cache IndexedDB autoritaire avant d'appliquer la sauvegarde générale de session.
+- Une ancienne sauvegarde générale ne peut donc plus vider le SDVFR du jour restauré depuis IndexedDB.
+- Migration automatique : si un cache v4.87 localStorage du jour existe encore et qu'IndexedDB n'est pas encore alimentée, ce cache est recopié dans IndexedDB.
+
+REDUCTION DE localStorage :
+- Le cache quotidien SDVFR localStorage ne conserve plus le payload SDVFR complet ; il garde seulement le jour, l'heure et une copie texte de secours des NOTAM.
+- Le cache rapide ne duplique plus le texte SDVFR ; il ne conserve que NATS.
+- Il n'existe donc plus deux copies localStorage du texte SDVFR plus un payload complet.
+- Si localStorage refuse une écriture, IndexedDB reste la persistance principale pour les NOTAM hors ligne.
+
+NETTOYAGE / NON-REGRESSION :
+- « Effacer les données locales » supprime également la nouvelle base IndexedDB NOTAM SDVFR et le cache quotidien de secours.
+- SDVFR reste la source NOTAM affichée par défaut à chaque ouverture.
+- NATS reste visible uniquement après sélection explicite de l'utilisateur.
+- Bandeau « NOTAMs en téléchargement... » conservé lorsqu'aucun NOTAM SDVFR du jour n'est disponible localement.
+- CheckWX reste désactivé.
+- Distinction SUP AIP / SUP AIP AIRAC conservée.
+
+CONTROLES AVANT LIVRAISON :
+- syntaxe JavaScript inline ;
+- manifeste JSON ;
+- syntaxe service worker ;
+- cohérence versions actives v4.88 ;
+- vérification que le changelog reste cumulatif.
+
+===============================================================================
+
+TEST v4.87 — 2026-09-20
+Base : TEST v4.86
+===============================================================================
+
+CORRECTION CRITIQUE — NOTAM SDVFR QUI DISPARAISSAIENT A LA REOUVERTURE :
+- Diagnostic v4.86 : le cache rapide pouvait réafficher correctement les NOTAM SDVFR au tout début, puis la restauration générale de session exécutée ensuite appelait restoreBfgNotamSources_() et remplaçait la source SDVFR par celle de la sauvegarde générale.
+- Si cette sauvegarde contenait une source SDVFR vide ou plus ancienne, les NOTAM déjà visibles disparaissaient de nouveau.
+- La sauvegarde rapide effectuée juste après pouvait alors propager ce mauvais état et écraser le cache rapide valide.
+- v4.87 rend le cache quotidien SDVFR du jour prioritaire sur la sauvegarde générale de session.
+- Ordre de priorité SDVFR lors d'une restauration locale : cache quotidien SDVFR du jour, puis cache rapide du jour, puis source déjà présente à l'écran, puis seulement la sauvegarde générale.
+- Une restauration locale ne peut plus remplacer un SDVFR du jour non vide par une valeur vide.
+- saveBfgNotamQuickCache_() conserve désormais un SDVFR valide du jour même si l'état courant restauré ne contient que NATS.
+- restoreBfgNotamQuickCache_() répare automatiquement un cache rapide v4.86 éventuellement vidé en reprenant le cache quotidien SDVFR du jour.
+- La restauration d'un briefing partagé reste indépendante : cette priorité renforcée s'applique à la restauration locale automatique, pas à l'import volontaire d'un briefing partagé.
+
+COMPORTEMENT CONSERVE :
+- SDVFR reste la source NOTAM affichée par défaut à chaque nouvelle ouverture.
+- NATS reste invisible tant que l'utilisateur ne le sélectionne pas explicitement.
+- Les actualisations réseau peuvent continuer en arrière-plan sans vider l'affichage SDVFR déjà disponible.
+- Bandeau « NOTAMs en téléchargement... » conservé lorsqu'aucun NOTAM SDVFR du jour n'est encore disponible.
+- CheckWX reste totalement désactivé.
+- Distinction SUP AIP / SUP AIP AIRAC conservée.
+
+CONTROLES AVANT LIVRAISON :
+- syntaxe JavaScript inline ;
+- manifeste JSON ;
+- syntaxe service worker ;
+- cohérence versions actives v4.87 ;
+- vérification que le changelog reste cumulatif.
+
+===============================================================================
+
+TEST v4.86 — 2026-09-20
+Base : TEST v4.85
+===============================================================================
+
+ACCES BRIEFING / EMPREINTE DIGITALE :
+- Suppression du nom technique contenant « password » sur le champ « Code accès Briefing ».
+- Le champ devient « cncasc-access-code-input » dans le HTML, le CSS et tous les appels JavaScript.
+- Objectif : éviter que Safari/iPadOS ou un gestionnaire de mots de passe interprète ce champ texte comme un mot de passe et affiche brièvement une demande Touch ID/empreinte au démarrage.
+- Les protections autocomplete/autocorrect/autocapitalize restent actives.
+- Le comportement v4.85 du clavier est conservé : premier tap = ouverture du clavier avec remontée de la page pour garder le champ visible.
+
+NOTAM — SOURCE PRIORITAIRE SDVFR :
+- SDVFR est désormais systématiquement la source NOTAM affichée par défaut à chaque nouvelle ouverture de BFG.
+- Le choix « Utiliser NATS comme source NOTAM » n’est plus mémorisé entre deux ouvertures.
+- Les NOTAM NATS peuvent continuer à être téléchargés/actualisés en arrière-plan mais ne remplacent jamais l’affichage SDVFR.
+- NATS n’est affiché que si l’utilisateur coche explicitement « Utiliser NATS comme source NOTAM » pendant la session en cours.
+- Au lancement suivant, BFG revient automatiquement sur SDVFR.
+
+NOTAM — AFFICHAGE IMMEDIAT ENTRE DEUX OUVERTURES :
+- Ajout d'un cache rapide local des textes NOTAM NATS/SDVFR du jour.
+- Au lancement, ce cache est restauré immédiatement après l'initialisation de l'analyseur NOTAM, avant la restauration IndexedDB lourde et avant les appels réseau.
+- Les NOTAM déjà chargés restent donc affichés pendant l'actualisation réseau de fond au lieu de disparaître jusqu'à la fin du nouveau téléchargement.
+- Le cache rapide n'est valable que pour la journée courante : au premier démarrage d'un nouveau jour, les NOTAM de la veille ne sont pas réaffichés comme s'ils étaient actuels.
+- Le cache rapide est mis à jour après récupération NATS, récupération SDVFR, restauration locale et sauvegarde locale.
+- Il est supprimé lors de la remise à zéro locale et lors de l'expiration quotidienne de la session sauvegardée.
+
+NOTAM — PREMIERE CONNEXION DU JOUR :
+- Ajout d'un bandeau visible dans la rubrique NOTAM : « NOTAMs en téléchargement... ».
+- Le bandeau n'apparaît que lorsqu'aucun NOTAM exploitable n'est déjà affiché.
+- Lors d'une réouverture avec les NOTAM du jour déjà en cache, le rafraîchissement peut continuer en arrière-plan sans masquer les NOTAM ni afficher inutilement le bandeau.
+- Si le téléchargement échoue alors qu'aucun NOTAM n'est disponible, le bandeau passe en erreur « Téléchargement des NOTAM impossible. ».
+
+SDVFR / DEMARRAGE :
+- Le payload SDVFR frais utilisé pour la météo est désormais également exploité immédiatement pour mémoriser les NOTAM SDVFR du même appel.
+- Cela évite une deuxième attente SDVFR au premier chargement et permet d'afficher les NOTAM plus tôt.
+- Cette optimisation ne réintroduit pas le défaut météo de v4.84 : seule la météo du payload frais est appliquée, le cache quotidien NOTAM n'est toujours pas réinjecté comme météo.
+- CheckWX reste totalement désactivé.
+
+NON-REGRESSION :
+- Distinction SUP AIP / SUP AIP AIRAC conservée.
+- Stabilité du scroll v4.83 conservée.
+- Météo SDVFR fraîche de v4.85 conservée.
+- Publication NOTAM vers NPF-Q400 conservée.
+- Aucun changement NAS/VPS ni du worker SDVFR.
+
+Contrôles avant livraison :
+- syntaxe de tous les scripts JavaScript inline ;
+- manifeste JSON ;
+- syntaxe du service worker ;
+- cohérence des versions actives v4.86 ;
+- vérification qu'aucun identifiant « cncasc-password-input » ne subsiste ;
+- vérification du cache rapide NOTAM et du bandeau de téléchargement ;
+- vérification que SDVFR est la source par défaut à chaque ouverture et que le choix NATS n’est plus persistant.
+
+===============================================================================
+
+TEST v4.85 — 2026-09-20
+Base : TEST v4.84
+===============================================================================
+
+CONNEXION / CLAVIER iPAD :
+- Correction du comportement du champ « Code accès Briefing » avec le clavier virtuel iPad.
+- Suppression du focus preventScroll introduit en v4.84 : il empêchait Safari de remonter la page lors du premier toucher.
+- Dès le premier toucher, le champ reçoit le focus normalement et BFG vérifie sa visibilité pendant l’ouverture du clavier via visualViewport.
+- Recentrages de sécurité brefs après le focus afin que la zone de saisie reste au-dessus du clavier sans attendre la première lettre tapée.
+- Le garde-fou empêchant l’ouverture automatique du clavier au démarrage reste conservé.
+
+METEO SDVFR — NE PLUS REVENIR A UNE METEO MEMORISEE :
+- Correction de la course entre météo fraîche et chargement des NOTAM.
+- Lors d’une connexion, BFG récupère désormais une météo SDVFR fraîche AVANT l’actualisation NATS.
+- Lors d’une réouverture avec session BFG encore valide, même ordre : météo SDVFR fraîche puis NATS.
+- Le payload mémorisé dans le cache quotidien SDVFR reste réservé aux NOTAM et n’est plus utilisé comme météo de connexion.
+- Une restauration locale ou partagée compare maintenant weatherSavedAt : une météo mémorisée plus ancienne ne peut plus écraser une météo plus récente déjà affichée.
+- Le chargement des NOTAM NATS ne doit donc plus faire « revenir en arrière » les METAR/TAF.
+- CheckWX reste totalement désactivé ; SDVFR reste la seule source météo active.
+
+NON-REGRESSION :
+- Distinction SUP AIP / SUP AIP AIRAC de v4.84 conservée.
+- Corrections de stabilité du scroll v4.83 conservées.
+- Fonctionnement NATS / SDVFR, persistance NOTAM et publication NPF-Q400 conservés.
+- Aucun changement NAS/VPS ni du worker SDVFR.
+
+Contrôles avant livraison :
+- syntaxe de tous les scripts JavaScript inline ;
+- manifeste JSON ;
+- syntaxe du service worker ;
+- cohérence des versions actives v4.85 ;
+- contrôle du chemin météo : requête SDVFR fraîche avant NATS, sans CheckWX ;
+- contrôle de non-écrasement d’une météo plus récente par restoreWeatherDataSnapshot_.
+
+===============================================================================
+
+TEST v4.84 — 2026-09-20
+Base : TEST v4.83
+===============================================================================
+
+CONNEXION / CLAVIER iPAD :
+- Le garde-fou anti-clavier automatique ne bloque plus le premier toucher utilisateur sur le champ « Code accès Briefing ».
+- Dès le premier toucher réel, le champ est focusé avec preventScroll afin d'éviter le petit déplacement de page préalable.
+- Les contrôles différés anti-focus restent actifs uniquement tant qu'aucune interaction utilisateur n'a eu lieu.
+- L'ouverture automatique du clavier au simple chargement de BFG reste empêchée.
+
+METEO — CHECKWX TEMPORAIREMENT DESACTIVE :
+- Ajout d'un verrou global CHECKWX_ENABLED_ = false.
+- Aucun appel réseau vers le proxy CheckWX ne peut partir, y compris depuis un ancien chemin de secours.
+- Connexion BFG : METAR/TAF chargés uniquement depuis SDVFR.
+- Bouton « Actualiser Météo », actualisation automatique des METAR > 35 min et bouton ↻ terrain : SDVFR uniquement.
+- En cas d'absence ou d'échec SDVFR, aucune bascule CheckWX n'est effectuée.
+- La recherche météo manuelle qui dépendait de CheckWX indique temporairement que CheckWX est désactivé.
+
+NOTAM — LIENS SUP AIP / SUP AIP AIRAC :
+- Correction de la règle de construction des PDF SIA.
+- Un SUP AIP classique utilise : lf_sup_YYYY_NNN_fr.pdf.
+- Un SUP AIP AIRAC utilise : lf_sup_a_YYYY_NNN_fr.pdf.
+- Le mot AIRAC n'est plus perdu lors de la normalisation interne.
+- Exemple validé : « AIP SUP 118/26 » -> lf_sup_2026_118_fr.pdf.
+- Exemple validé : « SUP AIP AIRAC 014/26 » -> lf_sup_a_2026_014_fr.pdf.
+- Même traitement pour les NOTAM NATS et SDVFR.
+
+NON-REGRESSION :
+- Corrections de stabilité du scroll v4.83 conservées.
+- Fonctionnement NATS / SDVFR et persistance NOTAM conservés.
+- Aucun changement NAS/VPS ni du worker SDVFR.
+
+Contrôles avant livraison :
+- syntaxe de tous les scripts JavaScript inline ;
+- manifeste JSON ;
+- syntaxe du service worker ;
+- cohérence des versions actives v4.84 ;
+- vérification de l'absence de chemin réseau CheckWX actif ;
+- vérification de la distinction SUP AIP / SUP AIP AIRAC.
+
+===============================================================================
+
+TEST v4.83 — 2026-09-20
+Base : TEST v4.82
+===============================================================================
+
+STABILITÉ DU SCROLL / DÉMARRAGE :
+- Désactivation de la restauration native de position du navigateur/PWA via history.scrollRestoration = manual.
+- Suppression des trois rappels de retour en haut à 0 / 300 / 1200 ms ; une seule stabilisation initiale instantanée est conservée.
+- Le retour initial est forcé sans animation même si la page utilise scroll-behavior: smooth pour la navigation volontaire.
+
+NOTAM — SUPPRESSION DES SCROLLS DE FOND :
+- L'actualisation NATS automatique au démarrage ne mémorise plus puis ne réimpose plus la position verticale de la fenêtre.
+- Suppression des restaurations différées répétées pendant les différentes étapes de génération, téléchargement et extraction NATS.
+- La restauration des NOTAM cochés/filtrés réapplique l'état sans scroll automatique vers le dernier NOTAM visible.
+- Le scroll vers le dernier NOTAM reste conservé uniquement lorsque l'utilisateur clique lui-même sur « Garder la sélection ».
+
+RESTAURATION DE SESSION :
+- La restauration d'une session locale ou d'un briefing partagé ne force plus automatiquement un déplacement vers la Feuille de Service.
+- Les navigations volontaires par le bandeau, les boutons GAAR et le visualiseur SUP AIP conservent leur scroll explicite.
+
+NON-RÉGRESSION :
+- Fonctionnement NATS / SDVFR de v4.82 conservé.
+- Confirmation verte de connexion et liens SUP AIP normalisés conservés.
+- Aucune modification NAS/VPS ni du worker SDVFR.
+
+Contrôles avant livraison :
+- syntaxe des scripts JavaScript inline ;
+- manifeste JSON ;
+- syntaxe du service worker ;
+- cohérence des versions actives v4.83.
+
+===============================================================================
+
+TEST v4.82 — 2026-09-20
+Base : TEST v4.81
+===============================================================================
+
+INTERFACE / CONNEXION :
+- Le bandeau final « NOTAM et METAR/TAF chargés. » utilise désormais le style succès vert.
+- Vert volontairement discret : légèrement plus foncé que le fond vert de la zone « Accès Briefing ».
+- Les messages d'erreur et d'attente conservent leurs styles précédents.
+
+STABILITÉ DE NAVIGATION :
+- Diagnostic v4.81 : le bandeau de confirmation ne contient lui-même aucun ordre de scroll.
+- La cause plausible du retour en haut est le mécanisme historique forceBriefingStartAtTop(), programmé plusieurs fois au démarrage/restauration.
+- v4.82 conserve la stabilisation en haut uniquement pendant le tout premier affichage.
+- Les rappels différés (0 / 300 / 1200 ms) sont annulés dès une interaction utilisateur de navigation : toucher/clic, geste tactile, molette ou touche de navigation.
+- Suppression des nouvelles salves de retour en haut après restauration d'un briefing partagé ou de la session locale.
+- Après que l'utilisateur a commencé à naviguer, une actualisation NOTAM/météo ou l'apparition du bandeau de connexion ne doit plus modifier sa position dans la page.
+
+LIENS SUP AIP DANS LES NOTAM :
+- Normalisation interne de toutes les références reconnues vers « SUP AIP numéro/année » pour construire l'URL SIA.
+- Formes reconnues : « AIP SUP 118/26 », « AIP SUP AIRAC 118/26 », « SUP AIP 014/26 », « SUP AIP AIRAC 014/26 » et l'ancienne forme courte « SUP 014/26 ».
+- Le texte d'origine du NOTAM reste affiché tel quel ; seule la recherche du PDF est normalisée.
+- Le lien continue d'ouvrir directement le PDF SIA associé.
+
+NON-RÉGRESSION :
+- Fonctionnement NOTAM par défaut / NATS optionnel de v4.80 conservé.
+- Actualisation météo, seuil automatique 35 min et secours CHECKWX inchangés.
+- Filtre GRUE + CRANE conservé.
+- Worker VPS inchangé fonctionnellement.
+
+Contrôles avant livraison :
+- syntaxe de tous les scripts JavaScript inline ;
+- manifeste JSON ;
+- syntaxe du service worker ;
+- compilation Python du worker ;
+- cohérence des versions actives v4.82 ;
+- vérification des formes SUP AIP reconnues.
+
+===============================================================================
+
+===============================================================================
+TEST v4.81 — 2026-09-20
+Base : TEST v4.80 validée
+===============================================================================
+
+LIENS SUP AIP DANS LES NOTAMs :
+- Extension de la détection automatique des références SUP AIP dans le texte des NOTAMs.
+- Les formulations suivantes deviennent cliquables :
+  • AIP SUP 118/26
+  • SUP 118/26
+  • SUP AIP 014/26
+  • SUP AIP AIRAC 014/26
+- Les liens ouvrent directement le PDF SIA correspondant, comme pour le fonctionnement déjà validé avec les NOTAMs NATS.
+- Aucun changement du contenu des NOTAMs ni de leur source : seule la reconnaissance des références SUP AIP est élargie.
+
+VERSION / CACHE :
+- Version visible et interne : TEST v4.81.
+- Service worker aligné sur v4.81.
+- Nouveau cache : briefing-fdf-test-v4.81-supaip-links-r1.
+
+NAS / VPS :
+- Aucun changement.
+- Worker VPS inchangé fonctionnellement.
+
+Contrôles avant livraison :
+- syntaxe de tous les scripts JavaScript inline ;
+- manifeste JSON ;
+- syntaxe du service worker ;
+- compilation Python du worker ;
+- cohérence des versions actives v4.81.
+
+CHANGELOG CUMULATIF — BFG TEST v4.79
+Date : 2026-09-20
+Base actuelle : TEST v4.78
+
+===============================================================================
+TEST v4.79 — 2026-09-20
+Base : TEST v4.78
+===============================================================================
+
+CORRECTION CRITIQUE — PURGE UNIQUE DU NATS HÉRITÉ
+- Diagnostic confirmé : la v4.78 séparait correctement NATS et SDVFR pour les nouvelles sauvegardes, mais pouvait encore restaurer un contenu NATS déjà contaminé par une sauvegarde v4.77/v4.78.
+- Ajout d'une migration unique v4.79 : tant qu'un nouveau PDF NATS n'a pas été téléchargé et extrait avec succès, tout NATS restauré depuis les anciennes sauvegardes est ignoré.
+- Le cache SDVFR du jour est conservé ; seule la partie NATS héritée est rejetée.
+- Si une session Briefing est déjà authentifiée au démarrage, BFG lance automatiquement une nouvelle génération/téléchargement NATS.
+- Si BFG n'est pas encore authentifié, la connexion Briefing déclenche comme auparavant l'import NATS ; le marqueur de migration n'est validé qu'après extraction effective d'un PDF NATS non vide.
+- En cas d'échec réseau ou de génération, le marqueur n'est pas posé : BFG retentera à la prochaine ouverture/connexion.
+- Après migration réussie, les ouvertures suivantes utilisent de nouveau la sauvegarde NATS séparée normale.
+
+VALIDATION DES SOURCES
+- Le bloc « ... - NATS » doit provenir exclusivement du nouveau PDF NATS téléchargé par le circuit historique NAS/VPS.
+- Le bloc « ... - SDVFR » continue de provenir de /features/on-tap et du cache SDVFR quotidien.
+- L'affichage simultané terrain par terrain est conservé.
+- Les identifiants persistants conservent leur préfixe NATS/SDVFR ; sélections, masquages et surlignages restent indépendants.
+
+FILTRES / MÉTÉO
+- Filtre GRUE conservé en plus de CRANE.
+- Aucun changement météo : SDVFR prioritaire, CHECKWX indiqué uniquement en secours, actualisation globale automatique si un METAR dépasse 35 minutes.
+
+SERVEUR / VPS
+- Aucun changement PHP NAS.
+- Aucun changement fonctionnel du worker SDVFR ; le fichier fourni est identique à v4.78.
+
+===============================================================================
+HISTORIQUE CUMULATIF PRÉCÉDENT
+===============================================================================
+
+CHANGELOG CUMULATIF — BFG TEST v4.78
+Date : 2026-09-20
+Base actuelle : TEST v4.77
+
+===============================================================================
+TEST v4.78 — 2026-09-20
+Base : TEST v4.77
+===============================================================================
+
+CORRECTION CRITIQUE — SÉPARATION RÉELLE DES SOURCES NOTAM
+- Correction du défaut de restauration de la v4.77 : le texte NATS + SDVFR combiné ne doit plus être réinjecté comme s’il provenait entièrement de NATS.
+- Les textes bruts NATS et SDVFR sont désormais sauvegardés dans deux champs distincts : NATS et SDVFR.
+- Le texte combiné NATS + SDVFR reste uniquement un format d’affichage et de compatibilité ; il n’est plus la référence servant à déterminer la source après restauration.
+- À la restauration locale ou d’un briefing partagé, BFG recharge d’abord les deux sources séparées puis reconstruit l’affichage simultané.
+- Compatibilité avec les sauvegardes v4.77 : si un ancien texte combiné porte les suffixes « - NATS » / « - SDVFR », BFG le resépare automatiquement avant affichage.
+- Compatibilité avec les sauvegardes plus anciennes : un texte sans suffixe de source reste considéré comme NATS, comme dans le fonctionnement historique de BFG.
+- Les identifiants persistants conservent le préfixe de source NATS/SDVFR ; sélections, masquages et surlignages restent donc indépendants entre les deux sources.
+
+FILTRES NOTAM
+- Ajout du mot-clé français « GRUE ».
+- Le filtre anglais « CRANE » est conservé.
+- La normalisation existante casse/accents/ponctuation reste inchangée.
+
+AFFICHAGE DE VALIDATION
+- Affichage simultané conservé terrain par terrain : « ... - NATS » puis « ... - SDVFR ».
+- Le contenu NATS provient du PDF NATS extrait par le circuit historique NAS/VPS.
+- Le contenu SDVFR provient du relais SDVFR /features/on-tap.
+- Le cache quotidien SDVFR de la v4.77 est conservé.
+
+MÉTÉO
+- Aucun changement fonctionnel par rapport à v4.77.
+- SDVFR reste prioritaire ; « CHECKWX » n’apparaît qu’en secours.
+- Actualisation météo globale automatique conservée lorsqu’un METAR dépasse 35 minutes.
+
+SERVEUR / VPS
+- Aucun changement PHP NAS.
+- Aucun changement fonctionnel du worker SDVFR ; le fichier fourni est identique fonctionnellement à v4.77.
+
+VALIDATION
+- Syntaxe JavaScript inline : OK.
+- Manifest JSON : OK.
+- Service worker JavaScript : OK.
+- Worker Python : compilation OK.
+
+===============================================================================
+HISTORIQUE CUMULATIF PRÉCÉDENT
+===============================================================================
+
+CHANGELOG CUMULATIF — BFG TEST v4.77
+Date : 2026-09-20
+Base actuelle : TEST v4.76
+
+===============================================================================
+TEST v4.77 — 2026-09-20
+Base : TEST v4.76
+===============================================================================
+
+NOTAMs — comparaison simultanée NATS / SDVFR
+- Suppression complète du bouton « Comparer : afficher … ».
+- Les NOTAMs NATS et SDVFR sont affichés simultanément.
+- Pour chaque terrain, l’ordre d’affichage est :
+  • « LFTW - NIMES GARONS - NATS »
+  • « LFTW - NIMES GARONS - SDVFR »
+  puis le terrain suivant selon l’ordre BFG.
+- Aucune fusion des deux sources : chaque NOTAM conserve son origine.
+- Les identifiants persistants des NOTAMs intègrent désormais la source (NATS ou SDVFR).
+- Les sélections verte/rouge et les surlignages peuvent donc être mémorisés indépendamment pour les deux sources sans écrasement mutuel.
+- Les filtres date et mots-clés continuent de s’appliquer aux deux sources.
+
+NOTAMs SDVFR — actualisation quotidienne
+- Ajout d’un cache local quotidien SDVFR.
+- Lorsqu’un jeu SDVFR a déjà été récupéré le jour courant, BFG le réutilise lors des ouvertures suivantes.
+- Une récupération automatique SDVFR complète n’est donc pas répétée à chaque ouverture.
+- Le bouton « Actualiser SDVFR » conserve la possibilité de forcer manuellement une nouvelle récupération.
+- L’actualisation météo SDVFR est volontairement séparée : elle ne remplace pas le cache quotidien des NOTAMs.
+
+Météo
+- Bouton « Charger Météo » renommé « Actualiser Météo ».
+- SDVFR reste la source météo prioritaire.
+- Aucune mention de source à côté d’un METAR/TAF signifie que la donnée provient de SDVFR.
+- Lorsqu’un bulletin provient du secours CheckWX, la mention « CHECKWX » est affichée explicitement à côté de METAR ou TAF.
+- L’actualisation météo globale interroge SDVFR puis utilise CheckWX uniquement pour les terrains non servis par SDVFR.
+- Si au moins un METAR affiché a plus de 35 minutes, BFG déclenche automatiquement l’actualisation météo de tous les terrains.
+- Protection anti-boucle : une seule actualisation globale simultanée et temporisation avant une nouvelle actualisation automatique.
+
+Serveur / VPS
+- Aucun changement PHP NAS requis.
+- Le worker SDVFR v4.77 est fonctionnellement identique au worker v4.76 déjà installé.
+
+Contrôles
+- Syntaxe JavaScript de tous les scripts inline : OK.
+- Manifest JSON : OK.
+- Service worker JavaScript : OK.
+- Worker Python : OK.
+
+===============================================================================
+HISTORIQUE CUMULATIF PRÉCÉDENT
+===============================================================================
+
+CHANGELOG CUMULATIF — BFG TEST v4.76
+Date : 2026-09-20
+Base actuelle : TEST v4.75
 
 RÈGLE DU FICHIER
 - Ce CHANGELOG est cumulatif.
-- Chaque nouvelle version TEST ou pérenne doit conserver l’historique des modifications antérieures et ajouter la nouvelle version en tête ou à la suite.
-- Les évolutions intermédiaires qui ont ensuite été corrigées ou remplacées restent mentionnées afin de conserver l’historique technique complet.
+- Chaque nouvelle version TEST ou pérenne doit conserver l’historique des modifications antérieures.
+- Les évolutions intermédiaires corrigées ou remplacées restent mentionnées pour conserver l’historique technique.
+- Les archives plus anciennes retrouvées dans la bibliothèque sont reprises ci-dessous ; lorsque seul le nom de l’archive est disponible, cela est indiqué comme tel.
 
 ===============================================================================
-HISTORIQUE ANTÉRIEUR À v4.36
+ARCHIVES BFG ANTÉRIEURES RETROUVÉES — v3.65 À v3.98
 ===============================================================================
 
-TEST v4.31
-- Branche de robustesse hors ligne / PDF / zoom reprise par les versions suivantes.
-- Les archives disponibles identifient cette base comme « TEST v4.31 hors ligne PDF zoom ».
+TEST v3.65 — GAAR automatique
+- Automatisation de récupération GAAR avec fichiers NAS dédiés.
 
-TEST v4.32 — 2026-07-10
-- PDF FDS / GAAR : suppression des boutons zoom + et - dans les viewers.
-- PDF FDS / GAAR : ajout du bouton « Centrer PDF » à leur place.
-- Mode Écrire PDF : remplacement du bouton texte « Écrire PDF » par une icône crayon.
-- Mode Écrire PDF : ajout de la couleur blanche ; rouge, bleu, vert et noir conservés.
-- Pélicandromes : point bleu au centre lorsque le champ Observations contient « Eau ».
-- Pélicandromes : si le pélicandrome est armé, le point bleu est affiché au centre du point vert.
-- NOTAMs : ajout des filtres PAPI, UL, CONSTRUCTION, ALTITUDE, SECURITY, NACELLE et AIR START.
+TEST v3.66 — carte GAAR intégrée
+- Intégration de la carte/circuits GAAR dans BFG.
 
-TEST v4.33 — 2026-07-10
-- PDF FDS / GAAR : agrandissement de l’icône crayon du mode Écrire PDF.
-- Le bouton conserve l’icône crayon lorsque le mode écriture est actif, avec titre/aria-label mis à jour.
+TEST v3.67 à v3.75 — TEMSI / hors ligne / NAS
+- v3.67 : activation TEMSI et cache.
+- v3.68 : nettoyage local iPad.
+- v3.69 : suppression de l’échéance TEMSI 00 UTC.
+- v3.70 : TEMSI du jour sans échéance future.
+- v3.71 : logique TEMSI/FDS/GAAR autour du changement de jour.
+- v3.72 : GAAR du jour strict.
+- v3.73 : TEMSI pérenne + GAAR strict.
+- v3.74 : menu TEMSI limité aux échéances du jour.
+- v3.75 : récupération TEMSI NAS/AEROWEB.
 
-TEST v4.34 — 2026-07-10
-- NOTAMs : classement alphabétique des mots-clés dans la liste des filtres.
-- Conservation des filtres ajoutés en v4.32.
+TEST v3.76 à v3.81 — FDF / CNCASC
+- Intégration des données FDF CNCASC.
+- Évolutions successives de l’interface, des tableaux, de leur lisibilité, des statuts et de l’affichage sans scroll.
 
-TEST v4.35 — 2026-07-10
-- NOTAMs : ajout du bouton « Annuler sélection » juste avant « Annuler surlignage ».
-- « Annuler sélection » décoche tous les NOTAMs sélectionnés et réaffiche la liste complète.
-- Correction du bouton « Annuler surlignage ».
-- Si la pile d’annulation Pencil est vide ou invalide, le dernier surlignage visible est supprimé en secours.
+TEST v3.82 à v3.88 — TEMSI/FDS/accès Briefing/actualisation globale
+- v3.82 : TEMSI depuis le NAS.
+- v3.83 : diagnostic du script TEMSI puis correction.
+- v3.84 : attente FDS renforcée.
+- v3.85 : accès Briefing protégé.
+- v3.86 : date du PDF NOTAM mémorisée.
+- v3.87 : correction du texte GAAR.
+- v3.88 : actualisation globale du Briefing.
+
+TEST v3.89 à v3.92 — NOTAM / METAR-TAF
+- v3.89 : gestion des NOTAMs d’aérodromes permanents.
+- v3.90 : diagnostic CheckWX.
+- v3.91 : proxy CheckWX.
+- v3.92 : affichage brut METAR/TAF via proxy CheckWX.
+
+TEST v3.93 à v3.98 — cartes risques / FDS / SYNERGI
+- v3.93 : forcer la mise à jour des cartes de risques.
+- v3.94 : robustesse FDS + forçage cartes de risques.
+- v3.95 : FDS silencieuse.
+- v3.96 : bouton unique cartes de risques.
+- v3.97 : harmonisation des boutons cartes de risques.
+- v3.98 : FDS silencieuse + raccourci SYNERGI ; base stable retenue pour la série suivante.
+
+===============================================================================
+TEST v4.03 À v4.24 — HISTORIQUE RETROUVÉ
+===============================================================================
+
+TEST v4.03 — rollback stable
+- Retour à la base v3.98 après essais Pencil problématiques.
+- Accès Briefing de nouveau fonctionnel.
+
+TEST v4.04 à v4.13 — Apple Pencil NOTAMs
+- Abandon de la sélection native iPadOS au Pencil.
+- Création d’un surligneur BFG spécifique Apple Pencil.
+- Distinction scroll/sélection : appui immobile court pour sélectionner, mouvement vertical pour scroller.
+- Verrouillage du surlignage à une seule ligne.
+- Suppression d’un surlignage par tap.
+- v4.13 retenue comme base Pencil fonctionnelle.
+
+TEST v4.14 à v4.18 — accès Briefing / partage
+- v4.14 : connexion valable jusqu’à 23h00 + dernier partage mémorisé.
+- v4.15 : correction affichage version et champ Accès Briefing.
+- v4.16 à v4.18 : essais d’authentification POST simplifiée/form-urlencoded/text/plain.
+- Diagnostic final : Synology peut remplacer les réponses d’erreur JSON par une page HTML.
+
+TEST v4.19 — authentification GET
+- Passage à GET code=... pour éviter le POST intercepté par Synology.
+
+TEST v4.20 — authentification NAS robuste
+- auth-cncasc.php renvoie HTTP 200 avec JSON ok:false en cas d’erreur.
+- Suppression du « Failed to fetch » dû aux pages HTML 401 Synology.
+- Validation du hash sha256(password_salt . code).
+
+TEST v4.21 — partage compact
+- Suppression des grands panneaux de partage.
+- Affichage compact « Code de partage généré : BFG-xxxx-xx ».
+- Mémorisation locale du code sur l’iPad créateur.
+
+TEST v4.22 — sauvegarde / partage / clavier iPad
+- Message de sauvegarde maintenu après action.
+- Code de partage maintenu sur la ligne d’état.
+- Suppression de l’ouverture automatique du clavier au chargement de BFG.
+
+TEST v4.23 — persistance NOTAMs
+- Mémorisation locale des NOTAMs cochés et surlignés par identité stable.
+- Restauration si le NOTAM revient identique ; abandon de l’état si son contenu change.
+
+TEST v4.24 — GAAR via relais NAS
+- « Actualiser feuille GAAR » passe par BFG -> NAS -> Apps Script -> Gmail -> NAS -> BFG.
+- Ajout de /web/briefing-api/request-gaar-import.php.
+- Zoom GAAR par défaut réduit de 1.30 à 1.20.
+- Le dernier code de partage n’est affiché que le jour de sa création.
+- Début de la règle imposant un changelog dans chaque pack.
+
+===============================================================================
+TEST v4.25 À v4.35 — HISTORIQUE RETROUVÉ
+===============================================================================
+
+TEST v4.25 — annotations PDF FDS/GAAR
+- Bandeau « Actualisation globale terminée » en vert soutenu.
+- Mode « Écrire PDF » au Pencil pour FDS/GAAR.
+- Boutons Annuler trait et Effacer page ; annotations visuelles sans modification du PDF source.
+
+TEST v4.26 — gomme et couleurs
+- Ajout d’une gomme.
+- Couleurs d’annotation rouge, bleu, vert et noir.
+
+TEST v4.27 — épaisseur de trait
+- Curseur « Trait » de 1 à 10 par pas de 0,5.
+- Carrés de couleur uniformisés.
+
+TEST v4.28 — SUP AIP
+- Ajout du bouton « Carte SUP AIP » ouvrant supaip.fr.
+- « Ouvrir ForeFlight » devient « ForeFlight ».
+
+TEST v4.29 — regroupement AZBA / SUP AIP
+- Rubrique unique « AZBA / SUP AIP ».
+- Boutons « Carte SUP AIP / AZBA », « AZBA SIA », « ForeFlight », « Charger SUP AIP ».
+
+TEST v4.30 — fiabilisation rendu PDF FDS/GAAR
+- Reset complet avant nouveau rendu, rotation forcée à 0°, suppression des anciennes transformations CSS.
+- Attente d’une largeur stable, rerender au retour réseau/arrière-plan/resize/orientation.
+- Détection d’un rendu anormalement petit et bouton « Réafficher PDF ».
+
+TEST v4.31 — hors ligne renforcé / zoom PDF
+- Détection du hors ligne au démarrage et réduction des appels réseau inutiles.
+- Conservation/restauration locale renforcée FDS/GAAR/cartes de risques.
+- Zoom tactile amorti ; pas des boutons +/- réduit.
+
+TEST v4.32 — Centrer PDF / crayon / eau / filtres NOTAM
+- Remplacement des boutons zoom par « Centrer PDF ».
+- Icône crayon et ajout de la couleur blanche.
+- Point bleu sur les pélicandromes dont l’observation contient « Eau ».
+- Filtres PAPI, UL, CONSTRUCTION, ALTITUDE, SECURITY, NACELLE, AIR START.
+
+TEST v4.33 — icône crayon agrandie
+- Icône crayon plus lisible et conservée lorsque le mode écriture est actif.
+
+TEST v4.34 — filtres NOTAM alphabétiques
+- Classement alphabétique des mots-clés.
+
+TEST v4.35 — annulation sélection/surlignage
+- Ajout du bouton « Annuler sélection ».
+- Correction « Annuler surlignage » avec mécanisme de secours.
 
 ===============================================================================
 TEST v4.36 — 2026-07-11
@@ -991,59 +2584,49 @@ Fichier NAS :
 
 
 ===============================================================================
-VERSION PÉRENNE v2026.26 — 2026-09-19
+TEST v4.72 — 2026-09-20
 Base : TEST v4.71
 ===============================================================================
 
-REPRISE FONCTIONNELLE :
-- Reprise intégrale de la TEST v4.71.
-- Association BFG ↔ NPF-Q400 via le NAS, sans dépendance entre les localStorage des deux PWA.
-- Association NPF-Q400 par code temporaire aléatoire à 8 chiffres, à usage unique.
-- Réassociation explicite possible depuis BFG avec remplacement de l'ancienne association.
-- Diagnostic d'association NPF-Q400 conservé dans un panneau repliable.
-- Synchronisation des NOTAMs BFG vers NPF-Q400 via le NAS.
-- FDS : si la FDS du jour n'est pas encore présente sur le NAS au démarrage, BFG lance automatiquement la recherche Gmail/NAS et charge le document dès qu'il devient disponible.
-- FDS : lors d'un réveil de la PWA après changement de jour sur iPad, le contrôle de la FDS du jour est relancé automatiquement.
-- SUP AIP : bouton « Charger SUP AIP » conservé après chargement.
-- SUP AIP : mémorisation persistante dans IndexedDB jusqu'à suppression volontaire.
-- SUP AIP : suppression individuelle persistante avec bouton X rouge / X noire renforcée.
-- SUP AIP : rendu PDF fiabilisé après chargement et après restauration à la réouverture de BFG.
+NOTAMS — PREMIÈRE INTÉGRATION SDVFR DANS BFG TEST :
+- Ajout d’un bouton séparé « SDVFR TEST LFML/LFMT » dans la zone d’importation NOTAM.
+- Le flux NATS existant « Importation Auto » reste entièrement conservé et inchangé.
+- Cette première intégration BFG est volontairement limitée aux deux terrains déjà validés côté relais :
+  * LFML — Marseille Provence ;
+  * LFMT — Montpellier Méditerranée.
+- BFG envoie la demande au NAS via `request-sdvfr-notams.php` avec le jeton BFG existant.
+- Le service VPS `bfg-sdvfr-worker.service` détecte la demande, ouvre une session SDVFR et interroge `/features/on-tap`.
+- BFG interroge ensuite `get-sdvfr-notams-result.php` jusqu’à réception d’un résultat `success` ou `partial`.
+- Les objets NOTAM SDVFR (`code` / `label` / `description`) sont convertis localement au format texte déjà compris par l’analyseur NOTAM BFG.
+- Une ligne Q synthétique est ajoutée lorsque SDVFR ne fournit pas de ligne Q, afin de conserver l’analyseur BFG existant sans le réécrire.
+- Le numéro NOTAM est extrait du code SDVFR (ex. `LFFA-A1642/26` → `A1642/26`) afin de conserver les identifiants persistants des NOTAMs.
+- Les dates B) / C) et le texte E) reçus de SDVFR restent utilisés par le filtre de validité et les filtres existants.
+- Lors de ce test SDVFR, les anciens `.notam-item` affichés sont supprimés avant insertion pour éviter tout mélange avec un précédent jeu NATS.
+- Après intégration, la sauvegarde locale BFG et la publication du snapshot NOTAM pour NPF-Q400 sont relancées comme pour l’import existant.
+- Un statut dédié affiche l’attente du relais VPS, la récupération en cours, le nombre de NOTAMs reçus ou l’erreur éventuelle.
 
-RÈGLES PÉRENNES :
-- Version affichée et interne : 2026.26.
-- Suppression des mentions TEST visibles.
-- Nom PWA : « Briefing FDF » ; nom court : « Briefing ».
-- Tour de France : FORÇAGE TEST DÉSACTIVÉ.
-- Tour de France : affichage uniquement du 04/07/2026 au 26/07/2026 inclus.
-- Tour de France : en dehors de cette période, la rubrique et son entrée dans la navigation restent masquées.
-- Source GAAR : bfg-v2026.26.
-- Source demande cartes des risques : bfg-v2026.26.
-- Service worker : version 2026.26.
-- Cache PWA : briefing-fdf-v2026-26-npf-fds-supaip-r1.
-- Le service worker ne supprime que les anciens caches de production BFG ; les caches NPF-Q400 et le cache partagé NOTAM restent préservés.
-- Aucun nouveau fichier NAS à remplacer par rapport à la TEST v4.71.
-- Le npf-docs-api.php déjà installé pour l'association NPF-Q400 reste nécessaire et inchangé.
+CIBLE DE VALIDATION :
+- Vérifier sur BFG TEST que le clic sur « SDVFR TEST LFML/LFMT » affiche les NOTAMs LFML et LFMT.
+- Vérifier le nombre affiché par rapport au `totalNotams` retourné par le relais.
+- Vérifier les filtres par date, mots-clés, sélection, masquage persistant, METAR/TAF et export/snapshot NPF-Q400.
+- Une fois ce flux validé, l’étape suivante sera d’étendre la demande SDVFR aux terrains opérationnels voulus et de décider du remplacement éventuel du flux NATS.
 
-CONTRÔLES RÉALISÉS :
-- Vérification explicite de TDF_FORCE_DISPLAY_OVERRIDE = false.
-- Vérification de la fenêtre Tour de France : début 2026-07-04, masquage à partir du 2026-07-27.
-- Vérification de l'absence de « TEST » dans index.html, manifest.json et sw.js.
-- Vérification de l'absence de source bfg-test.
-- Vérification des sources de production bfg-v2026.26 pour GAAR et cartes des risques.
-- Vérification syntaxique JavaScript.
-- Vérification syntaxique du service worker.
-- Vérification du manifeste JSON.
+NON-RÉGRESSION :
+- Aucun changement du flux NATS automatique existant.
+- Aucun changement FDS, GAAR, TEMSI, pélicandromes, FDF CNCASC, disponibilité avions, NPF-Q400, SUP AIP ou PDF/annotations.
+- Aucun nouveau fichier PHP NAS : les quatre endpoints SDVFR déjà installés sont réutilisés.
+- Aucun changement du worker VPS : le service SDVFR déjà validé est réutilisé.
 
 Fichiers BFG modifiés :
 - index.html
 - manifest.json
 - sw.js
 
-Fichier NAS :
-- Aucun changement.
+Fichiers NAS / VPS :
+- Aucun changement supplémentaire pour v4.72.
 
 ===============================================================================
-FICHIERS DE LA VERSION ACTUELLE v2026.26
+FICHIERS DE LA VERSION ACTUELLE v4.72
 ===============================================================================
 
 Fichiers BFG :
@@ -1056,3 +2639,197 @@ Fichier NAS :
 
 Fichier créé automatiquement par l’API lors de la première association :
 - /web/briefing-data/npf-auth-bridge-v1.json
+
+
+===============================================================================
+TEST v4.73 — 2026-09-20
+Base : TEST v4.72
+===============================================================================
+
+NOTAMS SDVFR — CORRECTION DU FILTRE « VALIDES AUJOURD’HUI » :
+- Correction de la conversion des dates de validité B) / C) fournies par SDVFR.
+- SDVFR renvoie ces dates sous une forme lisible telle que `B) 2026 Mar 19 00:00` et `C) 2026 Oct 29 23:59`, alors que l’analyseur historique BFG attend `B) 2603190000` / `C) 2610292359`.
+- Les lignes B) et C) SDVFR sont désormais normalisées localement au format OACI YYMMDDHHMM avant passage dans l’analyseur BFG.
+- Le filtre déjà existant « Afficher uniquement les NOTAMs valides aujourd’hui » peut donc de nouveau déterminer correctement les dates de début et de fin et masquer les NOTAMs futurs.
+- Les NOTAMs permanents (`C) PERM`) restent inchangés et continuent d’être gérés par l’analyseur existant.
+- Les filtres par mots-clés, la sélection, le masquage persistant et le flux NATS restent inchangés.
+
+VALIDATION ATTENDUE :
+- Avec le filtre de date coché, un NOTAM LFML dont B) est postérieur à aujourd’hui ne doit plus être affiché.
+- Un NOTAM actif aujourd’hui doit rester affiché.
+- En décochant le filtre de date, les NOTAMs futurs doivent redevenir visibles.
+
+NON-RÉGRESSION :
+- Aucun changement côté NAS ou VPS.
+- Aucun changement du service `bfg-sdvfr-worker.service`.
+- Aucun changement du flux NATS.
+- Le test SDVFR reste limité à LFML + LFMT dans cette version.
+
+Fichiers BFG modifiés :
+- index.html
+- manifest.json
+- sw.js
+
+Fichiers NAS / VPS :
+- Aucun changement.
+
+===============================================================================
+TEST v4.74 — 2026-09-20
+Base : TEST v4.73
+===============================================================================
+
+NOTAMS SDVFR — GÉNÉRALISATION AUX PÉLICANDROMES :
+- SDVFR appliqué aux 27 pélicandromes BFG.
+- LFMT supprimé du périmètre SDVFR : Montpellier n’est pas un pélicandrome.
+- Le flux NATS reste inchangé et disponible en parallèle.
+
+FILTRES MOTS-CLÉS :
+- Les filtres SDVFR travaillent sur le texte brut du NOTAM.
+- Normalisation casse, accents, ponctuation et espaces avant comparaison.
+- Les filtres date + mots-clés sont réappliqués après restauration des états persistants.
+
+Fichiers BFG modifiés :
+- index.html
+- manifest.json
+- sw.js
+
+NAS / VPS :
+- Aucun changement.
+
+===============================================================================
+TEST v4.75 — 2026-09-20
+Base : TEST v4.74
+===============================================================================
+
+COMPARAISON NOTAMS NATS / SDVFR :
+- Ajout d’un bouton unique de bascule « Comparer : afficher SDVFR/NATS ».
+- Les jeux NATS et SDVFR restent séparés en mémoire ; aucune fusion des sources.
+- Une fois les deux sources chargées, la bascule est immédiate et ne nécessite pas un nouveau téléchargement.
+- Si la source demandée n’est pas encore chargée, BFG déclenche automatiquement son acquisition.
+- Les mêmes filtres date/mots-clés, sélections, masquages persistants et surlignages sont réappliqués après chaque bascule.
+- Les boutons d’acquisition deviennent « Actualiser NATS » et « Actualiser SDVFR ».
+- LFMT reste exclu du périmètre SDVFR.
+
+METAR / TAF SDVFR :
+- Le worker VPS exploite maintenant nearestMetar et nearestTaf déjà présents dans la réponse /features/on-tap.
+- Aucun nouvel endpoint SDVFR n’est nécessaire.
+- Pour chaque terrain, le worker vérifie que l’OACI contenu dans le bulletin correspond au terrain demandé avant transmission à BFG.
+- Les chaînes METAR/TAF brutes SDVFR sont affichées dans les conteneurs météo BFG existants.
+- Le bouton « Charger Météo » utilise SDVFR en priorité.
+- CheckWX est conservé comme secours pour les terrains ne disposant d’aucune météo SDVFR ou en cas d’échec du relais.
+- Le bouton de rafraîchissement individuel tente également SDVFR en premier puis CheckWX en secours.
+- Une récupération SDVFR sert simultanément aux NOTAMs et à la météo, sans lancer 54 requêtes météo supplémentaires.
+
+SERVEUR :
+- Modification du worker VPS bfg-sdvfr-worker.py pour transmettre metar/taf dans chaque entrée airports[].
+- Aucun changement des quatre endpoints PHP NAS : update-sdvfr-notams-result.php conserve déjà le tableau airports complet.
+- Les identifiants SDVFR restent uniquement sur le VPS.
+
+Fichiers BFG modifiés :
+- index.html
+- manifest.json
+- sw.js
+
+Fichier VPS à remplacer :
+- /home/ubuntu/bfg-worker/bfg-sdvfr-worker.py
+
+Après remplacement du worker :
+- redémarrer bfg-sdvfr-worker.service.
+
+Contrôles avant livraison :
+- syntaxe JavaScript inline de l’index ;
+- manifeste JSON ;
+- syntaxe du service worker ;
+- compilation Python du worker.
+
+===============================================================================
+TEST v4.76 — 2026-09-20
+Base : TEST v4.75
+===============================================================================
+
+CORRECTION CONNEXION BFG :
+- Correction d’une référence JavaScript erronée : BFG_NOTAM_SOURCE_SDVFR -> BFG_NOTAM_SOURCE_SDVFR_.
+- Cette erreur interrompait l’initialisation JavaScript avant l’attachement du bouton de connexion BFG.
+- Aucun changement du mécanisme d’authentification NAS lui-même.
+- Worker VPS : fonctionnement identique à la version météo de v4.75 ; seul l’habillage de version est aligné sur v4.76.
+
+CORRECTIONS DE NON-RÉGRESSION :
+- Libellés visibles corrigés vers v4.76.
+- LFMT rétabli dans les deux tables générales de noms d’aérodromes.
+- LFMT reste exclu uniquement du périmètre SDVFR pélicandromes.
+- Version du service worker alignée sur v4.76 ; URL d’enregistrement et contrôle de version alignés ; nouveau cache v4.76 r1.
+
+VALIDATION :
+- Syntaxe de tous les scripts JavaScript inline : OK.
+- Manifest JSON : OK.
+- Service worker JavaScript : OK.
+- Worker Python : compilation OK.
+
+===============================================================================
+FICHIERS DE LA VERSION ACTUELLE v4.76
+===============================================================================
+
+- 1_Modifications_v4.76.txt
+- 2_Index_v4.76.txt
+- 3_Manifest_v4.76.txt
+- 4_Sw_v4.76.txt
+- 5_bfg-sdvfr-worker_v4.76.txt
+
+===============================================================================
+TEST v4.80 — 2026-09-20
+Base : TEST v4.79 validée
+===============================================================================
+
+INTERFACE NOTAM :
+- Suppression du double affichage simultané des deux sources.
+- Source NOTAM par défaut affichée sans mention de fournisseur : titres du type « LFTW - NIMES GARONS ».
+- NATS devient une source alternative activable depuis « Importation NOTAM » avec la case « Utiliser NATS comme source NOTAM ».
+- Lorsque NATS est activé, le titre du terrain précise explicitement « - NATS ».
+- Le choix « Utiliser NATS comme source NOTAM » est mémorisé localement.
+- Les sélections, masquages et surlignages restent séparés par source lors d’un changement de source.
+
+ZONE IMPORTATION NOTAM :
+- Transformation en panneau déroulant replié par défaut.
+- Les commandes NATS, le lien NATS, l’import manuel et les informations d’import automatique sont masqués lorsque le panneau est replié.
+- Suppression des mentions visibles de la source technique utilisée pour les NOTAM par défaut.
+
+ZONE ANALYSE NOTAM :
+- Ajout du bouton « Actualiser NOTAMs » devant « Garder la sélection ».
+- Déplacement du statut d’actualisation des NOTAM sous les boutons d’analyse.
+- Ajout d’une ligne permanente « Dernier téléchargement NOTAM : JJ/MM/AAAA à HH:MM ».
+- La date/heure correspond à la source actuellement affichée.
+- Déplacement du bouton « Actualiser Météo » à côté de « Annuler surlignage ».
+- Le bouton « Actualiser NOTAMs » et les commandes supérieures restent visibles même avant le premier bulletin.
+- Conservation des filtres CRANE et GRUE.
+
+ACTUALISATION ET CONNEXION :
+- Les NOTAM par défaut restent mis à jour au maximum une fois par jour automatiquement ; le bouton « Actualiser NOTAMs » permet une actualisation forcée.
+- NATS reste téléchargé automatiquement en arrière-plan à chaque ouverture de BFG lorsqu’une session Briefing valide existe.
+- L’actualisation NATS de démarrage ne remplace pas la source affichée si la case NATS n’est pas cochée.
+- À la connexion BFG, suppression du message détaillant le téléchargement NATS.
+- Message final de connexion : « NOTAM et METAR/TAF chargés. »
+- À la connexion, la météo issue du flux NOTAM est appliquée ; CheckWX complète uniquement les terrains manquants.
+- Le comportement d’actualisation météo automatique au-delà de 35 minutes est conservé.
+- La mention CHECKWX reste affichée uniquement lorsque CheckWX est effectivement utilisé en secours.
+
+ROBUSTESSE :
+- Lors du téléchargement automatique du PDF NATS, l’analyse intermédiaire du PDF est neutralisée afin d’éviter qu’un texte NATS soit momentanément attribué à la source NOTAM par défaut.
+- Le texte NATS et le texte NOTAM par défaut restent stockés séparément dans les sauvegardes.
+- Le rendu final n’utilise qu’une seule source à la fois.
+
+Fichiers BFG modifiés :
+- index.html
+- manifest.json
+- sw.js
+
+NAS / VPS :
+- Aucun changement.
+- Worker VPS inchangé fonctionnellement.
+
+Contrôles avant livraison :
+- syntaxe de tous les scripts JavaScript inline ;
+- manifeste JSON ;
+- syntaxe du service worker ;
+- compilation Python du worker ;
+- cohérence des versions actives v4.80 ;
+- absence de mention visible de la source technique NOTAM par défaut dans l’interface.
