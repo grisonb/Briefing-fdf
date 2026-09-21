@@ -1,7 +1,7 @@
 {
   "name": "Briefing FDF",
   "short_name": "Briefing",
-  "description": "Briefing FDF v2026.26 — association NPF-Q400, synchronisation NOTAM, FDS automatique et SUP AIP persistants",
+  "description": "Briefing FDF v2026.27 — base TEST v5.15, NOTAM persistants et carte SUP AIP intégrée",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
