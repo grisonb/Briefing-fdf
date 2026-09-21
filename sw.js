@@ -1,5 +1,5 @@
-const BFG_SW_VERSION = '2026.26';
-const CACHE_NAME = 'briefing-fdf-v2026-26-npf-fds-supaip-r1';
+const BFG_SW_VERSION = '2026.27';
+const CACHE_NAME = 'briefing-fdf-v2026-27-notam-supaip-r1';
 
 const LOCAL_ASSETS = [
   './manifest.json',
@@ -211,12 +211,13 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
   const sameOrigin = url.origin === self.location.origin;
 
-  // v4.51 — METAR/TAF : ne surtout pas appeler event.respondWith().
-  // Le navigateur effectue alors la requête réseau native directement vers le proxy NAS.
+  // v5.01 — METAR/TAF et relais SUP AIP : ne surtout pas appeler event.respondWith().
+  // Le navigateur effectue alors la requête réseau native directement vers les relais NAS.
   // Cette exclusion doit précéder la règle NAS et la règle générique des ressources externes.
   if (!sameOrigin &&
       url.hostname === 'grisonb.synology.me' &&
-      url.pathname.includes('/briefing-api/get-metar-taf.php')) {
+      (url.pathname.includes('/briefing-api/get-metar-taf.php') ||
+       url.pathname.includes('/briefing-api/get-sdvfr-temporary-airspaces.php'))) {
     return;
   }
 
@@ -293,7 +294,7 @@ self.addEventListener('fetch', (event) => {
   const isNavigation = event.request.mode === 'navigate';
   const isIndex =
     url.pathname.endsWith('/index.html') ||
-    url.pathname.endsWith('/Briefing_fdf/') ||
+    url.pathname.endsWith('/Briefing_fdf_TEST/') ||
     url.pathname.endsWith('/Briefing-fdf/');
 
   if (isNavigation || isIndex) {
