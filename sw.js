@@ -1,5 +1,5 @@
-const BFG_SW_VERSION = '2026.27';
-const CACHE_NAME = 'briefing-fdf-v2026-27-notam-supaip-r1';
+const BFG_SW_VERSION = '2026.28';
+const CACHE_NAME = 'briefing-fdf-v2026-28-promotion-v530-r1';
 
 const LOCAL_ASSETS = [
   './manifest.json',
@@ -52,12 +52,39 @@ async function fetchWithTimeout(request, options = {}, timeoutMs = 4000, waitFor
   }
 }
 
-async function networkFirst(request, timeoutMs = 3500) {
+// v5.21 — dernier recours d'une navigation hors ligne sans aucune copie
+// d'index.html : une page lisible plutôt qu'une erreur FetchEvent.
+function bfgOfflineUnavailableResponse() {
+  const html = '<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8">'
+    + '<meta name="viewport" content="width=device-width, initial-scale=1.0">'
+    + '<title>BFG indisponible hors ligne</title></head>'
+    + '<body style="font-family:-apple-system,Helvetica,Arial,sans-serif;margin:40px 20px;text-align:center;color:#2c3e50;">'
+    + '<h1 style="font-size:1.4em;">BFG indisponible hors ligne</h1>'
+    + '<p>Ouvrir BFG une fois en ligne pour le conserver sur cet appareil.</p>'
+    + '</body></html>';
+  return new Response(html, {
+    status: 503,
+    headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' }
+  });
+}
+
+async function networkFirst(request, timeoutMs = 3500, isNavigation = false) {
   try {
     const networkRes = await fetchWithTimeout(request, { cache: 'no-store' }, timeoutMs, true);
     if (networkRes && networkRes.ok) {
       const cache = await caches.open(CACHE_NAME);
       cache.put(request, networkRes.clone()).catch(() => {});
+      // v5.21 — une navigation réussie reconstitue aussi la copie de repli
+      // './index.html' si elle manque (cache applicatif effacé).
+      // Le clone est pris tout de suite : le corps de networkRes sera consommé
+      // par la page avant la fin de cache.match().
+      if (isNavigation) {
+        const indexCopy = networkRes.clone();
+        cache.match('./index.html').then((existing) => {
+          if (!existing) return cache.put('./index.html', indexCopy);
+          return null;
+        }).catch(() => {});
+      }
     }
     return networkRes;
   } catch (err) {
@@ -65,6 +92,7 @@ async function networkFirst(request, timeoutMs = 3500) {
     if (cached) return cached;
     const fallback = await caches.match('./index.html');
     if (fallback) return fallback;
+    if (isNavigation) return bfgOfflineUnavailableResponse();
     throw err;
   }
 }
@@ -211,6 +239,16 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
   const sameOrigin = url.origin === self.location.origin;
 
+  // v5.17 — dépôt de cartes VAC NPF-Q400-VAC.
+  // Publié sous la même origine que BFG mais hors de son périmètre applicatif :
+  // sans cette règle, il tomberait dans le cacheFirst final, ce qui figerait le
+  // manifest et accumulerait les PDF dans le cache applicatif BFG.
+  // Réseau pur : les PDF validés sont conservés par index.html dans IndexedDB.
+  if (sameOrigin && url.pathname.startsWith('/NPF-Q400-VAC/')) {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+
   // v5.01 — METAR/TAF et relais SUP AIP : ne surtout pas appeler event.respondWith().
   // Le navigateur effectue alors la requête réseau native directement vers les relais NAS.
   // Cette exclusion doit précéder la règle NAS et la règle générique des ressources externes.
@@ -298,7 +336,7 @@ self.addEventListener('fetch', (event) => {
     url.pathname.endsWith('/Briefing-fdf/');
 
   if (isNavigation || isIndex) {
-    event.respondWith(networkFirst(event.request, 3500));
+    event.respondWith(networkFirst(event.request, 3500, isNavigation));
     return;
   }
 

@@ -1,7 +1,7 @@
 {
   "name": "Briefing FDF",
   "short_name": "Briefing",
-  "description": "Briefing FDF v2026.27 — base TEST v5.15, NOTAM persistants et carte SUP AIP intégrée",
+  "description": "Briefing FDF v2026.28 — base TEST v5.30 : VAC, RTBA, Actualiser complet, NOTAM en deux couches",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

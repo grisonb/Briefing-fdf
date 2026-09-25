@@ -1,3 +1,1897 @@
+VERSION PÉRENNE v2026.28 — 2026-09-25
+Base : TEST v5.30 (Briefing_fdf_TEST, commit 5413372)
+===============================================================================
+
+PROMOTION COMPLÈTE DE LA TEST v5.30
+- Méthode : fusion à trois voies, avec pour base la TEST v5.15 (base de la
+  v2026.27), d'un côté la pérenne v2026.27, de l'autre la TEST v5.30. Pas de
+  copie intégrale d'index.html.
+- La pérenne v2026.27 ne différait de la TEST v5.15 que par ses écarts pérennes
+  (35 lignes). La fusion ne présentait de conflit que sur les lignes de version.
+  Tout le fonctionnel v5.16 à v5.30 est repris tel quel.
+- Sauvegarde avant promotion : tag Git avant-promotion-v2026.28 sur le commit
+  9bc82bf (v2026.27), poussé sur GitHub.
+
+FONCTIONS REPRISES DE LA TEST (détail dans les entrées TEST ci-dessous)
+- v5.17 / v5.18 : cartes VAC par terrain (BfgVacDB, dépôt NPF-Q400-VAC), bouton
+  VAC à droite du bandeau ; service worker : /NPF-Q400-VAC/ en réseau pur.
+- v5.19 : état NOTAM en deux couches (personnelle permanente, reçue jusqu'à
+  23:00), partage complet (byId), « Effacer » complet par préfixes (connexion
+  et association NPF-Q400 conservées), altitudes SUP AIP (FL, ft AMSL, ft ASFC,
+  SFC, UNL), filtre FL max sur les valeurs MSL.
+- v5.20 : bouton VAC grisé, téléchargement automatique des VAC, bandeau VAC,
+  alerte cycle AIRAC, étapes du chargement des NOTAM.
+- v5.21 : « Effacer » ne casse plus le hors ligne, page de repli hors ligne du
+  service worker, NOTAM une fois par jour, météo à chaque ouverture, VAC en
+  parallèle et à l'ouverture, pas de page blanche pour une VAC hors ligne.
+- v5.22 à v5.25, v5.30 : activations RTBA sur la carte AZBA / SUP AIP (fenêtre
+  de 4 h, regroupement par secteur, horaires UTC, actif clignotant, à venir
+  fixe), avertissement « Seules les activations des 4 prochaines heures sont
+  affichées » avec lien vers la page AZBA du SIA.
+- v5.26 à v5.29 : bouton « Actualiser » complet et son bandeau, demandes NOTAM /
+  météo l'une après l'autre, nouveaux essais (erreur réseau, créneau occupé),
+  cache NAS de 5 min et file d'attente (tickets, « Actualiser » forcé,
+  « NOTAM à jour (récupérés à HH:MM) », attente portée à 180 s).
+- v5.28 : image du Tour de France sans src vide.
+
+ÉCARTS PÉRENNES CONSERVÉS
+- Titre « Briefing Fdf », titre daté « Briefing Fdf du … », nom PWA
+  « Briefing FDF », nom court « Briefing ».
+- Panneaux « Association NPF-Q400 » et « Diagnostic BFG » masqués.
+- TDF_FORCE_DISPLAY_OVERRIDE = false : Tour de France du 04/07 au 26/07/2026
+  seulement.
+- Ordre des boutons de fin de liste NOTAM : « … Annuler Surlignage »,
+  « Sauvegarder en Pdf ». Libellé « Charger Pdf SUP AIP ».
+- Service worker : purge d'activate limitée à 'briefing-fdf-v'.
+
+IDENTITÉ v2026.28
+- Version affichée : v2026.28 (APP_VERSION = numéro seul).
+- manifest.json?v=2026.28 ; description du manifest mise à jour.
+- Source GAAR et demande cartes des risques : bfg-v2026.28.
+- Service worker : version 2026.28, cache briefing-fdf-v2026-28-promotion-v530-r1.
+- Inchangés, comme dans la TEST (constat 0.B1 du journal TEST) :
+  BFG_REQUIRED_SW_VERSION_ = '5.07', ./sw.js?v=5.07, apple-touch-icon ?v=4.24.
+
+AUCUNE MENTION VISIBLE DE « SDVFR » (règle permanente, liste 0.B5)
+- Pied de page : « Données : Météo-France, SIA, Windy.com. Page non commerciale,
+  à usage personnel. »
+- METAR / TAF absents : « Non disponible. » (4 occurrences). Une sauvegarde ou
+  un partage contenant l'ancien texte « Non disponible via SDVFR. » est corrigé à
+  la restauration.
+- Popup RTBA : « Récupéré à HH:MM » (ligne « Source » supprimée).
+- Statut RTBA vide : « Aucune activation RTBA reçue pour les 4 prochaines
+  heures. » (libellé BFG_RTBA_WINDOW_LABEL_).
+- Zones RTBA non dessinables : « ⚠️ RTBA : N zone(s) reçue(s), affichage non
+  disponible. Consulter la page AZBA du SIA. »
+- Messages relayés du NAS / worker (NOTAM erreur, NOTAM actualisation
+  impossible, Météo manuelle ×2, import NATS ×2) : affichés tels quels, sauf
+  s'ils contiennent « SDVFR » -> remplacés par « erreur de récupération »
+  (nouvelle fonction bfgPublicErrorText_).
+- Messages internes du relais SUP AIP reformulés sans le nom (ils ne sont
+  visibles que dans le diagnostic).
+- Non concernés : panneau Diagnostic BFG, console, identifiants, clés, URL.
+- Règle « NPF-Q400 » : aucun texte affiché n'écrit « NPF » seul.
+
+COHABITATION AVEC LA TEST ET NPF-Q400 (même origine grisonb.github.io)
+- « Effacer » : règle symétrique de la TEST. La coque pérenne 'briefing-fdf-v…'
+  est conservée, vidée de ses seules données d'une autre origine (PDF NAS,
+  TEMSI) ; la coque TEST 'briefing-fdf-test-…' n'est jamais touchée. Les caches
+  de données BFG restent effacés. Aucun cache npf-q400-* n'est concerné.
+- « Forcer MAJ » : ne désinscrit plus que le service worker de la pérenne
+  (portée /Briefing-fdf/) et ne supprime plus que les caches 'briefing-fdf-v…'.
+  Auparavant, il désinscrivait tous les service workers et vidait tous les
+  caches de l'origine, TEST et NPF-Q400 compris.
+- Service worker : la purge d'activate ne concerne que 'briefing-fdf-v'.
+  migratePreviousBfgDataCaches_ lit les anciens caches sans les modifier.
+- localStorage et IndexedDB : la TEST et la pérenne utilisent les mêmes clés et
+  les mêmes bases. SUR IPAD, chaque PWA installée a son propre stockage :
+  vérifié le 25/09/2026, « Effacer » dans la TEST n'a eu aucun effet sur la
+  pérenne. Le partage ne concerne donc que l'usage des deux versions dans un
+  même navigateur (PC) : « Effacer » dans l'une y vide aussi les données de
+  l'autre. Séparer les clés casserait la persistance NOTAM des appareils :
+  non fait, volontairement.
+- Texte de confirmation et aide d'« Effacer » : mention de la « trace de
+  diagnostic de démarrage » retirée (supprimée depuis la TEST v5.20).
+
+MIGRATION DES DONNÉES (v2026.27 -> v2026.28)
+- Aucune clé, base IndexedDB, version de base ni cache de données renommé ou
+  supprimé. Toutes les données de la v2026.27 sont relues : cases, surlignages
+  et marqueurs d'effacement (briefingFdfPersistentNotamStateV1), sauvegarde
+  locale (briefingSessionDB, relue par checkedIds / highlights / signatures en
+  l'absence de byId), « Garder la sélection », connexion, association NPF-Q400.
+- Couche reçue absente au premier lancement : aucune ancienne donnée n'est
+  classée « reçue ».
+- Nouvelles clés créées au besoin : briefingFdfReceivedNotamStateV1,
+  briefingFdfNotamLoginDayV1, bfgVac*, bfgRtbaCacheV1, base BfgVacDB.
+- Premier lancement : vérification VAC et téléchargement des cartes des
+  pélicandromes en tâche de fond ; NOTAM retéléchargés à la première connexion.
+- Rien d'obsolète à nettoyer : l'ancienne coque briefing-fdf-v2026-27-… est
+  supprimée par le nouveau service worker après recopie des PDF NAS.
+
+SERVEUR (NAS / WORKER VPS) — AUCUNE MODIFICATION
+- Toutes les dépendances de la v5.30 sont en place (journal TEST) : erreurs en
+  HTTP 200 (24/09), cache NAS NOTAM / météo et file d'attente (25/09), RTBA
+  240 min (24/09), dépôt NPF-Q400-VAC.
+- Ticket bloqué plus de 180 s : vérifié dans sdvfr-notams-queue-lib.php (copie
+  livrée, 23 253 octets) : terrains sans donnée en échec « Délai d'attente
+  dépassé : serveur NOTAM / météo occupé. », réponse status 'error' (ou
+  'partial' si des terrains ont été obtenus), toujours en HTTP 200. Ticket
+  inconnu : status 'error', errorCode unknown_ticket. BFG échoue donc aussitôt
+  sur status 'error' ; en pratique, un ticket bloqué échoue vers 3 min des deux
+  côtés.
+
+À REVOIR (repris de la TEST, non corrigé ici)
+- Entre 23:00 et minuit, après expiration de la couche reçue, des cases ou
+  surlignages reçus d'un partage peuvent être restaurés depuis la sauvegarde
+  locale du jour (champs checkedIds / highlights, lus sans filtre d'origine) et
+  devenir personnels. Défaut présent dans la TEST v5.30. Correctif à faire
+  d'abord dans une TEST v5.31, puis à promouvoir.
+
+RETOUR ARRIÈRE
+- git revert du commit v2026.28 puis push : le site revient à la v2026.27 ; son
+  sw.js, différent, se réinstalle sur les iPad et supprime la coque v2026.28.
+  La v2026.27 relit l'état personnel et les sauvegardes, et ignore les
+  nouvelles clés.
+- Ou : git checkout avant-promotion-v2026.28 -- index.html sw.js manifest.json
+  CHANGELOG_BFG.txt, puis commit et push.
+
+CONTRÔLES AVANT LIVRAISON
+- Syntaxe des deux blocs JavaScript inline d'index.html et de sw.js vérifiée
+  (node --check) ; manifest JSON valide ; aucun marqueur de conflit.
+- Différence TEST v5.30 -> v2026.28 relue ligne par ligne : uniquement les écarts
+  pérennes, l'identité v2026.28 et les adaptations ci-dessus.
+- Aucune mention visible de SDVFR ni de TEST ; aucun « NPF » seul affiché.
+- Persistance NOTAM, arbitrage v5.15, surligneur Apple Pencil, repli hors ligne
+  NAS et ordre du routage du service worker inchangés par rapport à la TEST v5.30.
+- Entrées TEST v5.16 à v5.30 recopiées ci-dessous, telles quelles ; historique
+  v2026.27 et antérieur conservé intégralement.
+
+TEST v5.30 — 2026-09-25
+Base : TEST v5.29
+===============================================================================
+
+AVERTISSEMENT SUR LA FENÊTRE RTBA. Aucune modification du NAS ni du worker.
+
+1. AJOUT
+- Sous la carte AZBA / SUP AIP, juste sous la ligne d'état du RTBA
+  (#rtba-map-notice) : « ⓘ Seules les activations des 4 prochaines heures sont
+  affichées. Pour la suite de la journée, consulter la page AZBA du SIA. »
+- « page AZBA du SIA » : lien vers https://www.sia.aviation-civile.gouv.fr/schedules,
+  ouvert dans un nouvel onglet (<a target="_blank" rel="noopener">, même méthode
+  que le bouton « AZBA SIA » existant).
+- Visible tant que la case « RTBA » est cochée, masqué quand elle est décochée ;
+  masqué par défaut tant que la couche RTBA n'est pas initialisée (carte non
+  chargée). Pas de bouton de fermeture. Petit texte gris, lien orangé, sous la
+  carte : aucun décalage de la carte.
+- Libellé de la fenêtre dans la constante BFG_RTBA_WINDOW_LABEL_
+  ('4 prochaines heures'), en prévision d'une anticipation évolutive.
+- Aucune mention de SDVFR : texte utilisable tel quel dans la pérenne.
+
+2. DÉCISION NOTÉE POUR PLUS TARD — NON CODÉE
+- Anticipation RTBA évolutive, calculée par le worker :
+  anticipation = max(240 min, minutes restant jusqu'à 23:00 heure de Paris).
+  À tester un jour d'activité RTBA au-delà de 4 h avant tout déploiement
+  (SDVFR a proposé 240 min comme valeur maximale pour les AZBA : le
+  comportement au-delà n'est PAS connu). BFG_RTBA_WINDOW_LABEL_ et la légende
+  « RTBA à venir (< 4 h) » seront alors à adapter. STATUT : NON IMPLÉMENTÉ.
+
+3. ESSAIS v5.29
+- « Actualiser » : 40 s au total ; UNE seule demande NOTAM (3 s, 27 terrains
+  servis par le cache NAS) ; météo sans seconde demande ; puis NATS 37 s et
+  données Briefing 26 s : VALIDÉ.
+- Cases reçues par partage expirées le lendemain : VALIDÉ.
+
+VERSIONS
+- APP_VERSION_NUMBER 5.30, BFG_SW_VERSION 5.30, CACHE_NAME
+  'briefing-fdf-test-v5.30-rtba-notice-r1', description du manifest. sw.js :
+  version seule. Constantes figées à 5.07 NON modifiées (cf. 0.B1).
+
+STATUTS v5.30
+- Avertissement RTBA : À MESURER sur iPad (affichage, lien, case RTBA).
+
+TEST v5.29 — 2026-09-25
+Base : TEST v5.28
+===============================================================================
+
+CACHE NAS DE 5 MINUTES POUR LES NOTAM ET LA MÉTÉO, FILE D'ATTENTE, « ACTUALISER »
+FORCÉ
+
+1. BESOIN
+- Éviter l'engorgement quand tous les collègues se connectent en même temps
+  (ex. briefing de 13:00). Le NAS n'acceptait qu'UNE demande NOTAM / météo à la
+  fois (créneau unique du worker, sdvfr-request.json) et refusait les autres.
+- Essai v5.28 : « Actualiser » durait 91 s, les mêmes 27 terrains étant demandés
+  trois fois de suite (météo d'ouverture, NOTAM, météo), 14 à 18 s chacune.
+
+2. NAS — DÉPLOYÉ LE 2026-09-25 (hors dépôt)
+- Copies installées vérifiées par empreinte avant de coder :
+  notams-sdvfr-shared.php = 24b, npf-docs-api.php = 24b,
+  notams-auto-refresh.php = 23b, get-sdvfr-notams-request.php et
+  update-sdvfr-notams-result.php identiques aux copies de référence du 24/09.
+  À SIGNALER (hors de ce chantier) : la livraison 24c de notams-sdvfr-shared.php
+  (114 terrains, codes OACI alignés sur le SIA) n'est PAS installée, alors que
+  NPF-Q400-TEST est en v17.30.
+- Fichiers (livraison ~/nas-a-copier/a-installer-cache-nas/) :
+  - sdvfr-notams-queue-lib.php (NOUVEAU) : cache par terrain, tickets,
+    répartiteur autour du créneau unique ; aucune sortie, aucun en-tête.
+  - request-sdvfr-notams.php : la demande devient un TICKET (bfgt-…), jamais
+    de refus request_already_active ; champ facultatif « force ».
+  - get-sdvfr-notams-result.php : un ticket reçoit sa réponse au format du
+    worker (tous les champs actuels + fetchedAt par terrain, fetchedAtOldest,
+    fetchedAtNewest, fromCache, queued, queuePosition) ; tout autre identifiant
+    garde le comportement précédent.
+  - update-sdvfr-notams-result.php : 17 lignes ajoutées, aucune retirée :
+    copie du résultat final dans le cache, totalement isolée (sortie jetée,
+    erreurs ignorées, verrou attendu 1 s au plus).
+- Non touchés : get-sdvfr-notams-request.php, notams-sdvfr-shared.php,
+  npf-docs-api.php, notams-auto-refresh.php, worker VPS (aucun changement).
+- Cache : briefing-data/sdvfr-notams/terrain-cache.json ; clé STRICTE OACI +
+  carré (lat, lon, demi-côtés à 1e-4) — décision du 25/09 : pas de partage avec
+  NPF-Q400, dont les coordonnées diffèrent (26 pélicandromes sur 27, jusqu'à
+  ~700 m) ; TEST et pérenne ont les mêmes 27 carrés et partagent tout.
+  Validité 300 s ; demande forcée : 60 s, quelle que soit l'origine des
+  données. Terrains en erreur jamais mis en cache. Purge : cache 2 h, tickets
+  15 min (queue-tickets.json). Verrou : queue.lock.
+- Répartiteur (à chaque demande et à chaque suivi) : terrain frais = servi ;
+  sinon REJOINT la demande en cours du créneau si elle le couvre ; sinon attend
+  le créneau ; créneau libre = terrains manquants de tous les tickets regroupés
+  (50 au plus, format de demande inchangé, requestedBy 'BFG'). Ticket bloqué plus
+  de 3 min = erreur lisible (HTTP 200, ok: false).
+- Délai de grâce après un résultat du créneau qui n'appartient pas à la file
+  (lot NPF-Q400, tâche planifiée) : 10 s. Cadences relues dans le code
+  installé : tâche de 06:30 3 s, client NPF-Q400-TEST 2 s ; retenu plus de
+  trois fois la plus lente (validé).
+- Risque préexistant inchangé : NPF-Q400 écrit dans le créneau sans ce verrou ;
+  le créneau est relu juste avant chaque écriture.
+- SAUVEGARDE : les 3 fichiers remplacés ont été téléchargés sur le PC de
+  l'utilisateur avant le dépôt (retour arrière : les redéposer ; la
+  bibliothèque, terrain-cache.json et queue-tickets.json peuvent rester).
+- Tests locaux avant livraison (vrai worker 5.24 avec appels SDVFR bouchonnés,
+  vraies fonctions de la pérenne v2026.27, vraie tâche 23b + bibliothèque 24b) :
+  10 collègues simultanés -> 1 demande au worker ; 20 s après -> 0 demande
+  (0,14 s) ; demandes différentes -> seuls les terrains manquants ; « Actualiser »
+  x4 -> 1 demande ; 5 terrains périmés -> seuls ces 5 ; terrain en panne ->
+  partial, non mis en cache, seul redemandé ; tâche de 06:30 + collègues ->
+  tâche réussie, aucun lot NPF-Q400 perdu ; ticket > 3 min -> erreur lisible ;
+  ticket inconnu -> erreur lisible ; identifiant classique -> comportement
+  précédent. Réponses au worker, fichier installé contre modifié : 60/60
+  identiques octet par octet, y compris bibliothèque absente, en exception,
+  en erreur de syntaxe, ou verrou bloqué (1 s d'attente au plus).
+- Contrôles après dépôt : curl sans autorisation -> HTTP 200 avec CORS sur les
+  deux fichiers ; essai réel v5.28, seconde ouverture : « Demande envoyée au
+  NAS » 11:24:52,829 -> « Résultat reçu » (success, 27 terrains) 11:24:54,251,
+  soit 1,4 s au lieu de 15 à 20 s. VALIDÉ.
+- CORRECTIF REDÉPOSÉ LE 2026-09-25 (sdvfr-notams-queue-lib.php, 23 253 octets) : un
+  ticket est « en file d'attente » dès qu'AU MOINS UN de ses terrains attend le
+  créneau. Avant : le seul pélicandrome commun avec NPF-Q400 rattaché à un lot
+  NPF-Q400 faisait afficher « récupération en cours » pendant que les 26 autres
+  attendaient. Affichage seulement : demandes, cache et réponses au worker
+  inchangés (60/60 identiques après correctif).
+- Limite connue : pendant une chaîne NPF-Q400 (tâche de 06:30 ou rafraîchissement
+  NPF-Q400, ~61 s réels), les demandes BFG attendent la fin de la chaîne. La
+  pérenne, qui abandonne à 60 s, peut alors échouer (auparavant : échec
+  immédiat « Load failed » ; ce n'est pas un recul). La TEST attend 180 s.
+
+3. BFG v5.29
+- Demandes forcées (force: true, données de moins de 60 s) : « Actualiser »,
+  « Actualiser NOTAM », « Actualiser Météo ». Demandes normales (cache 5 min) :
+  ouverture, connexion, actualisation automatique (METAR > 35 min), terrain isolé
+  (bouton ↻), Météo manuelle.
+- « Actualiser » : la météo est reprise de la réponse NOTAM SDVFR (déjà appliquée
+  par importSdvfrNotams_) ; demande météo séparée seulement si la demande NOTAM
+  a échoué. Une seule demande au lieu de trois, voire aucune si la météo
+  d'ouverture a moins de 60 s.
+- Affichage : pendant l'attente dans la file NAS (queued) : « NOTAM et météo :
+  demande en cours, en file d'attente… » (bandeau NOTAM, statut, et « en file
+  d'attente » dans le bandeau d'« Actualiser ») ; à réception : « NOTAM à jour
+  (récupérés à HH:MM) », HH:MM = heure réelle de récupération la plus ancienne
+  (fetchedAtOldest), en heure locale ; sans cette donnée (ancien NAS) : texte
+  précédent.
+- Attente d'un ticket de la file NAS portée de 60 s à 180 s.
+- Diagnostic « Résultat reçu » : forcée, nombre de terrains servis par le cache
+  NAS, heure réelle de récupération.
+- Conservé : file SDVFR de BFG et nouveaux essais v5.28 (compatibilité avec
+  l'ancien NAS en cas de retour arrière).
+- Essais Node (vraies fonctions v5.29 contre le NAS simulé et le vrai worker) :
+  ouverture 1,7 s puis 0,15 s depuis le cache ; « Actualiser » < 60 s -> 0
+  demande ; > 60 s -> 1 demande forcée ; ouverture pendant la tâche de 06:30 ->
+  « en file d'attente », puis « récupération en cours », puis « NOTAM à jour
+  (récupérés à HH:MM) », tâche réussie.
+- Textes visibles nouveaux sans SDVFR (règle 0.A.11 respectée).
+
+VERSIONS
+- APP_VERSION_NUMBER 5.29, BFG_SW_VERSION 5.29, CACHE_NAME
+  'briefing-fdf-test-v5.29-nas-cache-r1', description du manifest. sw.js :
+  version seule. Constantes figées à 5.07 NON modifiées (cf. 0.B1).
+
+STATUTS v5.29
+- Cache NAS et file d'attente : VALIDÉ (essai réel 1,4 s).
+- Correctif « en file d'attente » de la bibliothèque : déposé le 25/09 ; À MESURER.
+- BFG v5.29 (Actualiser forcé, météo sans seconde demande, messages) : À MESURER
+  sur iPad.
+
+TEST v5.28 — 2026-09-24
+Base : TEST v5.27
+===============================================================================
+
+NOTAM / MÉTÉO : « LOAD FAILED » — CAUSE NAS CORRIGÉE, ERREURS RÉSEAU RÉESSAYÉES
+
+1. CAUSE (essai v5.27, diagnostic du 24/09/2026 17:50)
+- « [SDVFR] Demande refusée | http: null, message: Load failed » à l'ouverture
+  puis deux fois pendant « Actualiser », en moins d'une seconde, alors que le
+  relais SUP AIP et le RTBA réussissaient.
+- Vérifié par curl (Origin compris) : le serveur web de Synology DSM REMPLACE
+  toute réponse HTTP 4xx / 5xx par sa page d'erreur HTML (text/html, 3566
+  octets) SANS Access-Control-Allow-Origin. Le PHP envoyait bien ses en-têtes
+  CORS, mais DSM les supprimait. Safari bloque la réponse : BFG ne voit que
+  « Load failed » et ne peut ni lire le refus, ni savoir qu'il faut réessayer.
+- request-sdvfr-notams.php répondait 409 quand le créneau SDVFR était pris
+  (créneau partagé avec les lots NPF-Q400 de notams-sdvfr-shared.php, qui
+  écrivent le même sdvfr-request.json avec requestedBy 'BFG'). Le relais SUP AIP
+  et le RTBA échappaient au problème : ils répondent toujours en HTTP 200.
+- Verrou « demande en cours » : 600 s au plus (request-sdvfr-notams.php et
+  NPF_NOTAMS_SDVFR_REQUEST_TTL) ; libéré par le résultat final du worker ;
+  jamais définitif.
+
+2. NAS — DÉPLOYÉ LE 2026-09-24 (hors dépôt)
+- Deux fichiers seulement, ceux qu'appelle le navigateur :
+  request-sdvfr-notams.php et get-sdvfr-notams-result.php.
+  - Erreurs applicatives en HTTP 200 avec ok: false, codes applicatifs
+    inchangés (error : request_already_active, unauthorized…), code HTTP
+    d'origine dans httpStatus.
+  - get-sdvfr-notams-result.php : status 'error', message lisible dans error,
+    code dans errorCode (sinon BFG attendait 60 s avant d'échouer).
+  - Filet de sécurité : exception ou erreur fatale PHP -> JSON HTTP 200 (ligne
+    d'état forcée : après une fatale, PHP impose 500 et http_response_code(200)
+    seul ne suffit pas).
+  - Messages reformulés sans « SDVFR » (« NOTAM / météo ») : ils deviennent
+    visibles dans la pérenne, où SDVFR est interdit (règle 0.A.11).
+- Non modifiés : get-sdvfr-notams-request.php et update-sdvfr-notams-result.php
+  (worker, serveur à serveur, dépend des codes HTTP via raise_for_status),
+  notams-sdvfr-shared.php, npf-docs-api.php, notams-auto-refresh.php.
+- Vérifié avant dépôt : pérenne v2026.27 (lit déjà ok: false et message ; lit
+  status 'error' au suivi) ; NPF-Q400 et tâche de 06:30 (passent par
+  notams-sdvfr-shared.php, sans appel HTTP à ces fichiers) ; worker (fichiers non
+  modifiés). Aucune modification nécessaire de leur côté.
+- php -l OK ; simulation locale : OPTIONS 204, ex-401, ex-409, ex-400, ex-405,
+  ex-500, exception et erreur fatale -> HTTP 200 JSON avec CORS.
+- Livraison : ~/nas-a-copier/a-installer-sdvfr-http200/.
+- SAUVEGARDE : les anciennes versions ont été téléchargées sur le PC de
+  l'utilisateur (File Station), et NON copiées en .v527 sur le NAS. Retour
+  arrière : redéposer ces deux fichiers depuis le PC.
+- Contrôle après dépôt (curl) : OPTIONS 204 avec CORS ; POST sans autorisation
+  en HTTP 200 avec CORS et {"ok": false, "error": "unauthorized",
+  "httpStatus": 401}. VALIDÉ.
+
+3. BFG v5.28
+- requestSdvfrNotams_ : erreur réseau marquée (network) ; ok: false porte
+  status (httpStatus ou code HTTP) et code (error). Les deux formats NAS
+  (ancien 409, nouveau 200 + ok: false) sont reconnus.
+- fetchSdvfrTargetsOnce_ : créneau occupé (409 ou request_already_active) ET
+  erreur réseau réessayés toutes les 3 s pendant 90 s au plus ; tout autre refus
+  échoue aussitôt. Diagnostic distinct : « Créneau occupé (409), nouvel essai »,
+  « Erreur réseau (réponse illisible), nouvel essai », « Demande refusée (HTTP
+  x, code) », et abandon après 90 s.
+- getSdvfrNotamsResult_ / waitForSdvfrNotams_ : erreur réseau pendant le suivi
+  retentée dans la fenêtre de 60 s existante ; status 'error' = échec immédiat.
+- Image du Tour de France : src="" retiré de #tdf-stage-map (un src vide était
+  résolu en index.html, d'où « [RESSOURCE] Chargement impossible <img> » à
+  chaque démarrage). Le JS pose la vraie adresse à la sélection d'une étape.
+- Essais Node (fonctions extraites d'index.html, fetch simulé) : créneau occupé
+  nouveau NAS puis libre -> réussite ; vrai 409 ancien NAS -> réussite ; erreur
+  réseau passagère -> réussite ; erreur réseau persistante -> abandon
+  « Load failed » ; créneau occupé trop longtemps -> abandon avec le message du
+  NAS ; refus 401 -> échec immédiat, sans nouvel essai ; erreur réseau pendant
+  le suivi -> réussite ; status 'error' au suivi -> échec immédiat.
+
+4. POUR LA PÉRENNE
+- Le correctif NAS profite dès maintenant à la pérenne : créneau occupé ou
+  erreur désormais LISIBLES (message affiché) au lieu de « Load failed ». La
+  pérenne ne réessaie toujours pas : le correctif BFG v5.28 (file SDVFR v5.27 +
+  nouvels essais) est à reprendre lors de la promotion.
+
+VERSIONS
+- APP_VERSION_NUMBER 5.28, BFG_SW_VERSION 5.28, CACHE_NAME
+  'briefing-fdf-test-v5.28-sdvfr-retry-r1', description du manifest. sw.js :
+  version seule. Constantes figées à 5.07 NON modifiées (cf. 0.B1).
+
+STATUTS v5.28
+- Correctif NAS HTTP 200 : VALIDÉ (curl).
+- Nouvels essais BFG et disparition de l'erreur <img> : À MESURER sur iPad
+  (ouvrir BFG puis « Actualiser » : NOTAM SDVFR et météo doivent aboutir).
+
+TEST v5.27 — 2026-09-24
+Base : TEST v5.26
+===============================================================================
+
+Corrections du bouton « Actualiser » après l'essai iPad de la v5.26. Aucune
+modification du NAS ni du worker.
+
+1. CAUSE (diagnostic iPad du 24/09/2026, 17:24:58 -> 17:31:50)
+- Le NAS n'a qu'UN créneau SDVFR : une seconde demande pendant qu'une première
+  est « pending » ou « running » est refusée par HTTP 409 « Une demande SDVFR est
+  déjà en cours. » (request-sdvfr-notams.php, copie de référence du 24/09,
+  lignes 266-276).
+- 17:24:59 : la météo silencieuse d'ouverture occupe ce créneau (terminée à
+  17:25:16). 17:25:06,624 : « Actualiser » envoie la demande NOTAM SDVFR ->
+  409 immédiat, sans trace (les demandes SDVFR n'étaient pas journalisées).
+  importSdvfrNotams_ échoue en quelques ms ; NATS, enchaîné sur sa FIN, démarre
+  à 17:25:06,702 ; la météo reçoit le même 409 -> « Météo : ÉCHEC » à
+  17:25:06,827. Le texte SDVFR reste celui de 15:10:31Z ; bandeau figé sur
+  « NOTAM (demande envoyée) » ; « NOTAM : ÉCHEC » à 17:25:44, fin de NATS.
+- Ni la garde « NOTAM une fois par jour », ni la session n'étaient en cause.
+
+2. CORRECTIONS
+- FILE SDVFR côté BFG (fetchSdvfrTargetsOnce_, fonction commune à toutes les
+  demandes SDVFR : NOTAM, météo, terrain isolé, Météo manuelle) : les demandes
+  de BFG partent l'une après l'autre, jamais en parallèle.
+- 409 venant d'un AUTRE client (autre appareil, NPF-Q400, tâche planifiée) :
+  nouvel essai toutes les 3 s pendant 90 s au plus, puis échec affiché.
+  requestSdvfrNotams_ attache le statut HTTP à l'erreur.
+- Journal [SDVFR] : demande en file d'attente, demande envoyée, créneau occupé
+  (409), demande refusée, résultat reçu.
+- ACTUALISATION DÉJÀ EN COURS : attendue, son résultat repris, pour chaque
+  élément :
+  - météo : refreshAllWeather_ et refreshBfgWeatherSilently_ partagent
+    bfgWeatherRefreshPromise_ (silencieuse d'ouverture, auto 35 min, bouton) ;
+  - NOTAM SDVFR : importSdvfrNotams_ rejoint un import en cours
+    (bfgSdvfrImportPromise_) ; c'est toujours une vraie demande SDVFR ; une
+    demande SDVFR de connexion / ouverture en cours passe avant grâce à la file ;
+  - NATS : importAutomaticNotamsFromNas_ rejoint un import en cours
+    (bfgNatsImportPromise_) au lieu d'une seconde demande de génération ;
+  - SUP AIP : si le chargement est en cours (son bouton est alors désactivé),
+    il est attendu puis son résultat lu ; code SUP AIP non modifié ;
+  - RTBA : demande en cours attendue (v5.26) ;
+  - VAC : vérification en cours rejointe (v5.20) ;
+  - TEMSI et données Briefing : un second appel relance simplement la lecture,
+    sans risque de fausse alerte.
+- ORDRE : NOTAM SDVFR, puis NATS une fois SDVFR TERMINÉ ; météo après SDVFR.
+- BANDEAU : l'étape en cours (« demande envoyée ») est un champ séparé du détail
+  d'échec : plus de « NOTAM ((demande envoyée)) ». Le détail d'échec ne reprend
+  qu'un message d'erreur réel.
+- Diagnostic RTBA : clé « codesMultiGéométrie » renommée « multiGéométrie » (le
+  filtre anti-secret du diagnostic masquait toute clé contenant « code »).
+
+3. ESSAIS NODE (fonctions extraites d'index.html, NAS simulé à un créneau)
+- Reproduction de l'incident (météo silencieuse, NATS, SUP AIP, RTBA et VAC déjà
+  en cours) : NOTAM SDVFR mis en file puis envoyé après la météo, NATS après la
+  fin de SDVFR, SUP AIP en cours rejoint (1 seul chargement) -> « Tout est à
+  jour ».
+- Échec réel TEMSI et NATS -> « en échec : NOTAM · TEMSI », les autres ✓.
+- Créneau occupé 100 ms par un autre client -> 409, nouveaux essais, réussite.
+- Créneau occupé au-delà de l'attente maximale -> « en échec : NOTAM · Météo »,
+  NATS lancé quand même après la fin de SDVFR.
+- Reprise : météo manuelle pendant la silencieuse, deux météos simultanées,
+  deux imports NOTAM SDVFR, deux imports NATS -> même résultat, UNE seule
+  demande à chaque fois.
+- Aucune double parenthèse dans le bandeau.
+
+4. ESSAIS v5.26
+- Bouton « Actualiser » : RTBA, cartes VAC, TEMSI, SUP AIP, données Briefing :
+  VALIDÉ. Défauts météo (fausse alerte) et NOTAM SDVFR (non actualisés, ordre non
+  respecté) : corrigés en v5.27.
+
+VERSIONS
+- APP_VERSION_NUMBER 5.27, BFG_SW_VERSION 5.27, CACHE_NAME
+  'briefing-fdf-test-v5.27-sdvfr-queue-r1', description du manifest. sw.js :
+  version seule. Constantes figées à 5.07 NON modifiées (cf. 0.B1).
+
+STATUTS v5.27
+- File SDVFR et reprise des actualisations en cours : À MESURER sur iPad
+  (refaire l'essai : ouvrir BFG puis « Actualiser » aussitôt).
+- À MESURER (reportés) : bascule de 18:14Z popup ouvert ; cases reçues à 23:00 ;
+  passage de minuit R45 N2 à N5 ; cases du lendemain ; NOTAM une fois par jour
+  et météo à chaque ouverture.
+
+TEST v5.26 — 2026-09-24
+Base : TEST v5.25
+===============================================================================
+
+Dernière version TEST avant la promotion partielle vers la pérenne. Aucune
+modification du NAS ni du worker.
+
+1. BOUTON « ACTUALISER » : TOUT ACTUALISER
+- Le bouton vert « Actualiser » du panneau Accès Briefing actualise désormais :
+  données Briefing (même ensemble qu'avant : avions / pélicandromes, FDF CNCASC,
+  FDS et GAAR via Gmail, cartes des risques) ; NOTAM SDVFR (importSdvfrNotams_,
+  logique « Actualiser NOTAM ») puis import NATS (importAutomaticNotamsFromNas_) ;
+  météo METAR / TAF (refreshAllWeather_) ; TEMSI (refreshTemsiFromNas_) ; carte
+  SUP AIP (bfgLoadAndRenderSupAipMap_(true), logique de son bouton) ; RTBA
+  (bfgRefreshRtba_ en demande explicite : sans anti-rafale 60 s, SANS force=1,
+  cache NAS de 5 min conservé) ; cartes VAC (ensureBfgVacDailyManifestCheck_
+  avec force : vérification du cycle et téléchargement des cartes manquantes,
+  même si la vérification du jour est déjà faite).
+- Fonctions existantes réutilisées, pas réécrites. Seuls ajouts : valeur de
+  retour true / false de importSdvfrNotams_ et de refreshAllWeather_ (true
+  seulement si la météo a été reçue), option explicit et résultat de
+  bfgRefreshRtba_ (une demande RTBA déjà en cours est attendue, pas doublée).
+  Les autres appelants ignorent ces valeurs : comportement inchangé.
+- Parallélisme : tout part en même temps SAUF les deux demandes SDVFR. NOTAM
+  SDVFR d'abord, puis NATS et météo en parallèle (comme à la connexion : rien
+  ne garantit que le NAS accepte deux demandes SDVFR simultanées, et l'import
+  NATS relit le texte SDVFR du jour). Un échec n'empêche pas les autres.
+- Bouton désactivé pendant toute l'actualisation (verrou interne contre le
+  double lancement + MutationObserver qui le redésactive si une fonction
+  réutilisée le réactive, ex. fetchAbeDispo_).
+- Session non valide : comportement inchangé. Hors ligne : « Actualisation
+  impossible hors ligne », rien n'est effacé.
+- Autres boutons d'actualisation et règle « NOTAM une fois par jour » à
+  l'ouverture : inchangés.
+
+2. BANDEAU D'ACTUALISATION (#global-refresh-banner)
+- Masqué au repos, sans place réservée ; même style que les bandeaux NOTAM / VAC.
+- Chaque élément avec son état : « … » en cours, ✓ terminé, ⚠️ en échec, ex.
+  « Données Briefing ✓ · NOTAM (récupération des NOTAM en cours)… · Météo ✓ ·
+  TEMSI ✓ · SUP AIP ✓ · RTBA ✓ · Cartes VAC 2/3… ».
+- Fin : « Tout est à jour » 4 s, ou « ⚠️ Actualisation incomplète — en échec :
+  … » (avec le détail éventuel : cartes VAC non téléchargées, alerte AIRAC),
+  affiché jusqu'à fermeture par ✕.
+- Pas de doublon : pendant cette actualisation, les messages des bandeaux NOTAM
+  (étapes) et VAC (compteur, échecs, alerte AIRAC) sont redirigés vers ce
+  bandeau ; hors de cette actualisation, ces bandeaux sont inchangés.
+- Limite connue : les données Briefing, TEMSI et SUP AIP gèrent leurs erreurs
+  elles-mêmes ; leur ⚠️ repose sur une promesse rejetée ou sur l'état
+  d'avertissement de leur propre statut (TEMSI, carte SUP AIP). Une erreur que
+  ces fonctions masquent entièrement peut rester ✓.
+- Règle « NPF-Q400 » respectée. Liste 0.B5 complétée (détail d'erreur).
+- Simulation Node (fonctions extraites d'index.html, actualisations bouchonnées) :
+  ordre NOTAM SDVFR -> NATS + météo vérifié ; échec TEMSI isolé et listé ;
+  cas tout réussi -> « Tout est à jour » ; alerte AIRAC reprise dans la liste
+  finale ; double clic sans effet ; bouton désactivé du début à la fin ; hors
+  ligne -> message attendu.
+
+3. ESSAIS
+- v5.20 : boutons de trace retirés du panneau Diagnostic : VALIDÉ ; clavier au
+  toucher sur le champ : VALIDÉ.
+- v5.19 : partage entre deux appareils (PC Windows -> iPad), deux sélections
+  visibles, conservées après fermeture et relance : VALIDÉ.
+- v5.25 : popup R45 S3 avec ses deux créneaux en UTC : VALIDÉ.
+- À MESURER : bascule de 18:14Z popup ouvert ; effacement des cases reçues à
+  23:00 ; passage de minuit R45 N2 à N5 ; cases du lendemain ; NOTAM une fois
+  par jour et météo à chaque ouverture ; bouton « Actualiser » complet.
+
+VERSIONS
+- APP_VERSION_NUMBER 5.26, BFG_SW_VERSION 5.26, CACHE_NAME
+  'briefing-fdf-test-v5.26-refresh-all-r1', description du manifest. sw.js :
+  version seule. Constantes figées à 5.07 NON modifiées (cf. 0.B1).
+
+STATUTS v5.26
+- Bouton « Actualiser » complet et son bandeau : À MESURER sur iPad.
+
+TEST v5.25 — 2026-09-24
+Base : TEST v5.24
+===============================================================================
+
+RTBA : REGROUPEMENT DES CRÉNEAUX PAR SECTEUR, HORAIRES EN UTC UNIQUEMENT
+Aucune modification du NAS ni du worker.
+
+1. REGROUPEMENT PAR SECTEUR — lève le point À DÉCIDER de la v5.24
+- Constat v5.24 : avec 4 h d'anticipation, un même secteur revient plusieurs
+  fois (ex. R45 S3 YONNE active 11:30Z → 15:00Z puis à venir 18:14Z → 23:59Z) ;
+  BFG dessinait deux zones superposées, un seul créneau accessible au toucher.
+- bfgBuildRtbaGroups_ regroupe les créneaux par secteur = même code ET même
+  géométrie. Deux objets de même code mais de géométries différentes restent
+  séparés et sont signalés dans le diagnostic (« Codes à géométries
+  différentes »).
+- UNE seule zone dessinée par secteur. Couleur selon le créneau le plus
+  urgent : un créneau actif => magenta vif clignotant ; sinon => rose clair
+  fixe. Créneaux terminés retirés ; le secteur disparaît quand tous ses
+  créneaux sont terminés. Filtre FL max appliqué à chaque créneau (règle et
+  prudence inchangées).
+- Mise à jour INCRÉMENTALE : une couche Leaflet par secteur, conservée d'un
+  recalcul à l'autre. Au changement de statut : setStyle et setPopupContent
+  SUR PLACE — un popup ouvert n'est pas refermé et affiche le nouveau contenu.
+  Seuls les secteurs sans créneau restant sont retirés. Même mécanisme à
+  l'arrivée de nouvelles données (actualisation 5 min). Le clignotement relit
+  la liste des secteurs actifs à chaque battement.
+
+2. POPUP
+- « RTBA », code du secteur, « Statut : Actif » ou « À venir ».
+- Plancher et plafond une seule fois s'ils sont identiques pour tous les
+  créneaux ; sinon indiqués sur chaque ligne de créneau.
+- « Créneaux (UTC) » : TOUS les créneaux non terminés, ordre chronologique,
+  chacun avec son statut, ex. « Actif : 11:30Z → 15:00Z » puis
+  « À venir : 18:14Z → 23:59Z ».
+- Heure locale SUPPRIMÉE de tous les textes RTBA. Date (jj/mm, UTC) ajoutée
+  quand l'instant n'est pas le jour UTC courant (ex. après minuit :
+  « Actif : 24/09 18:14Z → 05:10Z »).
+- Source, heure de récupération et « Données en cache » inchangés.
+
+3. ESSAIS NODE SUR LES RÉPONSES RÉELLES (fonctions extraites d'index.html)
+- rtba-test-1.json : 13:27Z => 11 secteurs (5 actifs, 6 à venir) ; 13:31Z =>
+  8 secteurs actifs, 3 créneaux terminés retirés.
+- rtba-test-240b.json (24 objets) :
+  14:17Z => 16 secteurs (8 actifs, 8 à venir), 8 secteurs à deux créneaux
+  (R45 S3, S4, S5, S6.1, S6.2, S7, B, C) ; popup S3 : « Actif : 11:30Z →
+  15:00Z » et « À venir : 18:14Z → 23:59Z », limites affichées une fois ;
+  15:01Z => 16 secteurs à venir, 8 créneaux terminés ;
+  18:15Z => 16 secteurs actifs (bascule automatique) ;
+  00:30Z le 25/09 => 5 secteurs actifs (N2 à N5.2), date affichée ;
+  05:11Z le 25/09 => plus aucun secteur.
+- Rendu incrémental (faux Leaflet) : 16 couches créées une fois ; à 14:18Z
+  aucune opération ; à 15:01Z 8 setStyle + 8 popups mis à jour, 0 couche
+  retirée ou recréée ; à 18:15Z 16 setStyle + 16 popups ; à 05:11Z les 16
+  couches retirées.
+- Même code, géométrie différente (cas simulé) : 2 secteurs séparés et code
+  signalé.
+
+VERSIONS
+- APP_VERSION_NUMBER 5.25, BFG_SW_VERSION 5.25, CACHE_NAME
+  'briefing-fdf-test-v5.25-rtba-sectors-r1', description du manifest. sw.js :
+  version seule. Constantes figées à 5.07 NON modifiées (cf. 0.B1).
+
+STATUTS v5.25
+- Regroupement par secteur et horaires UTC : À MESURER sur iPad.
+- À MESURER : secteur avec deux créneaux (ex. R45 S3 ce soir), passage de
+  minuit (R45 N2 à N5), bascule automatique à 18:14Z sans refermer un popup.
+
+TEST v5.24 — 2026-09-24
+Base : TEST v5.23
+===============================================================================
+
+RTBA : FENÊTRE D'ANTICIPATION PORTÉE DE 120 À 240 MINUTES (4 H)
+
+1. WORKER VPS v5.24 (hors dépôt, déployé le 2026-09-24 à 16:11 locale)
+- Seul changement fonctionnel : la demande RTBA imposée par le worker passe à
+  anticipation 240, valeur MAXIMALE proposée par SDVFR pour les AZBA.
+  Commentaire mis à jour (fenêtre liée au moment présent). WORKER_VERSION
+  porté à 5.24 pour identifier le fichier en service.
+- Demande SUP AIP STRICTEMENT identique (valeurs reprises de la file NAS).
+- NAS non modifié : sa réponse publique montre toujours requestPayload avec
+  anticipation 120 (demande écrite dans sa file) ; c'est le worker qui impose
+  240. Ce qui est réellement envoyé figure dans workerDiagnostic.sentPayload du
+  fichier rtba-result.json du NAS.
+- Livraison : ~/vps-a-copier/bfg-sdvfr-worker_rtba240.py (py_compile OK).
+- Déploiement guidé depuis PowerShell : envoi sous le nom .new, sauvegarde
+  bfg-sdvfr-worker.py.v523-20260924-160957 (worker 5.22), compilation dans
+  /tmp (COMPILE_OK), remplacement, redémarrage du service seul. Journal :
+  « Worker BFG SDVFR v5.24 démarré (NOTAM + METAR/TAF + SUP AIP + RTBA) »,
+  service active.
+- Retour arrière disponible : réinstaller la sauvegarde .v523-20260924-160957
+  puis redémarrer le service.
+
+2. TEST DE BOUT EN BOUT 240 MIN — VALIDÉ
+- Essai 1 (demande SDVFR à 14:12Z, fenêtre jusqu'à 18:12Z) : 8 zones, toutes
+  déjà actives, début le plus tardif 13:30Z. Non concluant à lui seul.
+- Essai 2 (demande SDVFR à 14:16:04Z, fenêtre jusqu'à 18:16Z) : worker 5.24,
+  SDVFR HTTP 200 JSON, 24 zones dont 16 créneaux du soir commençant à 18:14Z,
+  soit 237 min après la demande (> 120 min) :
+  R45 A, B, C jusqu'à 22:59Z ; R45 N2, N3, N4, N5.1, N5.2 jusqu'au 25/09
+  05:10Z ; R45 NS, S2, S3, S4, S5, S6.1, S6.2, S7 jusqu'à 23:59Z.
+- Les deux essais se recoupent : 18:14Z hors de la fenêtre du premier, dans
+  celle du second. 18:14Z est bien l'heure réelle de début, pas une borne.
+- Aucun secret dans les réponses.
+
+3. BFG v5.24
+- Légende : « RTBA à venir (< 4 h) ».
+- Commentaires du module RTBA : fenêtre de 4 h (240 min) au lieu de 2 h.
+- Liste de contrôle 0.B5 : texte pérenne « Aucune activation RTBA reçue pour
+  les 4 prochaines heures. »
+- Rien d'autre ne change.
+
+4. CONSTAT À MESURER (non modifié, présentation inchangée)
+- Un même secteur peut revenir plusieurs fois avec des id différents et la
+  même géométrie (ex. R45 S3 YONNE 11:30-15:00Z active ET 18:14-23:59Z à
+  venir). BFG dessine les deux plages superposées : magenta vif clignotant
+  par-dessus le rose fixe. Au toucher, seul le popup de la couche du dessus
+  s'ouvre. À MESURER sur iPad ; regroupement des plages d'un même secteur
+  dans un seul popup : À DÉCIDER.
+- Créneaux de nuit passant minuit (N2 à N5 jusqu'à 05:10Z le 25/09) désormais
+  visibles dès 14:14Z : affichage de la date dans l'horaire du popup,
+  À MESURER.
+
+VERSIONS
+- APP_VERSION_NUMBER 5.24, BFG_SW_VERSION 5.24, CACHE_NAME
+  'briefing-fdf-test-v5.24-rtba-4h-r1', description du manifest. sw.js :
+  version seule. Constantes figées à 5.07 NON modifiées (cf. 0.B1).
+
+STATUTS v5.24
+- Worker 240 min et test de bout en bout : VALIDÉ.
+- Légende « < 4 h » sur iPad : À MESURER.
+- Nettoyage VPS des fichiers temporaires : à faire par l'utilisateur.
+
+TEST v5.23 — 2026-09-24
+Base : TEST v5.22
+===============================================================================
+
+Réglages RTBA issus des essais de la v5.22 et nouvelle règle permanente sur
+SDVFR. Aucune modification du NAS ni du worker.
+
+1. NOUVELLE PRÉSENTATION RTBA
+- Actif : magenta VIF (BFG_RTBA_STYLE_ACTIVE_, trait #d1007a, fond #ff1aa3),
+  CLIGNOTANT.
+- À venir (< 2 h) : magenta PASTEL / rose clair (BFG_RTBA_STYLE_UPCOMING_,
+  trait #f08cc4, fond #fbc6e3), FIXE.
+- Terminé : non affiché (inchangé).
+- Clignotement propre au RTBA inversé : il porte désormais sur les zones
+  ACTIVES. setStyle sur les seules couches RTBA ; clignotement SUP AIP non
+  touché ; un popup ouvert n'est pas refermé par le clignotement.
+- Le recalcul local chaque minute fait basculer une zone de « à venir »
+  (pastel fixe) à « actif » (vif clignotant) sans appel réseau.
+- Légende : « RTBA actif (clignotant) » et « RTBA à venir (< 2 h) » aux
+  nouvelles couleurs. Entrées SUP AIP inchangées. Traits pleins.
+
+2. MESSAGE DE STATUT RTBA
+- « RTBA : mis à jour à HH:MM » pour toute réponse VALIDE du NAS, y compris
+  servie par son cache (5 min, ou dernière carte si le worker est occupé).
+  HH:MM = heure réelle de récupération auprès de SDVFR (finishedAt du worker ou
+  savedAt du cache NAS), jamais l'heure de l'appel de BFG.
+- « RTBA : données en cache (HH:MM) » UNIQUEMENT quand BFG n'obtient aucune
+  réponse valide (erreur, hors ligne) et affiche son propre cache
+  bfgRtbaCacheV1 ; HH:MM = heure de récupération de ces données. La mention
+  « Données en cache » du popup suit la même règle.
+- Une réponse valide servie par le cache NAS met aussi à jour bfgRtbaCacheV1
+  (avec son heure réelle). Le diagnostic précise « (cache NAS) ».
+- Autres textes de statut inchangés.
+
+3. RÈGLE PERMANENTE « SDVFR »
+- Ajoutée en section 0.A (règle 11) et dans CLAUDE.md (règle permanente 4) :
+  mentions visibles de SDVFR autorisées en TEST, interdites en pérenne ;
+  panneau « Diagnostic BFG » non concerné.
+- Liste de contrôle de promotion ajoutée en section 0.B5, avec le relevé
+  complet des textes visibles mentionnant SDVFR dans index.html : popup RTBA,
+  « Aucun RTBA retourné par SDVFR actuellement. », « … Consulter SDVFR. »,
+  4 « Non disponible via SDVFR. » (METAR / TAF), pied de page, libellé
+  APP_VERSION TEST de la v5.22, et textes d'erreur relayés depuis le NAS ou le
+  worker.
+- AUCUN texte de la TEST modifié pour cette règle.
+
+4. ESSAIS DE LA v5.22
+- Couche RTBA affichée, popup au bon format : VALIDÉ.
+- Comparaison avec l'activité publiée par le SIA le 24/09/2026 : COHÉRENTE
+  (R45 S3, S4 11:30-15:00 ; R45 B, C, S5, S6.1, S6.2, S7 13:30-15:00 ; créneaux
+  du soir attendus environ 2 h avant leur début, limite de la fenêtre de
+  120 min).
+- À MESURER :
+  - créneaux de nuit qui passent minuit (R45 N2 à N5 jusqu'à 05:10Z le
+    25/09) : l'horaire du popup affiche alors la date devant l'heure quand le
+    jour diffère d'aujourd'hui ;
+  - disparition d'une zone à sa fin sans rechargement ;
+  - case « RTBA » ;
+  - mode hors ligne (« RTBA : données en cache (HH:MM) ») ;
+  - nouvelle présentation (actif vif clignotant, à venir pastel fixe).
+
+VERSIONS
+- APP_VERSION_NUMBER 5.23, BFG_SW_VERSION 5.23, CACHE_NAME
+  'briefing-fdf-test-v5.23-rtba-style-r1', description du manifest. sw.js :
+  version seule. Constantes figées à 5.07 NON modifiées (cf. 0.B1).
+
+STATUTS v5.23
+- Nouvelle présentation RTBA : À MESURER.
+- Statut « mis à jour » / « données en cache » : À MESURER.
+- Règle SDVFR et liste B5 : en place, à appliquer à la promotion.
+
+TEST v5.22 — 2026-09-24
+Base : TEST v5.21
+===============================================================================
+
+ACTIVATIONS RTBA (AZBA) SUR LA CARTE FRANCE SUP AIP — SOURCE SDVFR
+
+AIDE À LA PRÉPARATION UNIQUEMENT : le RTBA ne remplace ni les NOTAM, ni les SUP
+AIP, ni l'AIP.
+
+1. ARCHITECTURE (worker + NAS, déployés le 2026-09-24, hors dépôt)
+- Chaîne : BFG (iPad) -> NAS -> worker VPS -> SDVFR -> worker -> NAS -> BFG.
+  Le navigateur ne contacte jamais SDVFR ; session, cookies, CSRF et
+  identifiants restent sur le VPS. Pas de SIA (ni API, ni scraping).
+- Worker bfg-sdvfr-worker.py v5.22 (même fichier, pas de second worker) :
+  une SEULE fonction générique pour SUP AIP et RTBA (même login /security/login,
+  même session, CSRF, X-Requested-With, validation, délais). Payload RTBA
+  imposé par le worker : { ceiling, azbaEnabled: true, supAipEnabled: false,
+  zsmEnabled: false, anticipation: 120 } sur /auto-temporary-airspaces.
+  /search-temporary-airspaces NON utilisé (il n'a renvoyé que SUP AIP et ZSM).
+  Validation : HTTP 200, pas de redirection vers le login, pas de HTML, JSON
+  valide, tableau airspaces présent ; tout le reste est une ERREUR.
+  Extraits d'erreur sanitisés (CSRF, cookie, PHPSESSID, mot de passe masqués),
+  aussi pour les SUP AIP. Log [RTBA-SDVFR] sanitisé ; premier RTBA réel
+  conservé en exemple sanitisé sur le VPS (rtba-sample.json).
+  Le worker ne traite une demande RTBA que si le NAS confirme type=rtba.
+- NAS : même mécanisme que les SUP AIP, paramètre type=supaip (défaut,
+  comportement inchangé) ou type=rtba, sur les 3 fichiers
+  get-sdvfr-temporary-airspaces.php, get-sdvfr-temporary-airspaces-request.php,
+  update-sdvfr-temporary-airspaces-result.php. Files, résultats et caches
+  séparés (rtba-request/result/cache.json). Cache NAS RTBA : 300 s (au plus
+  ~12 connexions SDVFR par heure). relayVersion 5.22 (SUP AIP compris).
+  Paramètre plutôt que nouveau fichier : le service worker exclut déjà
+  get-sdvfr-temporary-airspaces.php, sw.js n'a donc pas à être modifié.
+- Déploiement : NAS d'abord (anciens fichiers sauvegardés en .v521, carte SUP
+  AIP vérifiée), puis worker (sauvegarde bfg-sdvfr-worker.py.v521-20260924-
+  151250, contrôle de compilation sur le VPS, remplacement, redémarrage du
+  service seul). Journal : « Worker BFG SDVFR v5.22 démarré (NOTAM + METAR/TAF
+  + SUP AIP + RTBA) », aucune erreur de file RTBA.
+- Livraisons conservées hors dépôt : ~/vps-a-copier/bfg-sdvfr-worker_rtba.py,
+  ~/nas-a-copier/a-installer-rtba/ (3 fichiers PHP).
+
+2. TEST DE BOUT EN BOUT — VALIDÉ (2026-09-24 13:26 UTC)
+- Appel NAS type=rtba : HTTP 200 en 5,9 s, ok, source vps-worker, relais et
+  worker 5.22, payload envoyé AZBA seul, SDVFR HTTP 200 JSON en 46 ms.
+- 11 zones RTBA réelles reçues (secteur R45 : AUTUNOIS, ARBOIS, MACONNAIS,
+  JURA, DAMBLAIN, FRANCHE-COMTE, LANGRES, YONNE). Aucun secret dans la réponse.
+
+3. STRUCTURE RÉELLE (phase B, montrée avant écriture du parser)
+- Objet : id, code, label, type 'AZBA', clazz null, local_type 'RTBA',
+  description (FR + EN, horaires en clair), coordinates 'SRID=4326;POLYGON(...)',
+  lower_limit / _unit / _reference, upper_limit / _unit / _reference,
+  minimum_limit* et maximum_limit* (toujours nuls), lower_limit_msl,
+  upper_limit_msl, start_validity, end_validity (ISO UTC), min_elevation,
+  max_elevation. Mêmes clés pour les 11 zones.
+- UNE plage horaire par objet. Planchers tous en HEI (0 ou 800 ft).
+- FENÊTRE DE 2 H CONFIRMÉE : aucune zone ne commençait au-delà de l'heure de
+  la demande + 120 min. « À venir » = dans moins de 2 h.
+- Format NAS -> BFG : réponse SDVFR transmise telle quelle (comme les SUP AIP),
+  normalisée dans BFG sur les seuls champs réels. Aucun champ inventé.
+
+4. BFG — COUCHE RTBA (phases A + B)
+- Couche Leaflet séparée bfgRtbaFranceLayer_, dans un pane dédié au-dessus des
+  SUP AIP. Jamais dans bfgSupAipFranceLayer_. Cache, tableaux, diagnostic et
+  clignotement séparés. Actualisation : clearLayers() de la seule couche RTBA,
+  jamais de fitBounds, de zoom ni de déplacement.
+- Géométrie : bfgParseWktGeometry_ existant ; géométrie invalide ignorée.
+- Statuts : actif (début <= maintenant < fin), à venir (début > maintenant,
+  clignote), terminé (fin <= maintenant, jamais affiché). Recalcul local
+  chaque minute sans réseau ; pas de redessin si rien n'a changé (un popup
+  ouvert n'est pas refermé).
+- Popup : « RTBA », code, statut Actif / À venir, plancher et plafond au format
+  SUP AIP, horaire « 13:30Z → 15:00Z (15:30 → 17:00 locale) », « Source : SDVFR »
+  et heure de récupération, « Données en cache » si besoin. Ni description ni
+  détail technique.
+- Filtre FL max : même règle que les SUP AIP (plancher strictement inférieur) ;
+  plancher HEI / ASFC / AGL ou illisible => zone AFFICHÉE ; lower_limit_msl
+  non utilisé. Conséquence constatée : tous les RTBA reçus ont un plancher HEI,
+  le filtre FL max ne masque donc aucun RTBA.
+- Dates Du / Au NON appliquées au RTBA (pas de recherche sur période SDVFR).
+- Case « RTBA » cochée par défaut : masque / affiche la couche, sans réseau ni
+  effacement du cache.
+- Légende : « RTBA actif » et « RTBA à venir (< 2 h) » ajoutés ; entrées SUP AIP
+  inchangées. Couleurs provisoires (BFG_RTBA_STYLE_ACTIVE_ / _UPCOMING_).
+- Statuts texte, uniquement : « RTBA : chargement… », « RTBA : mis à jour à
+  HH:MM », « Aucun RTBA retourné par SDVFR actuellement. », « RTBA : données
+  indisponibles », « RTBA : données en cache (HH:MM) », et « ⚠️ RTBA : N zone(s)
+  reçue(s), affichage non disponible dans cette version de test. Consulter
+  SDVFR. » si des zones non terminées ne peuvent pas être dessinées.
+  Une erreur n'est jamais présentée comme une absence de RTBA. Réponse NAS
+  « stale » (worker occupé ou lent) = données en cache.
+- Actualisation : ouverture, retour au premier plan, toutes les 5 min (carte
+  présente, premier plan, en ligne), bouton « Actualiser SUP AIP ».
+  Anti-rafale 60 s. Plafond de demande fixe FL195 (cache NAS stable).
+  Indépendante des SUP AIP : un échec de l'un n'affecte pas l'autre.
+- Cache bfgRtbaCacheV1 (dernier résultat VALIDE, y compris vide, avec
+  fetchedAt), affiché d'emblée à l'ouverture et hors ligne. « Effacer » :
+  préfixe 'bfgRtba' ajouté au balayage.
+- Diagnostic BFG : section « RTBA » (dernier essai, résultat, source, versions,
+  heure des données, zones reçues / affichées / non affichées, cache) ; logs
+  [RTBA-SDVFR]. Aucun secret, aucune URL SDVFR.
+- Aucun autre module modifié. SUP AIP : code, écouteurs, couleurs, légende,
+  popups, filtres, clignotement et cadrage inchangés.
+
+VERSIONS
+- APP_VERSION_NUMBER 5.22, BFG_SW_VERSION 5.22, CACHE_NAME
+  'briefing-fdf-test-v5.22-rtba-r1', description du manifest. sw.js : version
+  seule. Constantes figées à 5.07 NON modifiées (cf. 0.B1).
+
+STATUTS v5.22
+- Worker + NAS RTBA et test de bout en bout : VALIDÉ.
+- Couche RTBA BFG (affichage, popups, clignotement, statuts, cache, 5 min) :
+  À MESURER sur iPad.
+- Couleurs RTBA : À DÉCIDER après essai sur iPad.
+- Nettoyage VPS (bfg-sdvfr-worker.py.new, /tmp/rtba-check.py) : à faire par
+  l'utilisateur.
+
+TEST v5.21 — 2026-09-24
+Base : TEST v5.20
+===============================================================================
+
+Corrections issues des essais de la v5.20.
+
+1. « EFFACER » NE CASSE PLUS LE HORS LIGNE
+- Constat : après « Effacer », BFG ne s'ouvrait plus en mode avion (erreur
+  FetchEvent). `clearBfgLocalCaches_()` supprimait tous les caches
+  'briefing-fdf*' sauf la coque PÉRENNE, donc aussi le cache applicatif de la
+  TEST en cours ('briefing-fdf-test-v…' : index.html, manifest, icônes, Tour
+  de France), qui n'était pas reconstitué. Résolu seulement par Forcer MAJ.
+- Correction : les caches 'briefing-fdf-test-*' sont CONSERVÉS. Seules les
+  DONNÉES qu'ils contiennent (toute entrée d'une autre origine : réponses NAS
+  risques/FdS/GAAR, images TEMSI) en sont retirées. Les autres caches de
+  données (SDVFR, SUP AIP, TEMSI, bfg-npf-shared-notams-v1) restent supprimés.
+  La coque pérenne reste préservée (v5.19).
+- sw.js, robustesse : une navigation hors ligne sans copie en cache renvoie
+  './index.html' depuis le cache ; à défaut, une page simple « BFG
+  indisponible hors ligne — Ouvrir BFG une fois en ligne pour le conserver
+  sur cet appareil » (HTTP 503), jamais une erreur FetchEvent.
+- sw.js : une navigation réussie en ligne recrée la copie de repli
+  './index.html' si elle manque.
+- Ordre des règles du listener fetch et filtre de purge d'activate INCHANGÉS.
+- « Forcer MAJ » : comportement inchangé.
+
+2. ESPACE RÉSERVÉ DES BANDEAUX SUPPRIMÉ
+- Retour à `display: none` au repos pour #notam-loading-banner et
+  #vac-loading-banner, hauteur adaptée au contenu. Le décalage du contenu à
+  l'apparition est accepté (décision utilisateur). Le choix v5.20 de la place
+  réservée est ABANDONNÉ.
+
+3. NOTAM UNE FOIS PAR JOUR, MÉTÉO À CHAQUE OUVERTURE
+- NOTAM SDVFR et import NATS téléchargés uniquement :
+    a) à la connexion Briefing réussie, si c'est la première du jour
+       (nouvelle clé `briefingFdfNotamLoginDayV1`, effacée par « Effacer »)
+       OU si aucun NOTAM du jour n'est en mémoire ;
+    b) par « Actualiser NOTAM » et « Actualiser NATS » (inchangés) ;
+    c) à l'ouverture avec session valide, si aucun NOTAM du jour n'est en
+       mémoire (ex. après « Effacer »).
+  Les étapes du bandeau NOTAM ne s'affichent que dans ces cas.
+- « NOTAM du jour en mémoire » = texte SDVFR du jour dans la copie
+  localStorage `briefingFdfSdvfrDailyNotamsV1`, réparée au démarrage depuis la
+  meilleure des trois copies avant toute décision réseau (initializeAbeDispo
+  attend les restaurations locales).
+- Ouverture avec session valide et NOTAM du jour en mémoire : aucune demande
+  NOTAM, aucun import NATS, aucun bandeau NOTAM.
+- Météo : actualisée à chaque ouverture (et à une connexion qui ne télécharge
+  pas les NOTAM), silencieusement, par `refreshBfgWeatherSilently_()` : la
+  réponse SDVFR met à jour METAR/TAF seulement ; le texte NOTAM du jour et son
+  cache ne sont pas modifiés (même règle que refreshAllWeather_ depuis v4.77).
+- Actualisation automatique d'un METAR de plus de 35 min : inchangée.
+- Le choix « Afficher NATS » sans texte NATS en mémoire déclenche toujours un
+  import NATS (action utilisateur, inchangé).
+- Aucune couche de persistance NOTAM ajoutée, renommée ou supprimée (0.B2).
+
+4. ERREUR JAVASCRIPT AU DÉMARRAGE
+- Origine : l'écouteur `error` du diagnostic est en phase de CAPTURE. Il
+  reçoit donc aussi les échecs de chargement de ressources (<img>, <link>,
+  <script>…), qui sont de simples Event sans message, fichier ni ligne : d'où
+  « Erreur JavaScript | source "", ligne 0, colonne 0 ». Ce n'est pas une
+  exception du code BFG (une exception BFG porte un message et une ligne ; une
+  erreur de script externe porte « Script error. »).
+- Correction : ces échecs sont journalisés à part, catégorie RESSOURCE, avec
+  la balise, l'identifiant et l'adresse SANS paramètres (aucun jeton exporté),
+  et l'état en ligne. Les vraies erreurs JS gardent leur ligne, avec en plus
+  la pile (300 caractères).
+- La ressource en cause n'est pas encore connue : À MESURER au prochain
+  diagnostic de démarrage.
+
+5. VAC EN PARALLÈLE
+- Constat : vérification VAC lancée 47 s après la connexion, après les NOTAM
+  SDVFR (13 s) et l'import NATS (31 s), pour 9 s de téléchargement (26 cartes).
+- `startBfgVacDailyCheck_('connexion')` est lancé dès la connexion réussie,
+  avant les données Briefing, sans attendre NOTAM ni NATS. Non bloquant.
+
+6. VÉRIFICATION VAC À L'OUVERTURE
+- À l'ouverture avec session valide, si la vérification du jour n'a pas été
+  faite (ex. après « Effacer », la connexion étant conservée) :
+  `startBfgVacDailyCheck_('ouverture')`. Hors ligne, l'échec est journalisé.
+
+7. PLUS DE PAGE BLANCHE POUR UNE VAC HORS LIGNE
+- Nouvelle clé `bfgVacStoredListV1` : liste des OACI enregistrés dans
+  BfgVacDB, mise à jour à chaque enregistrement (putBfgVacRecord_) ou
+  suppression (deleteBfgVacRecord_), effacée avec « Effacer ». Reconstruite
+  au démarrage depuis la base si elle manque (iPad venant de v5.20).
+- Avant window.open, vérification synchrone : hors ligne et carte non
+  enregistrée => message seul « Carte VAC de XXXX non disponible hors ligne.
+  L'ouvrir une fois en ligne pour la conserver. », AUCUN onglet.
+- Liste inconnue : comportement antérieur.
+
+8. COMPTEUR VAC
+- Vérifié : N compte déjà les CARTES réellement à télécharger (publiées,
+  manquantes ou modifiées), jamais les terrains. Contrôlé contre le manifest
+  du jour : 27 pélicandromes ciblés, 26 cartes disponibles, LFBM sans carte.
+  Aucune modification nécessaire.
+
+TESTS v5.20
+- Bouton VAC grisé LFBM : VALIDÉ (grisé après réception du manifest).
+- Téléchargement VAC et ouverture hors ligne (LFKF) : VALIDÉ après
+  reconnexion ; bandeau trop tardif (corrigé point 5).
+- Page blanche hors ligne : corrigée point 7.
+- « Effacer » cassait le hors ligne : corrigé point 1.
+- Espace vide trop important : corrigé point 2.
+- NOTAM et NATS retéléchargés à chaque ouverture : corrigé point 3.
+- À VÉRIFIER : disparition des boutons de trace de démarrage dans le panneau
+  Diagnostic BFG ; ouverture du clavier au toucher sur le champ.
+- À FAIRE AVANT PROMOTION : partage entre deux appareils, expiration de la
+  couche reçue à 23h00, vérification le lendemain.
+
+VERSIONS
+- APP_VERSION_NUMBER 5.21, BFG_SW_VERSION 5.21, nouveau CACHE_NAME
+  'briefing-fdf-test-v5.21-offline-notam-daily-r1', description du manifest.
+- Constantes figées à 5.07 NON modifiées (cf. 0.B1).
+
+STATUTS v5.21
+- Hors ligne après « Effacer » et repli du service worker : À MESURER
+  (essai : Effacer, puis mode avion, puis ouverture).
+- NOTAM une fois par jour, météo silencieuse à l'ouverture : À MESURER.
+- Diagnostic des erreurs de ressources : À MESURER.
+- VAC en parallèle et à l'ouverture : À MESURER.
+- VAC hors ligne sans page blanche : À MESURER.
+
+TEST v5.20 — 2026-09-24
+Base : TEST v5.19
+===============================================================================
+
+Corrections issues des essais de la v5.19.
+
+1. BOUTON VAC GRISÉ
+- Le manifest VAC reçu (vérification du jour ou premier clic) est conservé sur
+  l'iPad, en copie réduite, dans la nouvelle clé localStorage
+  `bfgVacManifestV1` (par source : sourceCycle, et par terrain disponibilité,
+  fichier, sha256, taille, cycle, nom).
+- Quand il est connu, le bouton VAC est grisé (`.vac-unavailable`,
+  aria-disabled) pour tout terrain sans carte : non publié (LFBM) ou absent du
+  manifest (terrain étranger en Météo manuelle). Appliqué à la création de
+  chaque section et après chaque manifest reçu.
+- Toucher un bouton grisé : message « Aucune carte VAC disponible pour XXXX »,
+  AUCUN onglet ouvert. La décision est lue de façon synchrone AVANT
+  `window.open`.
+- Tous les chemins d'échec de `openBfgVacPdf_` referment l'onglet ouvert
+  (déjà le cas, revérifié) : plus d'onglet vide.
+- Aucun manifest connu (nouvel iPad, après « Effacer ») : boutons actifs,
+  comportement antérieur. « Effacer » supprime la clé (préfixe `bfgVac`) et
+  `clearBfgVacDb_()` remet les boutons à l'état actif.
+- Le grisage suit `BFG_VAC_SOURCES_` : un terrain n'est grisé que si TOUTES
+  les sources déclarées sont connues et qu'aucune ne le publie. Une source
+  militaire ajoutée plus tard réactivera LFBM sans autre modification.
+
+2. TÉLÉCHARGEMENT AUTOMATIQUE DES VAC
+- `ensureBfgVacDailyManifestCheck_` (vérification du jour, première connexion
+  Briefing du jour, non bloquante) télécharge en arrière-plan, une par une, les
+  VAC manquantes ou dont le sha256 a changé, pour les terrains de
+  `getSdvfrPelicandromeTargets_()` (pélicandromes sans LFMT), en plus des
+  cartes déjà stockées. Contrôles inchangés (`storeBfgVacEntry_` : signature
+  PDF, taille, SHA-256).
+- Jours où tout est à jour : seul le manifest est téléchargé.
+- Échecs mémorisés dans `bfgVacPendingDownloadsV1` : nouvel essai à la
+  connexion suivante, même le jour même. Une carte en attente reste signalée
+  « non vérifiée » à l'ouverture et passe par la vérification ciblée.
+
+3. BANDEAU VAC À LA CONNEXION
+- Nouveau `#vac-loading-banner`, sous le bandeau NOTAM, même style.
+- Pas de message « Vérification du cycle VAC… » (décision utilisateur) : le
+  bandeau apparaît directement à « Téléchargement des cartes VAC n/N… »,
+  uniquement s'il y a des cartes à télécharger ou une alerte de cycle.
+- Fin : « Cartes VAC à jour (cycle 03 SEP 2026) » 4 s puis disparition.
+- Échec partiel : bandeau orange « N cartes VAC non téléchargées, nouvel essai
+  à la prochaine connexion », fermé seulement par le bouton ✕.
+
+4. ALERTE CYCLE AIRAC
+- Cycle en vigueur calculé sur le calendrier fixe de 28 jours, référence
+  03_SEP_2026 (00:00 UTC) ; cycle suivant 01_OCT_2026.
+- sourceCycle du manifest antérieur au cycle en vigueur : « ⚠️ Cartes VAC non à
+  jour : cycle XX disponible, cycle en vigueur YY. Effectuer la mise à jour des
+  cartes VAC depuis NPF-Q400. » Cycles affichés au format « 03 SEP 2026 ».
+- Emplacements : bandeau VAC de connexion (orange, fermé par ✕) et bandeau
+  orange `.vac-stale-warning` de la section du terrain dans BFG, au-dessus de
+  la carte ouverte. BFG ne peut rien afficher DANS l'onglet PDF.
+- L'alerte ne bloque pas l'ouverture des cartes.
+
+5. ÉTAPES DU CHARGEMENT DES NOTAM
+- Affichées à CHAQUE actualisation (connexion, démarrage avec session valide,
+  bouton « Actualiser NOTAM »), même quand des NOTAM sont déjà affichés.
+  Aucun temps écoulé.
+- Correspondance avec le code :
+    « Chargement des données Briefing… » : connexion seulement, pendant
+        `fetchAllCncascData_` ;
+    « Demande envoyée… » : `requestSdvfrNotams_` (request-sdvfr-notams.php) ;
+    « Récupération des NOTAM en cours… » : requestId reçu, attente dans
+        `waitForSdvfrNotams_` ;
+    « Affichage des NOTAM… » : `rememberFreshSdvfrNotamsFromPayload_` puis
+        `renderCombinedBfgNotamSources_` (une image est laissée au navigateur
+        pour peindre le message, le rendu étant synchrone) ;
+    « NOTAM à jour » : 3 s puis bandeau masqué.
+- NATS reste actualisé ENSUITE (`importAutomaticNotamsFromNas_`), hors
+  étapes, comme avant. En cas d'échec SDVFR à la connexion ou au démarrage, le
+  bandeau reprend le comportement antérieur avant le relais NATS.
+- Pendant une séquence d'étapes, seules les étapes pilotent le bandeau : les
+  masquages demandés par les restaurations locales sont ignorés.
+- `fetchSdvfrTargetsOnce_` reçoit un rappel d'étape optionnel ; ses autres
+  appelants (actualisation d'un terrain) sont inchangés.
+- PLACE RÉSERVÉE : les bandeaux NOTAM (46 px) et VAC (68 px, deux lignes)
+  gardent leur place en permanence, invisibles au repos (`visibility` et non
+  plus `display`), pour qu'aucune apparition ni disparition ne décale la page.
+
+6. RÈGLE PERMANENTE « NPF-Q400 »
+- Ajoutée en section 0.A (règle 10) et dans CLAUDE.md (règles permanentes).
+- Relevé : aucun texte affiché de BFG TEST n'écrivait « NPF » seul ; rien à
+  corriger. Les nouveaux textes v5.20 respectent la règle.
+
+7. NETTOYAGE
+- Diagnostic temporaire v5.16 retiré entièrement : bloc du <head>, boutons
+  « Trace démarrage / Copier trace / Vider trace » du panneau Diagnostic BFG,
+  4 lignes de trace. Clé `bfgDiagStartupTraceV1` supprimée au chargement
+  (hors préfixes balayés par « Effacer ») et retirée des exceptions
+  d'« Effacer ».
+- Garde-fou clavier retiré : `blurIfAutomaticStartupFocus_`, ses 4 minuteurs,
+  son écouteur pageshow, `userHasInteracted_` et ses 4 écouteurs
+  (pointerdown, touchstart, mousedown, keydown).
+- CONSERVÉS : ouverture du clavier au toucher sur le champ
+  (`focusFromRealTap_`, v4.84 / v4.85) et `hardenSensitiveInputsAgainstAutofill_`.
+
+8. CONSTATS ET DÉCISIONS
+- Clavier au démarrage : CAUSE IDENTIFIÉE. Entrée github.io du trousseau iOS
+  (panneau « Se connecter » avec Touch ID), confirmée par la trace v5.16 et une
+  vidéo. Résolu côté utilisateur : entrée supprimée, réponse « Jamais pour ce
+  site ». Aucun correctif applicatif nécessaire.
+- DÉCISION : les NOTAM déjà téléchargés sont conservés après une déconnexion
+  manuelle (comportement voulu).
+
+TESTS v5.19
+- Altitudes SUP AIP : VALIDÉ.
+- Bouton « Effacer » : VALIDÉ.
+- VAC LFTW et hors ligne : VALIDÉ.
+- Bouton VAC à droite : VALIDÉ.
+- LFBM : À REVOIR en v5.19, traité en v5.20 (bouton grisé).
+- À FAIRE AVANT PROMOTION : partage entre deux appareils, expiration de la
+  couche reçue à 23h00, vérification le lendemain.
+
+VERSIONS
+- APP_VERSION_NUMBER 5.20, BFG_SW_VERSION 5.20, nouveau CACHE_NAME
+  'briefing-fdf-test-v5.20-vac-notam-steps-r1', description du manifest.
+- Constantes figées à 5.07 NON modifiées (cf. 0.B1). sw.js : version seule.
+
+STATUTS v5.20
+- Bouton VAC grisé : À MESURER.
+- Téléchargement automatique et bandeau VAC : À MESURER.
+- Alerte AIRAC : À MESURER (visible réellement à partir du 01_OCT_2026 si le
+  manifest reste au cycle 03_SEP_2026).
+- Étapes NOTAM et place réservée des bandeaux : À MESURER.
+- Nettoyage diagnostic et clavier : À MESURER (clavier toujours ouvert au
+  toucher sur le champ).
+
+NAS — 2026-09-23b — NOTAM DES 122 TERRAINS NPF
+===============================================================================
+
+*** TRAVAIL CÔTÉ NAS UNIQUEMENT — index.html N'EST PAS MODIFIÉ ***
+Fichiers préparés dans ~/nas-a-copier/, non installés. Aucun commit.
+Le bouton NOTAM de BFG est reporté ; BFG continue de télécharger ses propres
+NOTAM pour ses 27 pélicandromes, seule sa PUBLICATION vers le NAS est refusée.
+
+PÉRIMÈTRE — 122 TERRAINS
+- Passage de 27 pélicandromes à 122 terrains, tous sans exception.
+- Source, en lecture seule dans NPF-Q400-TEST/script.js : `pelicanAirports`
+  (27) + `otherAirports` (95) = 122, sans aucun doublon OACI — compté, non
+  supposé. `piafMetropolitanAerodromes` n'entre PAS dans le périmètre.
+- Format inchangé, celui qu'attend déjà request-sdvfr-notams.php :
+  { icao, lat, lon, halfLat: 0.015, halfLon: 0.018 }.
+- `npf_notams_airport_label()` est portée de 28 à 122 entrées. SANS CELA, les
+  94 terrains ajoutés se seraient affichés « LFxx - INCONNU » dans BFG comme
+  dans NPF.
+
+LOTS DE 50, ENCHAÎNÉS
+- `NPF_NOTAMS_SDVFR_BATCH_SIZE` = 50, limite de request-sdvfr-notams.php.
+- 122 terrains => 3 lots : 50 + 50 + 22. Vérifié par exécution réelle.
+- Un seul lot actif à la fois ; `npf_notams_refresh_start_next_batch()`
+  enchaîne le suivant à la fin du précédent.
+- Progression exposée au client : `batchIndex`, `batchCount` et `batchLabel`
+  (« lot 2/3 »), repris dans les messages d'état et dans le journal.
+
+RÈGLE DU TOUT OU RIEN
+- Les lots réussis sont accumulés dans `sdvfr-batch-accumulator.json`, HORS du
+  fichier partagé.
+- Le fichier partagé n'est écrit QU'APRÈS le dernier lot, et seulement si tous
+  les lots ont abouti.
+- Tout échec laisse le fichier précédent intact et bascule l'état en `error`
+  avec un message explicite.
+- Nuance : en multi-lots, un lot SANS AUCUN NOTAM est légitime (ses terrains
+  peuvent n'avoir aucun NOTAM du jour) et n'est donc pas un échec. Le garde-fou
+  « résultat vide » ne s'applique qu'au cumul final et au mode mono-lot.
+
+CRÉNEAU SDVFR OCCUPÉ ENTRE DEUX LOTS
+- BFG partage la même file. Si le créneau est pris entre deux lots, la chaîne
+  ATTEND et réessaie au lieu d'échouer.
+- Plafond `NPF_NOTAMS_BATCH_SLOT_MAX_WAIT` = 600 s, au-delà duquel l'échec est
+  propre et le fichier précédent conservé.
+
+GARDE SUR notams-publish
+- npf-docs-api.php refuse désormais (HTTP 409, `snapshot_owned_by_nas`) toute
+  publication applicative si le fichier en place porte `source: "NAS"`.
+- Sans cette garde, chaque interaction NOTAM dans BFG aurait ramené le fichier
+  partagé à ses 27 pélicandromes.
+- VÉRIFIÉ EN LECTURE SEULE dans Briefing_fdf_TEST ET dans Briefing-fdf
+  (pérenne) : le refus est sans conséquence.
+  `publishBfgNpfNotamsSharedSnapshot_` intercepte l'échec dans son propre
+  try/catch, se contente d'un `console.warn`, écrit ensuite ses copies locales
+  et renvoie « écrit ». Les 4 appelants sont tous protégés : trois par
+  `.catch(console.warn)`, le quatrième (`flushExplicitNotamClear_`) par un
+  try/catch. AUCUN message d'erreur affiché, AUCUNE perturbation de l'import
+  NOTAM. Le code est identique dans les deux versions.
+- Seule trace : un `console.warn` par tentative, invisible sur iPad.
+
+PURGE DU STATE
+- Le fichier partagé ne porte plus aucune sélection : ni `state`, ni reprise de
+  l'état de la veille. Il ne transporte que le texte NOTAM et sa couverture.
+- VÉRIFIÉ EN LECTURE SEULE dans NPF-Q400-TEST : l'absence de `state` est
+  supportée. script.js ~L.32182 lit `payload?.state?.byId || {}` et ~L.32193
+  recrée la structure localement si elle manque.
+
+VERROU D'ÉCRITURE
+- `npf_notams_with_lock()` pose un `flock(LOCK_EX)` sur un fichier `.lock`
+  dédié avant toute écriture du fichier partagé. Le verrou ne porte jamais sur
+  la cible elle-même, afin que le `rename()` atomique reste possible.
+- Un verrou indisponible ne bloque jamais l'écriture : on dégrade sans échouer.
+- Le verrou anti-chevauchement des exécutions planifiées existait déjà.
+
+TÂCHE PLANIFIÉE
+- UN SEUL chargement par jour, à 06h30. Aucun rafraîchissement automatique
+  ensuite : les NOTAM du jour n'apparaissent pas en cours de journée.
+- Délai d'attente porté de 300 s à 1800 s pour couvrir 3 lots plus l'attente
+  éventuelle d'un créneau.
+- Journal applicatif déplacé HORS du dossier web, qui est public :
+  /volume1/briefing-logs/npf-notams-auto-refresh.log, dossier créé en 0750.
+
+FICHIERS PRÉPARÉS — NON INSTALLÉS
+- ~/nas-a-copier/5_notams-sdvfr-shared_2026-09-23b.txt
+- ~/nas-a-copier/5_npf-docs-api_2026-09-23b.txt
+- ~/nas-a-copier/5_notams-auto-refresh_2026-09-23b.txt
+Les trois passent `php -l`. Les `_v5.15`, qui correspondent à ce qui est
+installé sur le NAS, ne sont pas touchés.
+
+CONTRÔLES EFFECTUÉS
+- `php -l` sur les trois fichiers.
+- Exécution réelle de la bibliothèque : 122 terrains, 3 lots de 50 + 50 + 22,
+  aucun lot au-dessus de 50, couverture identique au périmètre, aucun doublon
+  OACI, aucun libellé « INCONNU », format de cible conforme.
+
+STATUT : À INSTALLER ET À MESURER.
+Durée réelle et taille du fichier pour 122 terrains inconnues tant que le
+premier lancement manuel n'a pas eu lieu.
+
+INSTALLATION ET VALIDATION — 2026-09-23
+- Installés dans /volume1/web/briefing-api/, fichiers 2026-09-23b :
+  - notams-sdvfr-shared.php (46 693 octets) ;
+  - npf-docs-api.php (66 052 octets) ;
+  - notams-auto-refresh.php (4 466 octets).
+  Tailles identiques aux fichiers livrés. Anciennes versions sauvegardées en
+  `.v515`.
+- Tâche DSM « BFG NPF - NOTAM 122 terrains » : utilisateur root, script lancé
+  via `sudo -u http /bin/php`, planification quotidienne à 06h30, une seule
+  exécution par jour.
+- Test manuel lancé depuis le Planificateur de tâches : état « Normal ».
+  Relevé de npf-notams-refresh-v1.json :
+  - 3 lots en ~61 s (16:00:52 → 16:01:53) ;
+  - aucune attente de créneau (`slotWaitingSince` 0) ;
+  - 926 NOTAM sur 110 terrains, pour 122 interrogés (12 terrains couverts
+    sans NOTAM).
+  npf-notams-snapshot-v1.json passé de 74 Ko à 248 Ko.
+- Garde vérifiée en réel : BFG encaisse le refus de publication sans erreur
+  visible ; NPF accepte le fichier sans sélection. BFG fonctionne comme avant
+  pour ses 27 pélicandromes.
+
+DÉFAUT CONSTATÉ DEPUIS (session NPF)
+- L'action web `notams-refresh` envoie les 122 terrains en un seul lot
+  (`npf_notams_create_request`) au lieu de passer par
+  `npf_notams_refresh_start_batched`. Le NAS répond HTTP 500 « Trop de
+  terrains pour une seule demande SDVFR (50 maximum) ».
+- Seule la tâche de 06h30 découpe en lots.
+- Correction en préparation dans la session NPF.
+- Second point à vérifier : `npf_notams_refresh_follow()` pourrait perdre les
+  informations de lots.
+
+STATUT (mise à jour 2026-09-23, remplace le statut de préparation ci-dessus) :
+- Chaîne par lots via la tâche planifiée de 06h30 : VALIDÉ.
+- Action web `notams-refresh` : À REVOIR (défaut ci-dessus, correction en
+  cours dans la session NPF).
+
+TEST v5.19 — 2026-09-23
+Base : TEST v5.18
+===============================================================================
+
+ÉTAT NOTAM — DEUX COUCHES SÉPARÉES
+- Les cases vertes, les cases noires et les surlignages suivent désormais tous
+  la même règle, répartis en deux couches qui ne se mélangent jamais.
+- COUCHE PERSONNELLE : `briefingFdfPersistentNotamStateV1`, inchangée.
+  Permanente tant que le NOTAM ne change pas, y compris les jours suivants.
+  Enregistrée sur l'iPad uniquement.
+- COUCHE REÇUE : nouvelle clé `briefingFdfReceivedNotamStateV1`. Elle contient
+  l'état d'un briefing partagé ouvert. Temporaire : `expiresAt` est fixé à
+  23h00 locales du jour, cohérent avec la fin de session Briefing.
+  Stockée en localStorage et non en sessionStorage, afin de survivre à une
+  fermeture puis relance de BFG dans la journée.
+- À l'affichage, la couche reçue est posée d'abord, la personnelle par-dessus.
+  En cas de conflit sur un même NOTAM, LE CHOIX PERSONNEL L'EMPORTE TOUJOURS.
+- Aucune distinction visuelle entre état reçu et état personnel.
+
+CORRECTION DU DÉFAUT CENTRAL
+- Jusqu'ici, l'ouverture d'un briefing partagé appelait `applySavedNotamState_`
+  puis immédiatement `persistCurrentNotamState_`, ce qui écrivait l'état de
+  l'autre dans la couche personnelle, définitivement et dès le rendu.
+- `parseAndDisplayNotams` accepte maintenant une origine. Avec l'origine
+  `received`, l'état est rangé dans la couche reçue et n'est JAMAIS persisté
+  dans la couche personnelle.
+- Les 10 appels à `persistCurrentNotamState_` ont été classés un par un :
+  1 restauration (le cas ci-dessus) et 9 gestes personnels.
+
+MARQUAGE PAR CHAMP
+- Corriger le seul appel de restauration ne suffisait pas : les 9 gestes
+  relisent tout le DOM, qui contient aussi l'état reçu après ouverture d'un
+  partage. Chaque geste aurait donc absorbé l'état de l'autre.
+- Trois marqueurs sont posés sur chaque NOTAM au moment où la couche reçue est
+  appliquée : `data-bfg-origin-checked`, `data-bfg-origin-hidden` et
+  `data-bfg-origin-highlight`. Ce dernier couvre le texte du NOTAM ET le bloc
+  de validité.
+- `captureCurrentNotamStateForPersistence_` ignore tout champ encore marqué
+  comme reçu.
+- Dès qu'un champ est touché, son marqueur tombe et le champ devient personnel.
+  C'est ce qui réalise « un geste fait pendant la consultation d'un partage va
+  dans la couche personnelle », au niveau du champ et non du NOTAM entier.
+- Décocher une case reçue retire l'entrée de la couche reçue uniquement, sans
+  rien écrire dans la couche personnelle.
+
+SURLIGNAGES MIXTES — LIMITE ASSUMÉE
+- Le surlignage est mémorisé sous forme de HTML du conteneur entier, non
+  surlignage par surlignage.
+- Conséquence : si un surlignage personnel est ajouté dans un NOTAM qui portait
+  déjà un surlignage reçu, le surlignage reçu devient personnel avec lui et
+  survivra donc à 23h00.
+- Comportement accepté et documenté. Le séparer supposerait de mémoriser les
+  surlignages par plage de texte plutôt que par HTML de conteneur.
+
+EXPIRATION À 23H00
+- Purge au démarrage si `expiresAt` est dépassé, puis à `pageshow` et au retour
+  au premier plan (`visibilitychange`).
+- Minuteur armé sur l'échéance : avec BFG resté ouvert, la couche reçue
+  disparaît AUSSI DE L'AFFICHAGE à 23h00, et pas seulement du stockage. Les
+  cases reçues sont décochées et les surlignages reçus retirés du DOM.
+- Un champ encore marqué comme reçu n'a par définition jamais été retouché :
+  son retrait ne peut pas altérer l'état personnel.
+
+EFFACEMENTS EXPLICITES
+- « Annuler Sélection » et « Annuler Surlignage » effacent LES DEUX COUCHES.
+- La couche personnelle conserve son marqueur d'effacement horodaté v5.15 ;
+  les champs correspondants sont en plus retirés de la couche reçue et leurs
+  marqueurs DOM supprimés.
+
+PARTAGE
+- `buildPortableSessionObject_` reçoit une option `mergeReceivedState`.
+- Un PARTAGE emporte tout l'état affiché : cases vertes, cases noires,
+  surlignages du texte ET surlignages de validité, couches reçue et
+  personnelle fusionnées. Un briefing reçu puis repartagé est donc un partage
+  à part entière.
+- Le nouveau champ `notamState.byId` porte les quatre champs. Les anciennes
+  clés `checkedIds`, `highlights`, `checkedSignatures` et `highlightSignatures`
+  sont conservées pour rester lisibles par les versions antérieures.
+- Correction associée : le partage ne transportait jusqu'ici NI les cases
+  noires NI les surlignages de validité.
+- Le SNAPSHOT LOCAL utilise le même constructeur mais avec
+  `mergeReceivedState` à false : il ne contient que la couche personnelle.
+  Sans cela, sa restauration aurait promu l'état reçu en permanent.
+
+EFFACER — REMISE À ZÉRO COMPLÈTE
+- Le bouton « Effacer » efface désormais TOUTES les données locales BFG, et non
+  plus une liste partielle de clés.
+- Le balayage se fait PAR PRÉFIXE (`briefingFdf`, `bfgNpf`, `bfgVac`,
+  `bfgPdfAnnotations:`) et non par liste nominative : une clé ajoutée dans une
+  version future sera prise en compte sans qu'on ait à penser à l'inscrire.
+- SONT EFFACÉS :
+    - couche NOTAM personnelle `briefingFdfPersistentNotamStateV1` : cases
+      vertes, cases noires, surlignages du texte et de la validité ;
+    - couche NOTAM reçue `briefingFdfReceivedNotamStateV1` ;
+    - marqueurs d'effacement explicite `clearMarkers` (inclus dans la couche
+      personnelle) ;
+    - « Garder la sélection » `briefingFdfKeepSelectionBySourceV1` ;
+    - plage de validité NOTAM, source NATS/SDVFR, caches NOTAM du jour ;
+    - sauvegarde locale de session (IndexedDB `briefingSessionDB`) ;
+    - NOTAM SDVFR persistants (IndexedDB + CacheStorage dédié) ;
+    - SUP AIP importés (IndexedDB `bfgSupAipPersistentDB`) ;
+    - cartes VAC (IndexedDB `BfgVacDB`) et dates de vérification du cycle ;
+    - annotations PDF : IndexedDB `bfg-pdf-annotations-v1` et clés
+      `bfgPdfAnnotations:*`. LACUNE CORRIGÉE : elles n'étaient effacées nulle
+      part jusqu'ici ;
+    - modes FDS/GAAR, statut NOTAM auto, coordonnées OACI manuelles ;
+    - derniers codes de partage créés ;
+    - session NPF-Q400 Docs `bfgNpfNotamsNasToken*` : sans conséquence, elle est
+      réobtenue à chaque connexion Briefing par
+      `authorizeNpfNotamsNasFromBfgPassword_`, appelée uniquement depuis
+      `unlockCncascAndSync_`. Seule conséquence : entre un effacement et la
+      connexion suivante, la publication NOTAM vers le NAS pour NPF-Q400 est
+      inactive et retombe sur les copies locales de secours ;
+    - caches applicatifs et de données BFG TEST.
+- SONT CONSERVÉS, seules exceptions :
+    - `bfgDiagStartupTraceV1`, la trace de diagnostic de démarrage v5.16 ;
+    - `bfg_cncasc_token_v1` et `bfg_cncasc_token_exp_v1`, la connexion Briefing,
+      qui s'interrompt avec son propre bouton « Déconnexion » ;
+    - les 5 clés du PONT NPF-Q400 : `bfgNpfBridgeIdV1`,
+      `bfgNpfBridgePairCodeV1`, `bfgNpfBridgePairCodeExpV1`,
+      `bfgNpfBridgeGrantExpV1` et `bfgNpfBridgePairedV1`. L'association est une
+      opération manuelle par code à 8 chiffres : elle n'a pas à être détruite
+      par un effacement de données locales, et n'est donc PAS à refaire après
+      un « Effacer ».
+      POINT DE VIGILANCE : le préfixe de balayage `bfgNpf` capturerait ces
+      clés ; elles sont explicitement inscrites dans la liste de conservation.
+      Toute future clé du pont devra y être ajoutée.
+- PROTECTION AJOUTÉE : `clearBfgLocalCaches_` supprimait tous les caches
+  commençant par `briefing-fdf`. Les trois applications partageant l'origine
+  grisonb.github.io, cela emportait AUSSI le cache applicatif de la version
+  pérenne (préfixe `briefing-fdf-v`), rendant l'outil opérationnel indisponible
+  hors ligne jusqu'à un rechargement en ligne. Ce préfixe est désormais
+  explicitement préservé. Les caches de DONNÉES partagés restent effacés : ils
+  se retéléchargent, contrairement à la coque applicative.
+- Le message de confirmation et l'aide « ? » énumèrent maintenant ce qui est
+  supprimé et ce qui est conservé, en mentionnant explicitement les cases et les
+  surlignages NOTAM.
+
+TRANSFERT BFG -> NPF-Q400
+- `publishBfgNpfNotamsSharedSnapshot_` N'EST PAS MODIFIÉE, comme demandé.
+- Elle lit `readPersistentNotamState_()`, donc la seule couche personnelle.
+  NPF-Q400 ne reçoit plus l'état d'un briefing partagé ouvert dans BFG.
+  C'est un changement de comportement observable côté NPF-Q400, obtenu sans
+  toucher une ligne de cette fonction.
+
+SUP AIP — AFFICHAGE DES TRANCHES D'ALTITUDE
+- Vocabulaire aligné sur le SUP AIP officiel du SIA :
+    STD / FL              -> « FL195 »
+    ALT                   -> « 6000 ft AMSL »
+    HEI                   -> « 1000 ft ASFC »
+    0 FT HEI, SFC, GND    -> « SFC »
+    999 FL, UNL, msl 99900 -> « UNL »
+- Motif vérifié sur le SUP AIP 183/26 : le relais SDVFR code « illimité » par
+  la valeur sentinelle 999 FL, avec `upper_limit_msl` à 99900. BFG affichait
+  « 999 FL STD », ce qui laissait croire à un plafond réel au FL999 alors que
+  le document officiel indique UNL. De même, « 0 FT HEI » est affiché SFC dans
+  le PDF officiel.
+- Le PDF officiel `lf_sup_2026_183_fr.pdf` a été téléchargé et comparé : les
+  ensembles de tranches concordent, seuls les vocabulaires différaient.
+
+SUP AIP — FILTRAGE PAR LE FL MAX
+- Le relais fournit `lower_limit_msl` et `upper_limit_msl`, valeurs déjà
+  normalisées en pieds MSL, jusqu'ici ignorées. Elles servent désormais au
+  FILTRAGE ; l'affichage continue d'utiliser la valeur brute.
+- RÈGLE DE PRUDENCE : en cas de doute, la zone reste AFFICHÉE.
+    - référence HEI / ASFC / AGL : la conversion dépend du relief -> conservée ;
+    - valeur MSL absente ou aberrante -> repli sur le FL calculé ;
+    - aucune valeur exploitable -> conservée.
+  Mieux vaut une zone en trop qu'une zone active manquante.
+- La règle v5.07 est conservée : une zone dont le plancher est supérieur OU
+  ÉGAL au FL max reste masquée.
+- Alignement des bornes serveur et client : volontairement NON traité.
+  Constat mesuré à conserver : avec ceiling=115 le relais renvoie 11 des 32
+  zones du SUP AIP 183/26, dont ZRT MIKE au plancher exactement FL115, que le
+  filtre client masque ensuite. STATUT : À DÉCIDER.
+
+NON-RÉGRESSION
+- Diagnostic temporaire v5.16 conservé intact et fonctionnel.
+- Mécanique VAC v5.17/v5.18 inchangée, bouton toujours à droite du bandeau.
+- Garde-fou clavier, surligneur Apple Pencil et routage du service worker
+  inchangés.
+- Aucun changement NAS / worker VPS / RTBA. Aucun fichier à déposer sur le NAS.
+- `BFG_REQUIRED_SW_VERSION_` et les URL en `?v=5.07` laissés inchangés,
+  conformément à la section 0.B1.
+- Version pérenne non touchée.
+
+CONTRÔLES AVANT LIVRAISON
+- Syntaxe des 3 blocs JavaScript inline d'index.html vérifiée.
+- Manifeste JSON vérifié.
+- Syntaxe du service worker vérifiée.
+- Cohérence APP_VERSION_NUMBER / BFG_SW_VERSION / description du manifest.
+- Filtre de purge d'activate toujours limité à `briefing-fdf-test-`.
+- Historique v5.18 et antérieur conservé intégralement.
+
+===============================================================================
+
+TEST v5.18 — 2026-09-23
+Base : TEST v5.17
+===============================================================================
+
+BOUTON VAC — ALIGNEMENT À DROITE RENFORCÉ
+- La règle v5.17 `margin-left: auto` ne produisait pas l'effet attendu sur
+  l'iPad. Le fichier réellement servi par GitHub Pages a été vérifié : la règle
+  y était bien présente et sa spécificité (1,2,1) l'emportait sur la règle de
+  base `.vac-open-btn`. Le code déployé était donc correct.
+- Deux causes restaient possibles : un iPad n'ayant pas rechargé la page, ou une
+  observation faite dans la Météo manuelle, dont le `h3` n'est PAS le bandeau
+  flex de la section NOTAM et n'était donc pas concerné par la règle v5.17.
+- Les deux cas sont traités dans cette version.
+
+CE QUI CHANGE
+- Le `h3` des blocs de terrain de la Météo manuelle passe en `display: flex`
+  avec `align-items: center`, `gap: 10px` et `flex-wrap: wrap`, comme le bandeau
+  de la section NOTAM. Présentation quasi identique à l'œil : le contenu était
+  déjà du texte suivi de trois boutons en ligne.
+- Le bouton VAC reçoit, dans les DEUX sections :
+    margin-left: auto !important   -> absorbe tout l'espace libre à sa gauche
+    order: 99                      -> reste le dernier élément de sa ligne
+    flex-shrink: 0                 -> ne se comprime pas si la ligne est chargée
+- `!important` est ici volontaire : il rend l'alignement insensible à toute
+  règle ultérieure sur `.vac-open-btn`, et retire toute ambiguïté de
+  spécificité si un style est ajouté plus tard.
+- Si le nom du terrain est long, le bandeau se replie (`flex-wrap`) et le bouton
+  VAC passe à la ligne suivante, toujours aligné à droite.
+
+VERSION
+- Nouvelle règle de travail : chaque livraison poussée sur GitHub reçoit un
+  nouveau numéro de version, même pour une petite correction ; les itérations
+  non poussées ne changent pas de numéro. Cette version 5.18 l'applique, et le
+  point 5 de la section 0 ci-dessus a été réécrit en conséquence.
+- Service worker en 5.18, nouveau cache `briefing-fdf-test-v5.18-vac-right-r1`.
+
+NON-RÉGRESSION
+- Modification exclusivement CSS : aucun JavaScript, aucun HTML touché.
+- Mécanique VAC inchangée : source, manifest, contrôle SHA-256, stockage
+  `BfgVacDB`, vérification quotidienne du cycle, bandeau d'avertissement,
+  ouverture en onglet.
+- Diagnostic temporaire v5.16 conservé intact et fonctionnel.
+- Garde-fou clavier, persistance NOTAM et surligneur Apple Pencil inchangés.
+- Aucun changement NAS / worker VPS / RTBA.
+- `BFG_REQUIRED_SW_VERSION_` et les URL en `?v=5.07` laissés inchangés,
+  conformément à la section 0.B1.
+- Version pérenne non touchée.
+
+CONTRÔLES AVANT LIVRAISON
+- Syntaxe des 3 blocs JavaScript inline d'index.html vérifiée.
+- Manifeste JSON vérifié.
+- Syntaxe du service worker vérifiée.
+- Cohérence APP_VERSION_NUMBER / BFG_SW_VERSION / description du manifest.
+- Filtre de purge d'activate toujours limité à `briefing-fdf-test-`.
+- Historique v5.17 et antérieur conservé intégralement.
+
+TEST v5.17 — 2026-09-23
+Base : TEST v5.16
+===============================================================================
+
+CARTES VAC — BOUTON PAR TERRAIN
+- Ajout d'un bouton « VAC » violet dans le bandeau de chaque aérodrome, après
+  « Afficher TAF » et le bouton ↻.
+- Dans la section NOTAM, le bouton est aligné à l'EXTRÉMITÉ DROITE du bandeau
+  (`margin-left: auto` dans le bandeau `h3` en `display: flex`), séparé du
+  groupe « Afficher TAF » / ↻ qui reste à gauche.
+- Le bouton est créé par `createAirportSectionElement`, donc il apparaît à la
+  fois dans la section NOTAM et dans la Météo manuelle.
+- Le bouton est TOUJOURS actif, y compris pour un terrain sans VAC publiée.
+- Clic géré par délégation au niveau `document`, afin de couvrir les deux
+  emplacements sans dupliquer de code.
+- Ouverture identique à NPF-Q400 : l'onglet est ouvert AVANT tout `await`,
+  sinon Safari le bloque, puis reçoit l'URL blob du PDF, révoquée après 120 s.
+  Repli sur `window.location.href` si l'onglet est refusé.
+
+SOURCE DES CARTES
+- Dépôt GitHub Pages public NPF-Q400-VAC, déjà utilisé par NPF-Q400 :
+  https://grisonb.github.io/NPF-Q400-VAC/
+- AUCUN fichier NAS ni VPS n'est utilisé ni à déposer. Aucune authentification.
+- Le manifest donne le chemin de chaque PDF ; l'URL n'est jamais reconstruite à
+  partir de l'OACI. L'OACI ne sert que de clé.
+- Manifest au moment de l'intégration : schemaVersion 1, cycle 03_SEP_2026,
+  446 terrains dont 415 avec VAC publiée.
+- Couverture des 28 OACI de la liste NOTAM BFG : 27 disponibles. Seul LFBM
+  (Mont-de-Marsan) est marqué `not_published_by_sia`.
+
+SOURCES MULTIPLES — STRUCTURE PRÊTE POUR LES VAC MILITAIRES
+- La constante `BFG_VAC_SOURCES_` est une LISTE consultée dans l'ordre déclaré.
+  La première source qui publie réellement la VAC du terrain l'emporte.
+- Une seconde source (VAC militaires, autre dépôt ou autre manifest) pourra y
+  être ajoutée sans refonte, à condition d'exposer le même contrat :
+  schemaVersion 1, `airports { OACI: { available, file, sha256, size, cycle,
+  name } }`, `sourceCycle`.
+- Cette seconde source n'est PAS créée dans cette version. STATUT : À VENIR.
+
+CONTRÔLE D'INTÉGRITÉ À CHAQUE TÉLÉCHARGEMENT
+- Réponse HTTP correcte, fichier non vide, signature `%PDF-`, taille exacte à
+  l'octet et SHA-256 conforme au manifest.
+- Un PDF non conforme est rejeté : rien n'est écrit en base.
+
+STOCKAGE
+- Base IndexedDB dédiée `BfgVacDB`, magasin `vacPdfs`, clé `oaci`.
+- La base `NpfVacDB` de NPF-Q400 n'est ni lue ni modifiée. Les deux applications
+  partagent pourtant la même origine, mais une PWA installée sur iPad peut
+  isoler son stockage : une lecture croisée serait un bonus non fiable.
+- Téléchargement À LA DEMANDE au clic, jamais de synchronisation de masse :
+  environ 200 à 400 ko par carte, contre 124 Mo pour le pack complet.
+
+CYCLE AIRAC — VÉRIFICATION UNE FOIS PAR JOUR
+- Déclenchée par la PREMIÈRE CONNEXION BRIEFING RÉUSSIE de la journée, à la fin
+  de `unlockCncascAndSync_`, en tâche de fond et sans bloquer la connexion.
+- AUCUNE requête VAC au démarrage de l'application : uniquement à la connexion
+  ou au clic.
+- La vérification retélécharge le manifest de chaque source, compare le SHA-256
+  de chaque VAC déjà stockée, retélécharge celles qui ont changé et supprime
+  celles qui ne sont plus publiées.
+- La date de vérification est mémorisée dans `bfgVacLastManifestCheckDayV1` et
+  `bfgVacLastManifestCheckIsoV1`. Les connexions suivantes du même jour ne
+  relancent pas la vérification.
+- En cas d'échec, la date du jour n'est PAS mémorisée : les VAC restent donc
+  signalées comme non vérifiées.
+
+AVERTISSEMENT DE CYCLE NON VÉRIFIÉ
+- Au clic, si la vérification du jour n'a pas eu lieu, BFG tente une
+  vérification ciblée sur ce seul terrain, avec manifest forcé à jour.
+- Si cette vérification aboutit, la carte est ouverte normalement.
+- Si elle échoue (hors ligne, réseau indisponible) et qu'une copie locale
+  existe, la carte est affichée MAIS un bandeau orange est inséré sous le
+  bandeau du terrain, indiquant le cycle enregistré et la date de la dernière
+  vérification.
+- Une VAC dont le cycle ne peut pas être confirmé n'est jamais affichée sans cet
+  avertissement.
+- Les bandeaux sont retirés dès qu'une vérification quotidienne aboutit.
+
+CAS D'ERREUR
+- Terrain sans VAC publiée (LFBM) ou OACI absent des manifests (ex. EGLL saisi
+  en Météo manuelle) : message « Aucune carte VAC disponible pour XXXX. »
+- Hors ligne et aucune copie locale : « VAC XXXX non disponible hors ligne.
+  L'ouvrir une fois en ligne pour la conserver. »
+- Téléchargement corrompu : message d'erreur, aucune écriture en base.
+
+SERVICE WORKER
+- Nouvelle règle placée en tête du routage `fetch` : les requêtes vers
+  `/NPF-Q400-VAC/` sont servies en RÉSEAU PUR.
+- Nécessaire car BFG est publié sur la même origine que le dépôt VAC : sans
+  cette règle, ces requêtes tombaient dans le `cacheFirst` final, ce qui aurait
+  figé le manifest et accumulé les PDF dans le cache applicatif BFG.
+- L'ordre des autres règles est strictement inchangé.
+
+EFFACEMENT
+- Le bouton « Effacer » vide désormais `BfgVacDB` et retire les deux clés de
+  date de vérification, via `resetBfgLocalStorage_`.
+- La trace de diagnostic `bfgDiagStartupTraceV1` reste préservée comme en v5.16.
+
+SAUVEGARDE LOCALE ET PARTAGE
+- Aucun impact : `collectWeatherDataSnapshot_` ne stocke que `metarHTML` et
+  `tafHTML`. Le bandeau `h3` est reconstruit à chaque rendu, donc les sections
+  restaurées reçoivent le bouton automatiquement.
+- Les PDF VAC restent hors snapshot et hors partage : un briefing partagé ne les
+  embarque pas et son volume est inchangé. Le destinataire les téléchargera au
+  besoin.
+- Correction associée : l'export PDF des NOTAM reprenait le texte du bandeau de
+  terrain en retirant « Afficher TAF » et « Masquer TAF ». « VAC » est ajouté à
+  ce nettoyage, sinon le mot se serait collé au nom du terrain dans le PDF.
+
+DIAGNOSTIC TEMPORAIRE v5.16
+- Intégralement conservé et fonctionnel : bloc `<script>` du `<head>`, boutons
+  « Trace démarrage » / « Copier trace » / « Vider trace » du panneau
+  « Diagnostic BFG », et les 4 lignes de trace dans `forceBriefingStartAtTop`,
+  `scheduleBfgInitialTopLock_`, `blurIfAutomaticStartupFocus_` et
+  `clearWeatherForDailyLogout_`.
+- Le problème d'apparition du clavier au démarrage reste NON CORRIGÉ et en
+  attente de mesure. STATUT : À MESURER.
+
+NON-RÉGRESSION
+- Aucune modification de la persistance NOTAM ni du surligneur Apple Pencil.
+- Garde-fou clavier `preventIpadKeyboardOnStartup_` inchangé.
+- Aucun changement NAS / worker VPS / RTBA.
+- `BFG_REQUIRED_SW_VERSION_` et les URL en `?v=5.07` laissés inchangés,
+  conformément à la section 0.B1.
+- Version pérenne non touchée.
+
+CONTRÔLES AVANT LIVRAISON
+- Syntaxe des 3 blocs JavaScript inline d'index.html vérifiée.
+- Manifeste JSON vérifié.
+- Syntaxe du service worker vérifiée.
+- Service worker aligné sur v5.17 avec nouveau nom de cache
+  `briefing-fdf-test-v5.17-vac-r2`.
+- RÉVISION r2 : cache renommé de `...-vac-r1` en `...-vac-r2` afin que l'iPad
+  reprenne l'alignement à droite du bouton VAC. `BFG_SW_VERSION` reste à 5.17 et
+  le numéro de version affiché est inchangé : c'est la modification du fichier
+  `sw.js` lui-même qui déclenche l'installation du nouveau service worker, puis
+  la purge des anciens caches `briefing-fdf-test-`.
+- Filtre de purge d'activate toujours limité à `briefing-fdf-test-`.
+- Historique v5.16 et antérieur conservé intégralement.
+
+TEST v5.16 — 2026-09-23
+Base : TEST v5.15
+===============================================================================
+
+*** VERSION DE DIAGNOSTIC TEMPORAIRE — NE PAS PROMOUVOIR EN PÉRENNE ***
+Cette version n'apporte aucune fonction opérationnelle. Elle sert uniquement à
+capturer, au premier lancement à froid d'une journée (jeton expiré), ce qui se
+passe autour du champ « Code accès Briefing » : apparition puis disparition du
+clavier iPad et défilement de la page. À retirer une fois la mesure faite.
+
+SYMPTÔME OBSERVÉ (non corrigé dans cette version)
+- Au démarrage à froid, le clavier apparaît puis disparaît, et la page se
+  retrouve défilée.
+- Se produit au premier lancement de la journée, ou sur une TEST jamais
+  connectée. Ne se produit pas après une déconnexion manuelle le même jour,
+  ni à froid en étant déjà connecté.
+- Constat présent aussi en version pérenne ; la pérenne n'est pas modifiée.
+
+ANALYSE PRÉALABLE (faits vérifiés dans le code, aucune correction appliquée)
+- Le garde-fou `preventIpadKeyboardOnStartup_()` ne bloque pas le focus : il le
+  laisse se produire puis appelle `input.blur()` à 0, 50, 300 et 1000 ms tant
+  qu'aucune interaction utilisateur n'a eu lieu.
+- Aucun `focus()` de démarrage n'existe dans le code BFG : le seul appel est
+  déclenché par un `pointerdown`/`touchstart` réel sur le champ. L'origine du
+  focus initial est donc externe (AutoFill iOS / fenêtre biométrique).
+- La différence entre « déconnexion manuelle le même jour » et « premier
+  lancement du jour » n'est pas le jeton mais la CLÉ DE DATE : les caches
+  `briefingFdfNotamQuickCacheV1` et `briefingFdfSdvfrDailyNotamsV1` sont
+  rejetés dès que leur champ `day` ne vaut plus `bfgTodayLocalKey_()`.
+- Conséquence : au premier lancement du jour, `restoreBfgNotamQuickCache_()`
+  sort en `false` et le bandeau `#notam-loading-banner` reste affiché. Or ce
+  bandeau se trouve À L'INTÉRIEUR du panneau Accès Briefing, directement sous
+  le champ, entre `#cncasc-auth-status` et `#cncasc-warning`. Il représente
+  environ 50 à 60 px qui apparaissent puis disparaissent sous le champ pendant
+  le chargement.
+- En plus, si un jeton expiré est encore présent, `getStoredCncascToken_()`
+  déclenche `clearWeatherForDailyLogout_()`, chemin inexistant après une
+  déconnexion manuelle.
+- Il y a donc probablement deux causes superposées : l'ouverture du clavier
+  elle-même, et le déplacement du contenu sous le champ. STATUT : À MESURER.
+
+CE QUE FAIT CETTE VERSION
+- Enregistreur de démarrage passif placé dans le `<head>`, démarré au plus tôt.
+- Écouteurs uniquement passifs, en capture : aucun `preventDefault`, aucun
+  `focus`/`blur`, aucun défilement provoqué. Le garde-fou clavier existant est
+  laissé strictement tel quel.
+- Événements journalisés avec horodatage en ms depuis le début du script :
+  état du jeton au démarrage (aucun / valide / expiré, jamais sa valeur),
+  `document.activeElement` au départ puis à chaque changement, `focusin` et
+  `focusout` avec `isTrusted`, `pointerdown`/`touchstart` sur les deux champs
+  de saisie, `visualViewport` resize/scroll et `window.scrollY`,
+  affichage/masquage de `#notam-loading-banner`, changements de
+  `#cncasc-warning`, hauteur de `#cncasc-auth-panel`, puis `load`,
+  `pageshow` (avec `persisted`), `visibilitychange` et `controllerchange` du
+  service worker.
+- Quatre lignes de trace, sans effet fonctionnel, ajoutées au début de
+  `forceBriefingStartAtTop`, `scheduleBfgInitialTopLock_`,
+  `blurIfAutomaticStartupFocus_` et `clearWeatherForDailyLogout_`. Elles
+  n'agissent que si `window.__bfgDiagMark_` existe.
+- L'état du jeton est lu directement en `localStorage.getItem()`, SANS appeler
+  `getStoredCncascToken_()`, qui supprimerait les clés au passage et fausserait
+  la mesure.
+
+STOCKAGE DE LA TRACE
+- Clé dédiée `bfgDiagStartupTraceV1`, conservée sur les 3 derniers lancements.
+- Cette clé n'est retirée ni par le bouton « Effacer » ni par « Déconnexion » :
+  `clearCncascToken_()` ne retire que 4 clés nommées, `resetBfgLocalStorage_()`
+  que des clés nommées, et il n'existe aucun `localStorage.clear()` global.
+- L'enregistrement s'arrête seul au bout de 15 secondes par lancement, avec un
+  plafond de 900 événements.
+
+INTERFACE
+- Trois boutons ajoutés dans le panneau « Diagnostic BFG » : « Trace démarrage »,
+  « Copier trace » et « Vider trace », avec leur propre zone d'affichage
+  `#bfg-diag-startup-output`, distincte de celle du diagnostic existant pour
+  éviter tout conflit avec son rafraîchissement automatique.
+
+PROCÉDURE DE MESURE
+- Installer cette version, se connecter, puis FERMER COMPLÈTEMENT BFG avant
+  23h00. Important : `scheduleBfgDailyExpiry_()` arme un minuteur qui, à 23h00,
+  appelle `clearCncascToken_()` et SUPPRIME les clés de jeton. Si BFG reste
+  ouvert, même en arrière-plan, l'état du lendemain sera « aucun jeton » au lieu
+  de « jeton expiré ».
+- Le lendemain matin, lancer BFG à froid avant toute connexion, attendre une
+  quinzaine de secondes, puis ouvrir « Diagnostic BFG » et afficher la trace.
+
+RETRAIT DE CETTE VERSION
+- Supprimer le bloc `<script>` balisé « BFG DIAG TEMPORAIRE v5.16 » du `<head>`.
+- Supprimer le bloc HTML balisé du panneau « Diagnostic BFG ».
+- Supprimer les 4 lignes commençant par `/* BFG DIAG TEMPORAIRE v5.16 */`.
+- Retirer au besoin la clé `bfgDiagStartupTraceV1` avec « Vider trace ».
+
+NON-RÉGRESSION
+- Aucune modification de la persistance NOTAM, du surligneur Apple Pencil, du
+  routage du service worker ni du garde-fou clavier.
+- Aucun changement NAS / worker VPS / RTBA.
+- `BFG_REQUIRED_SW_VERSION_` et les URL en `?v=5.07` sont laissés inchangés,
+  conformément à la section 0.B1.
+- Version pérenne non touchée.
+
+CONTRÔLES AVANT LIVRAISON
+- Syntaxe JavaScript inline vérifiée.
+- Manifeste JSON vérifié.
+- Service worker aligné sur v5.16 avec nouveau nom de cache
+  `briefing-fdf-test-v5.16-diag-startup-r1`.
+- Filtre de purge d'activate toujours limité à `briefing-fdf-test-`.
+- Historique v5.15 et antérieur conservé intégralement.
+
+TEST v5.15 (suite) — 2026-09-23 — CHAÎNE NOTAM SDVFR PARTAGÉE VIA LE NAS
+Base : TEST v5.15 — aucun changement d'index.html, sw.js ni manifest.json
+===============================================================================
+
+ARCHITECTURE RETENUE — À REVOIR (décidée, non implémentée côté client)
+- Le NAS devient le producteur du fichier NOTAM partagé : BFG et NPF deviennent tous deux de simples lecteurs.
+- Source unique du fichier partagé : SDVFR. NATS est définitivement exclu, la liste d'aérodromes du PIB n'étant pas modifiable automatiquement et ne pouvant donc pas couvrir les 122 terrains de NPF.
+- NATS reste une solution de secours propre à BFG, hors fichier partagé : le bouton « Actualiser NATS » est conservé tel quel.
+- Un bouton « Rafraîchir les NOTAM » est ajouté dans les deux applications, avec attente et progression.
+- Périmètre phase 1 : les 27 pélicandromes, inchangé. Élargissement aux 122 terrains en phase 2 seulement.
+
+CONTRAT NAS ÉTABLI SUR LES FICHIERS PHP RÉELS — VALIDÉ (constats, pas des suppositions)
+- npf-docs-api.php : `action=login` (BFG, mot de passe), `bridge-claim` et `bridge-session` (NPF) appellent tous npf_create_session_token(). Les deux applications détiennent donc le MÊME type de jeton : NPF pouvait déjà publier et BFG déjà lire, sans aucune modification serveur.
+- Jeton valable jusqu'à minuit Europe/Paris.
+- `notams-snapshot` renvoie le payload BRUT, sans enveloppe {ok:true}, et 404 {ok:false} si absent.
+- `notams-publish` : plafond 8 Mo, exige version === 'bfgNpfNotamsV1', notamText non vide et notamsAutoPdfStatus.timestampIso parsable.
+- Fichier partagé : /web/briefing-data/npf-notams-snapshot-v1.json, écriture atomique.
+- request-sdvfr-notams.php : 1 à 50 terrains par demande, un seul slot global (409 request_already_active), TTL 600 s, requestedBy = 'BFG' pour le bouton BFG existant.
+- request-notams-generation.php : n'envoie AUCUNE liste de terrains ; le périmètre NATS vit dans le worker PC.
+- get-notams-generation-status.php : ne vérifie aucun jeton.
+- Aucun fichier PHP du NAS ne nomme d'état terminal SDVFR. Les seuls traités en production sont ceux de la boucle d'attente de BFG : success, partial, error.
+
+RELAIS NAS — DÉPLOYÉ SUR LE NAS ET VALIDÉ EN RÉEL EN LIGNE DE COMMANDE (code hors dépôt)
+- Trois blocs remis à l'utilisateur : notams-sdvfr-shared.php (nouveau), deux insertions dans npf-docs-api.php, notams-auto-refresh.php (nouveau, tâche planifiée Synology).
+- Actions `notams-refresh` (POST) et `notams-refresh-status` (GET), derrière npf_verify_session_token : mêmes actions et même jeton pour BFG et pour NPF.
+- Statut en quatre états : idle, pending (enregistrée), running (en cours), success / error (terminée).
+- La lecture du statut fait avancer la machine à états : c'est elle qui construit le texte et écrit le fichier partagé dès que le worker a terminé.
+- Construction du texte : portage strict de buildBfgNotamTextFromSdvfrResult_ (index.html ~L.5255), normalisation des dates B) / C) comprise. Toute divergence casserait les analyseurs de BFG et de NPF.
+- Compatibilité des installations déjà déployées : version 'bfgNpfNotamsV1' conservée et notamsAutoPdfStatus.timestampIso renseigné, sans quoi NPF rejette le fichier.
+- Champs additifs : sourceKind = 'SDVFR' (garde côté NPF), coverage, coverageCount, notamCount, requestId, origin.
+- L'état des sélections (state) est repris tel quel tant que l'on reste dans la même journée Europe/Paris, puis repart à zéro.
+- Un résultat SDVFR vide n'écrase jamais un fichier partagé exploitable.
+
+CORRECTIONS APPORTÉES AVANT COPIE SUR LE NAS — VALIDÉ pour requestedBy et origin ; verrou et adoption À MESURER (non exercés par le test du 23/09)
+- requestedBy : les valeurs 'NAS' et 'NAS-AUTO' du premier jet étaient inventées. Remplacées par 'BFG', seule valeur que request-sdvfr-notams.php écrive pour le bouton BFG existant, donc la seule que le worker VPS ait jamais traitée. L'origine réelle (api-refresh / nas-auto) est mémorisée dans npf-notams-refresh-v1.json, que le worker ne lit pas.
+- Verrou anti-doublon : npf_notams_active_request() libère la demande dès que sdvfr-result.json porte le même requestId avec un état terminal, que sdvfr-request.json ait été mis à jour ou non. Le TTL de 600 s est conservé comme filet de sécurité. Tout statut inconnu du worker reste NON terminal, pour ne jamais relancer une demande pendant qu'il travaille encore.
+- Ajout de npf_notams_refresh_follow() : une demande SDVFR lancée hors de cette chaîne (bouton BFG historique, tâche planifiée, autre application) est adoptée pour que son avancement soit suivi et que le fichier partagé soit écrit à son terme. Sans elle, un rafraîchissement déclenché pendant qu'une demande tournait déjà renvoyait joined=true avec un statut idle incohérent.
+- Conséquence assumée : deux appuis successifs sur « Rafraîchir » lancent deux téléchargements réels au lieu d'être fusionnés.
+
+TEST RÉEL DU 23/09/2026 — VALIDÉ (chemin ligne de commande uniquement)
+- notams-auto-refresh.php exécuté par le Planificateur de tâches DSM (root, puis sudo -u http /bin/php), PHP 7.3.3, code retour 0.
+- Enchaînement complet observé : pending 09:37:53 -> running 09:37:56 -> success 09:38:05.
+- Prise en charge de la demande par le worker VPS : environ 3 s. Cycle complet : 12 s pour 27 terrains et 207 NOTAM.
+- Fichier partagé écrit : /volume1/web/briefing-data/npf-notams-snapshot-v1.json, 72 804 octets, propriétaire http.
+- État de rafraîchissement écrit : npf-notams-refresh-v1.json, 729 octets, avec requestedBy = BFG, origin = nas-auto, coverage des 27 OACI, notamCount 207, airportCount 27, sdvfrStatus success.
+- requestedBy = 'BFG' est bien accepté par le worker VPS : la valeur reprise de request-sdvfr-notams.php était la bonne, l'hypothèse est levée.
+- COMPATIBILITÉ NPF CONFIRMÉE SANS AUCUNE MODIFICATION DE NPF : NPF-Q400 TEST affiche la ligne source du fichier produit par le NAS (« NOTAM SDVFR du 23/09/2026 à 09h38 »). Le format bfgNpfNotamsV1 et le champ notamsAutoPdfStatus.timestampIso remplissent donc bien leur rôle de compatibilité.
+- NON exercés par ce test : libération du verrou sur résultat terminal, adoption par npf_notams_refresh_follow(), et les deux actions web notams-refresh / notams-refresh-status.
+
+HORODATAGES DU FICHIER D'ÉTAT — À REVOIR (aucune conséquence fonctionnelle constatée)
+- requestedAt et updatedAt sont en heure locale Europe/Paris (+02:00) ; expiresAt est en UTC (+00:00).
+- Ce n'est volontaire qu'à moitié : expiresAt est recopié tel quel depuis sdvfr-request.json, dont le format gmdate('c') reproduit exactement celui de request-sdvfr-notams.php pour le worker. Sa propagation dans npf-notams-refresh-v1.json est un effet de bord, pas un choix.
+- Les deux formes sont de l'ISO 8601 à décalage explicite, correctement interprétées par strtotime() côté NAS — le test le confirme, aucun faux dépassement de délai — et par Date.parse() côté client.
+- Règle côté client : analyser ces champs avec Date.parse() / new Date(), jamais par comparaison ni découpage de chaîne, et calculer le jour Europe/Paris via Intl comme le fait déjà NPF.
+
+PARTAGE DES SÉLECTIONS BFG -> NPF ROMPU DEPUIS LA v4.77 — À REVOIR
+- Défaut reproduit sur iPad : un NOTAM coché dans BFG TEST n'apparaît pas coché dans NPF TEST.
+- Cause identifiée dans le code : BFG préfixe ses identifiants persistants par la source — `${source}-${icao}-...` (index.html, createNotamItemElement) — alors que NPF construit les siens sans préfixe, `${oaci}-...` (src/210 createNpfBfgNotamRecord), et les recherche par accès direct byId[record.id], sans aucun traitement de préfixe. Aucune entrée publiée par BFG ne peut donc être retrouvée par NPF.
+- Origine datée et confirmée : entrée TEST v4.77 du 20/09/2026 de ce journal — « Les identifiants persistants des NOTAMs intègrent désormais la source (NATS ou SDVFR) », introduit pour mémoriser NATS et SDVFR indépendamment sans écrasement mutuel. La même entrée conclut « Aucun changement PHP NAS requis » : l'effet de bord sur le partage vers NPF n'avait pas été vu. L'hypothèse d'une rupture en v4.77 est donc vérifiée.
+- La version pérenne v2026.27 porte le même préfixe : le défaut est présent dans les deux applications BFG, ce qui concorde avec « ça fonctionnait avant ».
+- Les fonctions de signature sont en revanche rigoureusement identiques des deux côtés (même normalisation, même FNV-1a, même base 36) : une fois les identifiants alignés, le contrôle textSignature passera sans autre correction.
+- Correction envisagée le 23/09 au matin, puis ABANDONNÉE le même jour : BFG devait publier dans le fichier commun une projection de son état, préfixe SDVFR- retiré. Écartée par la décision sur le caractère individuel des sélections — voir la rubrique suivante.
+- Le constat technique reste entier : tant que les identifiants ne sont pas alignés, aucun mécanisme de partage de sélections, où qu'il range les données, ne fonctionnera entre BFG et NPF.
+
+SÉLECTIONS INDIVIDUELLES — NOUVELLE ORIENTATION — À REVOIR
+- Décision du 23/09/2026 : les cases cochées sont individuelles. Elles ne sont jamais partagées avec d'autres utilisateurs, à la seule exception du partage volontaire du briefing BFG (code BFG-xxxx-xx), qui reste inchangé et hors de ce sujet.
+- Conséquence directe : npf-notams-snapshot-v1.json, commun à toutes les installations, ne doit plus porter l'état de personne. Trois écritures le remplissent encore aujourd'hui et devront être traitées : la préservation du `state` de la veille dans npf_notams_write_snapshot() du relais NAS, les publications de BFG TEST, et celles de la version pérenne v2026.27.
+- Piste à l'étude : ranger les sélections par association BFG <-> NPF, c'est-à-dire par pont bridge-grant / bridge-claim.
+- Vérification du modèle dans le code réel de npf-docs-api.php : npf-auth-bridge-v1.json contient une CARTE `bridges` indexée par bridgeId. Plusieurs ponts coexistent donc, un par appairage BFG <-> NPF ; il n'y a pas de pont global unique. Le modèle se prête bien à un rangement par paire d'installations.
+- bridgeId = 16 octets aléatoires (32 hexadécimaux), créé par bridge-grant, mémorisé des deux côtés : clé bfgNpfBridgeIdV1 dans BFG, bridgeId + deviceSecret dans NPF.
+- Preuves de propriété disponibles sans rien inventer : NPF présente bridgeId + deviceSecret, dont le NAS ne conserve qu'un SHA-256 ; BFG présente son jeton de session BFG (scope 'bfg'), déjà vérifié par bridge-grant.
+- Point d'attention : le jeton de session npf-docs-v1 ne porte PAS le bridgeId. Le serveur ne peut donc pas déduire le pont du seul jeton — toute action par pont devra exiger une preuve explicite, sans quoi n'importe quel porteur de jeton valide lirait les sélections d'un autre pont.
+- Deuxième point d'attention : une réassociation explicite (forceRePair) crée un NOUVEAU bridgeId et révoque l'ancien. Des sélections rangées par bridgeId seraient perdues à cet instant. Acceptable si elles restent quotidiennes, à confirmer.
+- Troisième point : grantExp vaut minuit ; BFG doit réautoriser chaque jour, sans quoi bridge-session renvoie bridge_not_granted. Un accès aux sélections adossé au pont hériterait de cette contrainte quotidienne.
+- NPF pérenne n'affiche pas les NOTAM : modifier NPF TEST pour lire ses sélections ailleurs que dans le fichier commun est donc acceptable et sans effet sur la pérenne.
+- Aucun code écrit, aucune action serveur créée à ce stade.
+
+VERSION PÉRENNE v2026.27 — RISQUE D'ÉCRASEMENT DU FICHIER DU NAS — TRANCHÉ le 23/09, INSTALLATION PLANIFIÉE
+- Décision : garde côté NAS + purge du `state`, mais PAS MAINTENANT. Les deux sont à livrer et à installer EN MÊME TEMPS que la tâche planifiée qui prendra le relais de la production du lot. Installée seule, la garde couperait la dernière source qui alimente le fichier et NPF TEST resterait figé sur le dernier lot produit manuellement.
+- D'ici là, le NAS n'est pas touché : notams-publish continue d'accepter les publications de BFG TEST et de la pérenne.
+- Code préparé, NON LIVRÉ, dans ~/nas-a-copier/en-attente/ : garde dans notams-publish refusant d'écraser un fichier dont `source` vaut `NAS` (409 snapshot_owned_by_nas), et suppression de la préservation du `state` dans npf_notams_write_snapshot(). Les fichiers complets au sens de la règle 6 seront produits au moment de l'installation, pas avant.
+- Ordre d'installation retenu : tâche planifiée DSM active, puis remplacement des deux fichiers PHP dans la même opération.
+- Vérifié en lecture seule dans le dépôt Briefing-fdf : la pérenne publie toujours son texte NOTAM via notams-publish (publishBfgNpfNotamsSharedSnapshot_, appelée depuis l'import SDVFR, l'import NATS, la sauvegarde locale et la republication différée), avec le même format bfgNpfNotamsV1.
+- Conséquence : dès que le NAS est producteur, la pérenne utilisée sur le même iPad écrase npf-notams-snapshot-v1.json avec son texte AFFICHÉ — donc potentiellement du NATS — et sans les champs sourceKind ni coverage.
+- Trois voies possibles : livrer une pérenne corrigée ; protéger côté NAS en refusant un notams-publish qui écraserait un fichier dont source vaut NAS ; ou accepter le risque jusqu'à la promotion.
+- Aucune décision prise, aucune protection ajoutée au relais NAS à ce stade.
+
+RELAIS NAS — ACTION notams-state — ABANDONNÉE le 23/09/2026, RIEN LIVRÉ
+- Motif de l'abandon : décision du 23/09 — les cases cochées sont INDIVIDUELLES et ne doivent jamais être partagées entre utilisateurs. Le fichier npf-notams-snapshot-v1.json étant commun à tous, il ne doit plus porter les sélections de qui que ce soit. Une action qui y écrit un état va donc à l'encontre de cette règle, quelle que soit sa propreté technique.
+- L'action avait été écrite puis retirée du fichier livré : 5_npf-docs-api_v5.15.txt est revenu à l'identique de sa version précédente (1 412 lignes), sans aucune trace de notams-state. Rien n'a été copié sur le NAS.
+- Description conservée ici pour mémoire, l'essai ne devant pas être refait : l'action n'acceptait que {version, state}, ne modifiait que la clé `state`, ignorait un notamText envoyé par erreur, et opérait sous verrou exclusif sur le modèle de npf_bridge_mutate_state.
+- Constat qui reste valable indépendamment de l'abandon : notams-publish rejette une charge sans notamText et réécrit le fichier entier ; il ne permet donc pas de mettre à jour un état seul.
+- Constat préalable sur le code réel : notams-publish rejette une charge sans notamText et réécrit le fichier entier ; il ne permet donc pas de mettre à jour l'état seul.
+- Nouvelle action notams-state (POST, derrière npf_verify_session_token) : n'accepte que {version, state}, ne modifie que la clé `state` du fichier partagé, ignore explicitement un notamText envoyé par erreur et le signale dans sa réponse (notamTextIgnored).
+- Lecture-modification-écriture en place sous verrou exclusif, sur le modèle de npf_bridge_mutate_state, pour que deux mises à jour d'état concurrentes ne se perdent pas.
+- Limite connue : l'écriture du fichier par le NAS utilise tmp + rename et ne prend pas ce verrou. Une collision reste théoriquement possible entre une écriture du lot et une mise à jour d'état ; fenêtre de l'ordre de la milliseconde, non traitée à ce stade.
+
+CÔTÉ CLIENT — NON IMPLÉMENTÉ
+- BFG : lecture du fichier partagé à écrire (elle n'existe pas aujourd'hui) ; #notam-refresh-btn recâblé sur la nouvelle chaîne ; publishBfgNpfNotamsSharedSnapshot_ à neutraliser sans supprimer son code — elle publie le texte AFFICHÉ, donc potentiellement du NATS, ce que la nouvelle architecture interdit ; « Actualiser NATS » et le sélecteur de source conservés.
+- NPF : bouton dans « Gestion des Cartes » sous #simulation-mode-button, sur le gabarit de la section VAC ; attente avec progression reprise de waitForBriefingDocSourceRefresh ; garde SDVFR au chargement ; porte de fraîcheur généralisée avec repli sur notamsAutoPdfStatus.timestampIso.
+- Filtrage de l'affichage BFG inutile en phase 1 : il ne devient nécessaire qu'au passage à 122 terrains.
+
+DÉCISIONS DU 23/09/2026 POUR LE BOUTON BFG — À DÉCIDER levé, reste NON IMPLÉMENTÉ
+- Temporisation calée sur les mesures réelles et non sur NATS : pas d'interrogation 2 s, plafond de prise en charge 45 s en pending, plafond global 120 s (mesuré : prise en charge ~3 s, cycle complet 12 s). Les 240 s de NATS correspondent à une génération de PDF et ne sont pas repris. Le TTL de 600 s reste côté NAS.
+- Le champ message renvoyé par le NAS, déjà rédigé en français, est affiché tel quel : une seule source pour les libellés de progression, pas de duplication côté client.
+- Collision météo / NOTAM sur le slot SDVFR unique : le 409 request_already_active est reconnu et affiché explicitement (« téléchargement NOTAM en cours, réessayer dans quelques secondes »). La logique météo elle-même n'est pas modifiée ; refreshAllWeather_ continue d'utiliser getSdvfrPelicandromeTargets_().
+- Lecture automatique du fichier partagé, précisée le 23/09 : rendu direct AU DÉMARRAGE UNIQUEMENT. Au retour au premier plan, si le lot a changé, BFG affiche seulement une mention discrète « nouveau lot NOTAM disponible » et attend un appui de l'utilisateur ; aucun rendu non sollicité en cours de session.
+- Détection du changement sans téléchargement : notams-refresh-status renvoie déjà snapshot.publishedAt et notamCount sans transférer les ~72 Ko. Lot identique à celui déjà appliqué ⇒ aucun téléchargement, aucun rendu, aucune capture d'état, aucun accès au DOM.
+- Le rendu au démarrage reste soumis aux règles de défilement v4.82 / v4.83 : jamais pendant la stabilisation initiale (bfgStartupTopLockActive_), jamais de pilotage de la position verticale, et restitution de scrollY, des surlignages et des cases via l'état persistant existant.
+- Jeton NAS absent ou expiré (il expire à minuit et n'est obtenu qu'au login BFG) : message « Accès Briefing verrouillé », comme la chaîne SDVFR actuelle. Aucune nouvelle invite de mot de passe.
+- Tous les horodatages reçus du NAS sont analysés avec Date.parse() / new Date(), jamais par comparaison ni découpage de chaîne, du fait du mélange +02:00 / +00:00 constaté.
+
+À MESURER
+- Les deux actions web notams-refresh (POST) et notams-refresh-status (GET) : jamais appelées à ce jour, seul le chemin ligne de commande a été exercé.
+- Deux rafraîchissements concurrents, et libération du verrou dès qu'un résultat terminal porte le même requestId.
+- Phase 2, extrapolations à confirmer : à densité NOTAM comparable, 122 terrains donneraient environ 330 Ko (72 804 octets x 122/27), très en dessous du plafond de 8 Mo — la contrainte de taille n'est donc plus un sujet ; et environ trois lots séquentiels, soit un ordre de grandeur de 60 à 90 s si la durée d'un lot croît avec le nombre de terrains.
+
+À DÉCIDER
+- Élargissement aux 122 terrains : découpage en trois lots successifs côté NAS (un seul lot actif à la fois), filtrage de l'affichage côté BFG, couverture élargie côté NPF.
+- Sort de la publication BFG une fois la nouvelle chaîne validée en usage réel : neutralisation définitive ou suppression.
+
+NON-RÉGRESSION
+- Aucun fichier du dépôt modifié : index.html, sw.js et manifest.json sont inchangés, la version TEST reste 5.15.
+- Chaîne NATS de BFG inchangée et maintenue hors du fichier partagé.
+- Aucun cache, base IndexedDB ou clé localStorage de la chaîne de persistance NOTAM renommé ou supprimé.
+
 VERSION PÉRENNE v2026.27 — 2026-09-21
 Base : TEST v5.15
 ===============================================================================
