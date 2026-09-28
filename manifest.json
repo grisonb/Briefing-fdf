@@ -1,7 +1,7 @@
 {
   "name": "Briefing FDF",
   "short_name": "Briefing",
-  "description": "Briefing FDF v2026.28 — base TEST v5.30 : VAC, RTBA, Actualiser complet, NOTAM en deux couches",
+  "description": "Briefing FDF v2026.29 — carte AZBA / SUP AIP et RTBA de la TEST v5.36 : fenêtres, zones en mer, créneaux, coucher du soleil",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

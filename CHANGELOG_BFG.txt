@@ -1,3 +1,831 @@
+VERSION PÉRENNE v2026.29 — 2026-09-28
+Base : pérenne v2026.28 + carte AZBA / SUP AIP / RTBA de la TEST v5.36
+       (Briefing_fdf_TEST, commit fdb6bd0) + correctif NOTAM de 23:00 (TEST v5.31)
+===============================================================================
+
+PROMOTION PARTIELLE — CARTE, SUP AIP ET AZBA / RTBA
+- Méthode : écarts repris un par un. Une copie de la TEST v5.36 dont on a retiré
+  les éléments TEST seulement (voir plus bas) a été fusionnée à trois voies sur la
+  v2026.28, avec pour base la TEST v5.30 (base de la v2026.28). Seul conflit :
+  la ligne de version. Pas de copie intégrale d'index.html.
+- Sauvegarde avant promotion : tag Git avant-promotion-v2026.29 sur a9421ef
+  (v2026.28).
+
+REPRIS DE LA TEST
+1. Fenêtres de toutes les zones au toucher (v5.35). Toutes les zones (SUP AIP
+   et RTBA) sont dessinées non interactives ; un seul gestionnaire de toucher
+   sur la carte ouvre UNE fenêtre qui liste toutes les zones sous le doigt :
+   RTBA d'abord, puis SUP AIP, séparés par un trait. Toucher hors zone :
+   fenêtre fermée. Corrige le défaut présent en v2026.28 : dès qu'un RTBA était
+   dessiné, les zones SUP AIP n'ouvraient plus de fenêtre.
+2. Filtre des zones SUP AIP en mer (v5.31) : une zone dont moins de 4,5 % de la
+   surface est au-dessus de la terre n'est pas affichée ; au moindre doute, elle
+   reste affichée. Le RTBA n'est pas concerné. Données de côte : polygones de
+   terre OpenStreetMap (« simplified land polygons », osmdata.openstreetmap.de,
+   téléchargés le 25/09/2026), © OpenStreetMap contributors, licence ODbL 1.0,
+   mention conservée dans le code ; environ 87 Ko intégrés à index.html,
+   fonctionne hors ligne.
+3. Créneaux SUP AIP et filtre des zones (v5.32) : fichier supaip-schedules-v1.json
+   (PDF du SIA, script VPS) lu via get-supaip-schedules.php et gardé en cache
+   ('briefing-fdf-supaip-schedules-v1') pour le hors ligne. Une zone « fiable »
+   sans créneau de jour restant est masquée ; tout le reste est affiché. Fichier
+   absent, invalide ou de plus de 36 h, période hors J à J+7 : tout est affiché.
+   SANS la case « Afficher toutes les zones » : le filtre fonctionne toujours
+   comme si elle était non cochée (showAll = false).
+4. Règle de nuit civile (v5.32) AVEC son correctif des créneaux courts (v5.36),
+   les deux ensemble : un créneau n'est « de nuit » que s'il touche la nuit
+   civile (soleil à 6° sous l'horizon) et que sa partie de jour ne dépasse pas
+   30 min. Sert aux SUP AIP fiables et au RTBA.
+5. RTBA toujours affiché (v5.31) : case « RTBA » supprimée ; couche et
+   avertissement toujours présents dès que la carte est chargée.
+6. Clignotement inversé (v5.35) : RTBA à venir rose pâle CLIGNOTANT, RTBA actif
+   magenta FIXE.
+7. Fin d'affichage des RTBA au coucher du soleil moins 30 min (v5.35) : un
+   créneau qui COMMENCE après le coucher du soleil moins 30 min (à la position du
+   secteur) n'est pas affiché. Le worker VPS continue à demander jusqu'à 23:00.
+8. Fenêtre RTBA ACTIF / À VENIR / TERMINÉ (v5.36) : un créneau par ligne,
+   horaires UTC en grand, couleurs contrastées ; créneaux terminés de la journée
+   grisés grâce à une mémoire locale du jour (localStorage 'bfgRtbaDaySlotsV1',
+   remise à zéro chaque jour, effacée par « Effacer » via le préfixe bfgRtba).
+9. Textes « jusqu'au coucher du soleil » (v5.35) : légende « RTBA actif (fixe) »,
+   « RTBA à venir (clignotant ; jusqu'au coucher du soleil) » ; avertissement
+   « ⓘ Seules les activations qui commencent avant le coucher du soleil moins
+   30 min (à la position de chaque zone) sont affichées. Au-delà, consulter la
+   page AZBA du SIA. » (lien). Remplacent les textes « 4 prochaines heures ».
+10. Correctif NOTAM de 23:00 (v5.31) : en sauvegarde locale, un champ reçu d'un
+   briefing partagé n'entre plus dans les champs hérités (checkedIds,
+   highlights et leurs signatures). Lève le point À REVOIR de la v2026.28. Le
+   partage est inchangé. Limite : une sauvegarde locale écrite avant la mise à
+   jour peut encore contenir des champs reçus jusqu'à la sauvegarde suivante.
+
+ADAPTATIONS PÉRENNES
+- Fenêtre RTBA : « Récupéré à HH:MM », sans ligne « Source ».
+- Statut sans RTBA : « Aucune activation RTBA à afficher (activations commençant
+  avant le coucher du soleil moins 30 min). »
+- Zones RTBA non dessinables : « … Consulter la page AZBA du SIA. » (inchangé
+  depuis la v2026.28).
+- Aucun texte affiché ne contient « SDVFR » ; aucun « NPF » seul.
+
+LAISSÉ EN TEST
+- Case « Afficher toutes les zones » (v5.32).
+- Bouton et panneau « Comparaison NOTAM SOFIA / SDVFR » (v5.33).
+- Sections de diagnostic « CRÉNEAUX SUP AIP » et compteurs RTBA du rapport
+  (panneau Diagnostic masqué en pérenne) ; les compteurs internes utiles au code
+  sont conservés.
+- « Forcer MAJ » de la TEST : la pérenne garde le sien (/Briefing-fdf/,
+  'briefing-fdf-v…').
+
+IDENTITÉ v2026.29
+- Version affichée v2026.29 ; manifest.json?v=2026.29 ; description du manifest.
+- Source GAAR et demande cartes des risques : bfg-v2026.29.
+- Service worker : version 2026.29, cache briefing-fdf-v2026-29-carte-rtba-v536-r1 ;
+  purge d'activate toujours limitée à 'briefing-fdf-v' (le cache des créneaux
+  'briefing-fdf-supaip-schedules-v1' n'est pas concerné). Routage inchangé.
+
+SERVEUR (NAS / VPS) — AUCUNE MODIFICATION
+- Même fichier de créneaux que la TEST (get-supaip-schedules.php, lecture
+  publique, déployé le 26/09) : vérifié le 28/09, fichier généré à 08:02Z,
+  auto-test réussi, couverture 28/09 -> 05/10, 110 SUP AIP, analyseur 1.1.0.
+- RTBA : même relais et même worker VPS 5.25 qu'avant.
+
+CONTRÔLES AVANT LIVRAISON
+- node --check : deux blocs JavaScript d'index.html et sw.js ; manifest JSON
+  valide ; aucun marqueur de conflit.
+- Différence TEST v5.36 -> v2026.29 relue : uniquement les écarts pérennes
+  connus, les éléments TEST retirés et les adaptations ci-dessus.
+- Aucun texte affiché avec « SDVFR », « TEST » ou « NPF » seul.
+- Essais Node sur les VRAIES fonctions de la v2026.29 (29 + 4, tous conformes) :
+  nuit civile (30 min et 10 min à midi : jour ; R45 N2 18:14Z -> 05:10Z : nuit ;
+  centre inconnu : gardé) ; coucher du soleil 17:28Z le 28/09 (début 20 min
+  avant : masqué ; 40 min avant : affiché) ; données RTBA réelles du 28/09 :
+  19 secteurs, aucun créneau écarté ; enregistrement du 24/09 14:16Z : 8
+  secteurs (16 créneaux de nuit) ; fenêtre R45 S7 : 06:00Z À VENIR ×3, 09:00Z
+  ACTIF + À VENIR ×2, 11:45Z TERMINÉ / ACTIF / À VENIR, 13:10Z TERMINÉ ×2 /
+  ACTIF, 15:05Z secteur retiré, « Récupéré à » sans SDVFR ; toucher : RTBA +
+  SUP AIP superposées -> les deux (RTBA d'abord), zone seule, trou, hors zone ;
+  mer : terre pleine 100 % affichée, pleine mer 0 % masquée, hors emprise et
+  géométrie absente affichées ; créneaux : sans fichier tout affiché, fichier du
+  NAS du jour utilisable sans case ; rendu RTBA (Leaflet simulé) : couches non
+  interactives, texte « aucun RTBA » pérenne.
+- Non essayé : le comportement réel au doigt sur iPad (à faire après mise en
+  ligne).
+
+RETOUR ARRIÈRE
+- git revert du commit v2026.29 puis push : la v2026.28 revient ; son sw.js,
+  différent, se réinstalle et supprime la coque v2026.29. La clé
+  bfgRtbaDaySlotsV1 et le cache des créneaux sont sans effet sur elle.
+- Ou : git checkout avant-promotion-v2026.29 -- index.html sw.js manifest.json
+  CHANGELOG_BFG.txt, puis commit et push.
+
+JOURNAL TEST
+- Les entrées TEST v5.31 à v5.36 sont recopiées ci-dessous pour mémoire. Seuls
+  les points listés plus haut sont promus.
+
+TEST v5.36 — 2026-09-28
+Base : TEST v5.35
+===============================================================================
+
+FENÊTRE RTBA : ÉTAT DE CHAQUE CRÉNEAU MIS EN ÉVIDENCE ; CORRECTIF DE LA RÈGLE DE
+NUIT (créneaux courts de jour écartés à tort depuis la v5.32).
+Aucune modification du worker VPS, du NAS ni de la pérenne.
+
+1. FENÊTRE RTBA (demande de l'utilisateur)
+- Chaque créneau sur une ligne, horaires en UTC, en plus grand (16 px), dans
+  l'ordre de la journée :
+  . ACTIF : fond magenta (#d1007a, couleur de la carte), texte blanc gras,
+    « ACTIF » devant l'horaire ;
+  . À VENIR : fond rose pâle (#fbc6e3), texte bordeaux foncé (#4a0030),
+    « À VENIR » devant l'horaire ;
+  . TERMINÉ : fond gris clair, texte gris foncé, « TERMINÉ » devant l'horaire.
+  Contrastes élevés (lisible en plein soleil et dans un cockpit sombre ; la
+  fenêtre Leaflet reste sur fond blanc). Reste de la fenêtre inchangé.
+- Créneaux terminés : SDVFR ne renvoie que les créneaux en cours ou à venir ; BFG
+  retient donc les créneaux affichés dans la JOURNÉE (jour local de l'iPad) et les
+  montre grisés une fois terminés. Mémoire : localStorage 'bfgRtbaDaySlotsV1'
+  (nouvelle clé, confort, try/catch ; sans elle : durée de la session), remise à
+  zéro chaque jour. Sert UNIQUEMENT à la fenêtre : la carte ne change pas (un
+  secteur sans créneau restant disparaît comme avant).
+- Essai Node (données réelles du 28/09, R45 S7) : 06:00Z : À VENIR ×3 ;
+  09:00Z : ACTIF 08:30-10:00 ; 11:45Z : TERMINÉ 08:30-10:00, ACTIF 11:30-12:00,
+  À VENIR 13:00-15:00 ; 13:10Z : TERMINÉ ×2, ACTIF 13:00-15:00 ; 15:05Z :
+  secteur retiré. Lendemain : mémoire remise à zéro.
+
+2. CORRECTIF : RÈGLE DE NUIT CIVILE (défaut présent depuis la v5.32)
+- Constat pendant l'essai de la fenêtre : un créneau de 30 min ou moins était
+  toujours classé « de nuit » (sa partie de jour, 30 min, ne dépasse pas la
+  tolérance), même à midi. Le 28/09 : 5 créneaux RTBA de mi-journée masqués à
+  tort (R45 S6.1, S6.2, S7 11:30-12:00Z ; S6.1, S6.2 13:00-13:30Z). La même
+  fonction sert aux SUP AIP fiables : un créneau court de jour pouvait aussi être
+  ignoré (zone masquée à tort si c'était son seul créneau restant).
+- Correction (bfgSlotIsNight_) : un créneau n'est « de nuit » que s'il TOUCHE la
+  nuit civile et que sa partie de jour ne dépasse pas 30 min.
+- Essais Node : 30 min à midi -> jour ; 10 min à midi -> jour ; ZRT 166 B soir,
+  185/26, R45 N2 18:14-05:10 -> nuit (inchangé) ; 28/09 : 0 créneau écarté comme
+  nuit ; enregistrement du 24/09 : 8 secteurs (inchangé).
+
+VERSIONS
+- APP_VERSION_NUMBER 5.36, BFG_SW_VERSION 5.36, CACHE_NAME
+  'briefing-fdf-test-v5.36-rtba-slots-r1', description du manifest.
+  Constantes figées à 5.07 NON modifiées (cf. 0.B1).
+- Liste 0.B5 : étiquettes des créneaux de la fenêtre RTBA notées (sans SDVFR).
+- Pour la prochaine promotion : fenêtre RTBA v5.36 et CORRECTIF DE NUIT
+  (obligatoire si la règle de nuit de la v5.32 est promue).
+
+STATUTS v5.36
+- Fenêtre RTBA : À MESURER sur iPad (soleil et pénombre).
+- Correctif de nuit : À MESURER (créneaux courts de mi-journée visibles).
+
+TEST v5.35 — 2026-09-28
+Base : TEST v5.34
+===============================================================================
+
+FENÊTRES DE TOUTES LES ZONES DE LA CARTE (BUG) ; RTBA : À VENIR CLIGNOTANT, ACTIF
+FIXE ; RTBA AFFICHÉ JUSQU'AU COUCHER DU SOLEIL ; ANALYSE DES ÉCARTS NOTAM DU 28/09.
+Aucune modification du worker VPS, du NAS ni de la pérenne.
+
+1. BUG : SEULES LES ZONES RTBA OUVRAIENT UNE FENÊTRE
+- Cause : la couche RTBA a son propre panneau (bfgRtbaPane, au-dessus des SUP
+  AIP) et son propre canvas Leaflet (L.canvas), qui couvre toute la carte. Dès le
+  premier secteur RTBA dessiné, ce canvas recevait TOUS les touchers et ne les
+  transmettait pas au canvas des SUP AIP (Leaflet 1.9.3 : seul le canvas du
+  dessus reçoit l'événement). Hors zone RTBA, le toucher était perdu.
+- Depuis : v5.22 (panneau et canvas RTBA créés dès la première version RTBA),
+  chaque fois qu'un secteur RTBA était affiché ; quasi permanent depuis la v5.31
+  (RTBA toujours affiché) et surtout la v5.34 (RTBA de la journée visible dès le
+  matin, grâce au worker 5.25).
+- Correction : toutes les zones (SUP AIP et RTBA) sont dessinées NON interactives ;
+  un seul gestionnaire de toucher sur la carte (bfgOpenMapPopupAt_) cherche les
+  zones qui contiennent le point touché (règle pair-impair, trous gérés) et ouvre
+  UNE fenêtre qui les liste toutes : RTBA d'abord, puis SUP AIP, séparés par un
+  trait. Toucher hors zone : fenêtre fermée. Fenêtre ouverte mise à jour sur
+  place à chaque recalcul (RTBA chaque minute, SUP AIP), fermée si plus aucune
+  zone n'est sous le point.
+- Essais Node : RTBA + SUP AIP superposées -> les deux ; RTBA seule ; SUP AIP
+  seule ; zone à trou ; hors zone -> rien. Le comportement réel au doigt sur
+  iPad reste À MESURER.
+
+2. RTBA : CLIGNOTEMENT INVERSÉ
+- À venir : rose pâle CLIGNOTANT ; actif : magenta vif FIXE (demande de
+  l'utilisateur). Légende : « RTBA actif (fixe) », « RTBA à venir (clignotant ;
+  jusqu'au coucher du soleil) ». Constante BFG_RTBA_STYLE_PULSE_OFF_.
+
+3. RTBA : FIN D'AFFICHAGE AU COUCHER DU SOLEIL
+- Nouvelle règle : un créneau RTBA qui COMMENCE après le coucher du soleil moins
+  30 minutes (calculé à la position du secteur, pour le jour UTC de son début)
+  n'est pas affiché ; un créneau qui commence avant reste affiché.
+- Différence avec la règle de nuit civile (v5.32, conservée) : l'ancienne règle
+  ne retire un créneau que s'il est PRESQUE ENTIÈREMENT dans la nuit civile (soleil
+  à 6° sous l'horizon, environ 30 min après le coucher) : partie de jour <= 30 min.
+  La nouvelle regarde seulement l'HEURE DE DÉBUT et coupe plus tôt : un créneau
+  qui commence 20 min avant le coucher était gardé (51 min de jour), il est
+  désormais masqué. La règle de nuit reste utile pour les créneaux de fin de nuit
+  (après minuit, avant le lever).
+- Avertissement : « ⓘ Seules les activations qui commencent avant le coucher du
+  soleil moins 30 min (à la position de chaque zone) sont affichées. Au-delà,
+  consulter la page AZBA du SIA. » Diagnostic : créneaux « commençant après le
+  coucher du soleil - 30 min » comptés.
+- Le worker VPS continue à demander jusqu'à 23:00 locale (non modifié).
+- Essais Node : essai RTBA du 28/09 (coucher 17:28Z au centre de R45 A) : 19
+  secteurs affichés, rien écarté ; enregistrement du 24/09 à 14:16Z : 8 secteurs
+  (créneaux de 18:14Z déjà écartés par la nuit civile) ; début 20 min avant le
+  coucher : masqué ; 40 min avant : affiché.
+
+4. ANALYSE (sans modification) : ÉCARTS NOTAM SOFIA / SDVFR DU 28/09
+- Relevés : SDVFR = cache NAS des 07:43 et 07:47Z (coordonnées BFG) ; SOFIA =
+  08:05Z. Vérifications faites le 28/09 vers 09:25Z (cache NAS, fichier NPF-Q400
+  de 04:31Z, deux requêtes SOFIA).
+- LFML P3538/26 (grue à Rognac, 28/09 06:11Z -> 02/10) absent de SDVFR : présent
+  chez SOFIA à 08:05Z, absent du relevé SDVFR de 07:43Z, présent dans celui de
+  09:22Z. VRAI MANQUE TEMPORAIRE DE SDVFR (intégration tardive, entre 1 h 30 et
+  3 h après le début du NOTAM), pas une erreur de comparaison.
+- LFMK B4437/26 (VDF 134.505 hors service, 27/09 16:39 -> 01/03/2027) absent de
+  SOFIA : SDVFR donne DEUX NOTAM au texte identique, B4434/26 (fin 27/09/2027)
+  et B4437/26 ; SOFIA ne donne que B4434/26 (y compris en recherche par FIR).
+  L'information est donc présente des deux côtés ; le statut de B4437/26 (NOTAM
+  distinct, remplaçant ou annulé) ne peut pas être établi avec les données
+  publiques : NON TRANCHÉ.
+- « Seulement SDVFR » à 18 : variation réelle, pas une erreur. 9 NOTAM commencent
+  après la fenêtre J à J+7 (nouveaux NOTAM de la semaine suivante) ; 7 se
+  terminaient entre 07:00 et 08:00Z le lundi matin (fermetures de week-end) et
+  figuraient encore dans le relevé SDVFR (dont 3 déjà échus avant 07:43Z : SDVFR
+  garde brièvement des NOTAM terminés) ; 1 champ D ; 1 inexpliqué (B4437/26).
+- Piste d'amélioration du classement (NON faite) : libellé « terminé avant le
+  relevé SOFIA » au lieu de « expiré entre les deux relevés » ; rapprocher deux
+  NOTAM de même texte et de même terrain.
+
+VERSIONS
+- APP_VERSION_NUMBER 5.35, BFG_SW_VERSION 5.35, CACHE_NAME
+  'briefing-fdf-test-v5.35-map-popups-r1', description du manifest.
+  Constantes figées à 5.07 NON modifiées (cf. 0.B1).
+- Liste 0.B5 : texte pérenne RTBA adapté à la règle du coucher du soleil.
+- Pour la prochaine promotion : correction des fenêtres de la carte (le bug existe
+  aussi en pérenne dès qu'un RTBA est affiché) ; clignotement inversé ; règle du
+  coucher du soleil et textes.
+
+STATUTS v5.35
+- Fenêtres de toutes les zones : À MESURER sur iPad (SUP AIP seule, RTBA seule,
+  superposées).
+- Clignotement inversé et règle du coucher du soleil : À MESURER.
+- Écart LFMK B4437/26 : À REVOIR si l'essai NOTAM le signale encore.
+
+TEST v5.34 — 2026-09-27
+Base : TEST v5.33
+===============================================================================
+
+RTBA : TEXTES « JUSQU'À 23:00 » (worker VPS 5.25 et essai du 27/09, cf. suivi de
+la v5.33). Aucune modification du worker, du NAS ni de la pérenne.
+
+1. VÉRIFICATION : AUCUN FILTRE À 4 HEURES DANS BFG
+- Code RTBA relu (bfgBuildRtbaGroups_, bfgRtbaZoneStatus_, bfgRenderRtbaLayer_) :
+  les créneaux ne sont écartés que s'ils sont terminés, au-dessus du FL max,
+  entièrement de nuit civile (v5.32) ou à géométrie invalide. Aucune limite de
+  durée : un créneau qui commence 17 h plus tard est affiché « à venir ». Les
+  4 heures n'existaient que dans deux textes.
+
+2. TEXTES (justes à toute heure : le worker utilise max(240 min, minutes jusqu'à
+   23:00 heure de Paris) ; après 19:00, la fenêtre est de 4 h et dépasse 23:00)
+- Légende : « RTBA à venir (jusqu'à 23:00 locale ; le soir, 4 h) » au lieu de
+  « RTBA à venir (< 4 h) ».
+- Avertissement sous la carte : « ⓘ Seules les activations prévues jusqu'à 23:00
+  locale (le soir : celles des 4 prochaines heures) sont affichées. Au-delà,
+  consulter la page AZBA du SIA. » au lieu de « … des 4 prochaines heures … Pour
+  la suite de la journée, … ». BFG_RTBA_WINDOW_LABEL_ mis à jour.
+- « locale » précisé à la demande de l'utilisateur : les horaires RTBA de la carte
+  (popups) sont en UTC, la limite de 23:00 est en heure de Paris.
+- Commentaire d'en-tête du module RTBA mis à jour. Liste 0.B5 : texte pérenne
+  « Aucune activation RTBA reçue… » adapté (« jusqu'à 23:00 locale (le soir, pour les
+  4 prochaines heures) »). Aucune mention de SDVFR ajoutée.
+
+VERSIONS
+- APP_VERSION_NUMBER 5.34, BFG_SW_VERSION 5.34, CACHE_NAME
+  'briefing-fdf-test-v5.34-rtba-23h-r1', description du manifest.
+  Constantes figées à 5.07 NON modifiées (cf. 0.B1).
+
+STATUTS v5.34
+- Textes RTBA : À MESURER sur iPad (légende et avertissement ; secteurs de
+  l'après-midi visibles dès le matin, en rose pâle).
+
+TEST v5.33 — 2026-09-26
+Base : TEST v5.32
+===============================================================================
+
+ANALYSEUR SUP AIP 1.1.0 (RÈGLE R14 GROUPE PAR GROUPE) ; ESSAI EN PARALLÈLE
+NOTAM SOFIA / SDVFR (27 PÉLICANDROMES, 7 JOURS) ; BOUTON DE COMPARAISON DANS LE
+DIAGNOSTIC (TEST UNIQUEMENT). SDVFR reste la source affichée dans BFG.
+
+1. SUIVI v5.32
+- Passage automatique du 26/09 à 10:00 (heure de Paris) réussi : auto-test
+  22/22, 113 SUP AIP, 726 NOTAM SOFIA, dépôt NAS à 10:05:32 (58 847 octets).
+
+2. ANALYSEUR 1.1.0 — R14 GROUPE PAR GROUPE (cas du SUP AIP 112/26)
+- Constat : ZRT PAMIERS-SAVERDUN (112/26) était non fiable parce que la mention
+  « Activable par NOTAM » du groupe ST GIRONS / LAVELANET s'appliquait à tout le
+  bloc. Ses horaires propres sont fixes (lun-ven sauf fériés, 0730-0930 et
+  1115-1315 UTC jusqu'au 23/10, 0830-1030 et 1215-1415 à partir du 26/10 : même
+  heure locale, ce qui confirme l'hypothèse H1).
+- Règle validée : la mention « activable par NOTAM / selon protocole / préavis »
+  ne rend non fiables que les zones du GROUPE sous lequel elle est écrite. Hors
+  de tout groupe (préambule, en-tête, fin de bloc, doute) : tout le SUP AIP.
+- Rattachement (validé) : par l'INDENTATION de l'extraction « layout » : mention
+  sur une ligne d'horaires du groupe, ou sur une ligne indentée qui la suit
+  immédiatement. Ligne alignée sur les en-têtes (colonne 0) : hors groupe.
+  L'extraction « plain » doit donner les mêmes groupes et mentions (contrôle 3).
+- Autres contrôles inchangés (grammaire fermée, comptage limité aux groupes lus,
+  double extraction, noms, texte libre).
+- Tests : 27 cas, 27 conformes. Nouveaux : R22a (SAVERDUN fiable, créneaux
+  vérifiés du 04/06 au 04/01/2027), R22b (ST GIRONS et LAVELANET non fiables),
+  R23 (mention seule en fin de bloc : tout non fiable), R24 / R24b (mention
+  entièrement sur les lignes d'horaires : attendus repris de R22).
+- Mutations : 11 défauts volontaires, tous détectés (sous-lignes ignorées,
+  en-têtes de page, soleil inversé, heure d'été, fériés, mentions ignorées,
+  prudence H3, lignes inconnues + comptage, mention appliquée à tout le SUP AIP,
+  mention ignorée sur sa ligne d'horaires, mention hors groupe rattachée au
+  dernier groupe). R24 ajouté : sans lui, le défaut « mention ignorée sur sa
+  ligne d'horaires » n'était détecté par aucun test.
+- Effet sur le fichier du 26/09 : ZRT PAMIERS-SAVERDUN fiable ; ZRT SOTAME
+  BRAVO (162/26) en H24 (toujours affichée) ; les groupes non fiables sont
+  désormais listés zone par zone (d'où 199 entrées non fiables au lieu de 99,
+  sans changement d'affichage).
+
+3. ESSAI EN PARALLÈLE NOTAM SOFIA / SDVFR (script VPS 1.1.0, notam_compare 1.0.0)
+- À chaque passage (06:45, 10:00) : NOTAM d'aérodrome SOFIA des 27
+  pélicandromes (recherche par aérodrome, anonyme, une requête par jour de J à
+  J+7), comparés aux NOTAM SDVFR ; numéros normalisés (A0416/26 = A416/26).
+- Source SDVFR, indiquée terrain par terrain dans le rapport :
+  1. relevé BFG du cache NAS (briefing-data/sdvfr-notams/terrain-cache.json,
+     coordonnées de BFG) s'il a moins de 2 h ;
+  2. sinon fichier partagé NPF-Q400 (briefing-data/npf-notams-snapshot-v1.json).
+  Coordonnées NPF-Q400 / BFG : différentes pour 26 terrains sur 27, jusqu'à
+  1,6 km (LFLX) et 1,4 km (LFMD). Vérifié le 26/09 : mêmes NOTAM avec les deux
+  jeux de coordonnées (184 communs ; 2 écarts = NOTAM expirés entre les relevés).
+- Classement : EXPLIQUÉ (IFR seulement ; commence après J+7 ; expiré ou publié
+  entre les deux relevés ; champ D sans activité dans la fenêtre) ou INEXPLIQUÉ.
+- Rapport : 7 derniers jours (le dernier passage du jour remplace le précédent),
+  déposé sur le NAS comme le fichier des créneaux ; une panne de l'essai
+  n'empêche jamais le dépôt des créneaux.
+- Essai à blanc du 26/09 : 182 communs, seulement SDVFR 2 (commencent après
+  J+7), seulement SOFIA 60 (58 IFR seulement, 2 publiés après le relevé SDVFR),
+  INEXPLIQUÉS 0 ; source : coordonnées BFG pour les 27 terrains.
+- Nouveaux fichiers NAS (~/nas-a-copier/a-installer-notam-compare/) :
+  update-notam-compare.php (POST, upload_token, schéma, 2 Mo max, écriture
+  atomique + .prev) et get-notam-compare.php (GET public, CORS, HTTP 200).
+  Essais sur serveur PHP local : absent 404, mauvais jeton 401, schéma 400,
+  dépôt 200, lecture 200.
+
+4. MÉTÉO : COMPARAISON PONCTUELLE SOFIA / SDVFR (26/09, 08:06Z)
+- Source SDVFR : cache NAS (coordonnées BFG), 27 pélicandromes.
+- LFBN, LFCC, LFHO : ni METAR ni TAF, ni chez SOFIA ni chez SDVFR.
+- METAR : même contenu pour les 24 terrains, à deux réserves près : SOFIA colle
+  certains éléments sans espace (« TEMPOBKN014 », « Q1022NOSIG ») ; 3 METAR
+  SDVFR (LFRV, LFSG, LFAQ) avaient 30 min de retard au moment du relevé.
+- TAF : même contenu (mêmes collages chez SOFIA) ; LFBM : SDVFR donnait encore
+  le TAF de 0200Z, SOFIA celui de 0800Z.
+- Conclusion : SDVFR reste la source METAR / TAF ; SOFIA ne l'améliore pas et son
+  texte n'est pas directement exploitable (espaces manquants).
+
+5. REMARQUE SÉCURITÉ (constat, rien modifié)
+- Lisibles sans authentification sur le NAS : briefing-data/npf-notams-
+  snapshot-v1.json et briefing-data/sdvfr-notams/terrain-cache.json (NOTAM et
+  météo, données publiques par nature). À décider par l'utilisateur.
+
+6. BFG v5.33 (TEST UNIQUEMENT)
+- Panneau « Diagnostic BFG » : bouton « Comparaison NOTAM SOFIA / SDVFR »
+  (lecture de get-notam-compare.php à chaque ouverture). Affiche seulement :
+  verdict en une ligne (vert « Aucun écart inexpliqué depuis N jours », orange
+  « N écarts inexpliqués aujourd'hui »), tableau par jour (Communs / Seulement
+  SDVFR / Seulement SOFIA / Inexpliqués), liste des écarts inexpliqués
+  (terrain, numéro, source où il manque) seulement s'il y en a. Écarts
+  expliqués masqués. Consigne de retrait ajoutée en 0.B5.
+- Essais Node du rendu : 1 jour propre (vert, 1 jour) ; jour avec 2 écarts
+  (orange, liste) ; jour propre après un jour à écarts (vert, 1 jour) ; aucun
+  rapport (gris).
+- Service worker : aucune règle modifiée (URL NAS en réseau seul) ; version
+  seule.
+
+VERSIONS
+- APP_VERSION_NUMBER 5.33, BFG_SW_VERSION 5.33, CACHE_NAME
+  'briefing-fdf-test-v5.33-notam-compare-r1', description du manifest.
+  Constantes figées à 5.07 NON modifiées (cf. 0.B1).
+- VPS : bfg-supaip-schedules 1.1.0 (analyseur 1.1.0, essai 1.0.0), NON DÉPLOYÉ.
+
+STATUTS v5.33
+- VPS 1.1.0 DÉPLOYÉ le 26/09 (1.0.1 sauvegardée : bfg-supaip-schedules-1.0.1-
+  sauvegarde.tar.gz ; state/ conservé). Premier passage réel (manuel) : relu
+  sur le NAS — créneaux générés 08:53Z (script et analyseur 1.1.0, auto-test
+  27/27, contrôle NOTAM OK, 30 zones fiables dont ZRT PAMIERS-SAVERDUN) ;
+  rapport NOTAM généré 09:03Z (182 communs, 2 seulement SDVFR, 60 seulement
+  SOFIA, 0 inexpliqué ; coordonnées BFG pour les 27 terrains). Dépôts 09:04Z.
+- Analyseur 1.1.0 : À MESURER sur iPad (ZRT PAMIERS-SAVERDUN masquée le
+  week-end et après 13:30 UTC en semaine).
+- NAS : get-notam-compare.php et update-notam-compare.php déposés le 26/09 dans
+  web/briefing-api/ (lecture avant dépôt : absent, 404, attendu).
+- Essai NOTAM SOFIA / SDVFR : déployé, À MESURER pendant
+  7 jours ; décision de remplacement À DÉCIDER à l'issue.
+- Bouton de comparaison : À MESURER ; À RETIRER à la promotion.
+- Lisibilité publique de deux fichiers du NAS : À DÉCIDER.
+
+SUIVI APRÈS MISE EN LIGNE DE LA v5.33 — WORKER VPS SDVFR 5.25 (26/09/2026)
+Aucune modification de BFG. Worker VPS seulement.
+- Anticipation RTBA évolutive : à chaque demande RTBA, anticipation =
+  max(240, minutes restant jusqu'à 23:00 heure de Paris) ; après 23:00 : 240.
+  Heure d'été / d'hiver gérée par Europe/Paris. Demande SUP AIP strictement
+  identique à la 5.24.
+- Repli : au moindre refus d'une anticipation > 240 (erreur HTTP, page HTML ou
+  redirection, JSON invalide, tableau airspaces absent, élément non objet), la
+  même demande est refaite immédiatement avec 240 dans le même traitement ; si
+  elle échoue aussi, l'erreur remonte comme en 5.24.
+- Journal du worker à chaque demande RTBA : anticipation demandée, utilisée,
+  repli et cause, début d'activation le plus tardif reçu. Résultat transmis au
+  NAS : champs ajoutés anticipationRequested / anticipationUsed (et dans
+  workerDiagnostic) ; aucun champ supprimé. Le relais NAS ne les renvoie pas
+  encore à BFG (relais inchangé).
+- Tests hors ligne (tous conformes) : 06:30 -> 990 min, 13:00 -> 600, 19:30 ->
+  240, 22:59 -> 240, 23:30 -> 240 ; jours de changement d'heure (25/10/2026 et
+  28/03/2027) ; repli pour les 5 types de refus ; double échec -> erreur comme
+  en 5.24 ; demandes SUP AIP et RTBA à 240 identiques à la 5.24.
+- Fichier : bfg-sdvfr-worker_v525.py (SHA-256 28e41225…ed37de752).
+- Déploiement guidé : worker en service vérifié identique à la base 5.24
+  (658fc745…) ; envoi sous un nom temporaire ; compilation dans /tmp ;
+  sauvegarde bfg-sdvfr-worker.py.v524-20260926-130703 ; remplacement ;
+  redémarrage du seul bfg-sdvfr-worker.service (26/09 13:08:57, heure de Paris) :
+  « Worker BFG SDVFR v5.25 démarré », sans erreur.
+- Retour arrière : recopier bfg-sdvfr-worker.py.v524-20260926-130703 sur
+  bfg-sdvfr-worker.py puis redémarrer bfg-sdvfr-worker.service.
+- Contrôle du samedi 26/09 à 13:09 : anticipation demandée 590 min, utilisée
+  590 min, pas de repli, HTTP 200, 0 zone (samedi). SDVFR accepte donc une
+  anticipation supérieure à 240.
+- Journal du worker lisible seulement avec sudo (ssh -t, sudo journalctl).
+- ESSAI UNIQUE DU DIMANCHE 27/09 (remplace l'essai prévu lundi matin) : une
+  seule demande SDVFR depuis le VPS, par un script qui réutilise les fonctions du
+  worker installé (même adresse, mêmes en-têtes, plafond 195), anticipation
+  jusqu'au lundi 28/09 23:00 heure de Paris. Worker, service, NAS : non touchés ;
+  identifiants lus dans l'environnement du service, jamais affichés.
+  . Demande : 27/09 19:59:47 UTC, anticipation 1500 min ; HTTP 200, JSON valide.
+  . Réponse : 30 créneaux, 19 secteurs RTBA, tous le 28/09 ; premier début 07:30Z,
+    début le plus tardif 13:00Z (R45 S7 jusqu'à 15:00Z), soit 11 h 30 à 17 h après
+    la demande.
+  . Comparaison avec la page AZBA du SIA (relevé partiel de l'utilisateur) :
+    TOUS les créneaux relevés sont identiques (R142 A/B, R45 N2 à N5.2, R69,
+    R45 NS/S2/S3/S4/S5, R45 A/B/C, R45 S6.1/S6.2, R45 S7). R45 S1 (11:30-13:30Z)
+    reçu mais absent du relevé partiel. Les horaires du SIA sont en UTC.
+  . Conclusion : SDVFR renvoie bien les activations au-delà de 4 h quand
+    l'anticipation le demande (pas de coupure silencieuse). Limite : aucune
+    activation de soirée ce jour-là, cas non testé.
+  . Fichier : ~/nas-a-copier/essai-rtba-20260927.json (copie de
+    /home/ubuntu/bfg-worker/essai-rtba-20260927.json), 36 675 octets,
+    SHA-256 7c769373efaf7fc6ea348caf8de772db8a81e9217b310e718046046389b0b77f.
+    Script : ~/vps-a-copier/essai-rtba-20260927.py (SHA-256 f41b1c8a…920b4b).
+- STATUTS : worker 5.25 DÉPLOYÉ et VALIDÉ par l'essai du 27/09 ; textes RTBA de
+  BFG : cf. v5.34.
+- Pérenne : utilise le même worker ; elle reçoit donc désormais les activations
+  jusqu'à 23:00 alors que son texte annonce encore « 4 prochaines heures » (écart
+  du côté de la prudence : plus d'activations affichées qu'annoncé). À corriger à
+  la prochaine promotion (texte de la v5.34).
+
+TEST v5.32 — 2026-09-25
+Base : TEST v5.31
+===============================================================================
+
+CRÉNEAUX SUP AIP LUS DANS LES PDF DU SIA ; CRÉNEAUX DE NUIT CIVILE IGNORÉS
+(SUP AIP ET RTBA). Nouveau script VPS séparé du worker SDVFR (non modifié),
+deux nouveaux fichiers NAS (relais SUP AIP non modifié).
+
+1. RÈGLES DÉCIDÉES
+- Périmètre : zones SUP AIP de la carte (métropole + Corse, plancher
+  strictement inférieur au FL max, après le filtre mer de la v5.31).
+- Zone FIABLE (créneaux lus sans aucun doute) : affichée toute la journée tant
+  qu'il lui reste un créneau DE JOUR ; masquée si elle n'en a aucun
+  aujourd'hui, ou 15 min après la fin de son dernier créneau de jour (30 min
+  si l'horaire dépend du lever / coucher du soleil).
+- Zone NON FIABLE (pas d'horaires, activable par NOTAM, selon protocole,
+  texte libre, lecture douteuse, PDF inaccessible, nom incertain, SUP AIP cité
+  par un NOTAM autre que son déclencheur) : affichée en permanence.
+- Dates Du / Au : zone affichée si elle a au moins un créneau de jour dans la
+  période ; au-delà de J+7 ou fichier absent / illisible / de plus de 36 h :
+  tout est affiché.
+- Nuit civile (soleil à 6° sous l'horizon, au centre de la zone ou du
+  secteur) : un créneau est « de nuit » si sa partie hors nuit civile ne
+  dépasse pas 30 minutes au total ; il ne compte pas. Option C retenue après
+  essai de la règle « nuit réduite de 15 min », sans effet sur les cas réels
+  (créneaux RTBA de 18:14Z, SUP AIP 185/26).
+- Apparence inchangée, aucun message à l'écran (les créneaux signifient le
+  plus souvent « activable », pas « actif »).
+
+2. VPS — bfg-supaip-schedules (NOUVEAU, livré dans ~/vps-a-copier/)
+- analyzer.py 1.0.0 : grammaire FERMÉE du bloc « DATES ET HEURES
+  D'ACTIVITÉ ». Contrôles : ligne par ligne ; comptage indépendant des lignes
+  d'horaires ; double extraction pypdf (plain / layout) ; noms retrouvés
+  ailleurs dans le PDF ; aucun horaire lié à une zone hors du bloc ; aucune
+  mention NOTAM / protocole / préavis dans le bloc (R14). Heures UTC (H1),
+  notes été / hiver avec union le jour du changement (H2), nuits SS -> SR
+  (H3), préambules en liste fermée (H4), jours fériés nationaux, Vendredi
+  saint et 26/12 non fiables en Alsace-Moselle.
+- Tests de référence : 22 cas écrits à la main et validés (R1-R21 : 194/26
+  dont ZRT 166 B, 185/26 nuit, 179/26 été et fériés, 045/26 changement
+  d'heure, 201/26, H24, pièges). 22/22 conformes. Essais de mutation : chaque
+  défaut volontaire (sous-lignes ignorées, en-têtes de page, soleil inversé,
+  heure d'été, fériés, NOTAM, prudence H3, lignes inconnues + comptage
+  désactivé) fait échouer au moins un test. PDF 055/26 (18,6 Mo) remplacé par
+  un extrait textuel figé.
+- bfg_supaip_schedules.py 1.0.0 : auto-test avant tout dépôt ; liste des SUP
+  AIP métropole du SIA ; PDF téléchargés seulement s'ils changent (ETag) ;
+  analyses en cache (SHA-256 + version de l'analyseur) ; NOTAM SOFIA (5 FIR,
+  une requête par jour de J à J+7) : SUP AIP cité hors NOTAM déclencheur ->
+  non fiable ; contrôle NOTAM impossible -> tout non fiable ; fichier
+  supaip-schedules-v1.json (créneaux UTC déjà calculés, J à J+7 en heure de
+  Paris) ; dépôt NAS avec le jeton du worker (lecture seule du fichier
+  /home/ubuntu/bfg-worker/secrets-upload.json) ; nouveaux essais toutes les
+  10 min jusqu'à 08:00 (passage de 06:45) ou 11:00 (passage de 10:00) ;
+  jamais de dépôt entre 23:50 et 06:00.
+- Minuteur systemd : 06:45 et 10:00 Europe/Paris, Persistent=true.
+- Essai à blanc du 25/09 (sans dépôt) : 114 SUP AIP, 739 NOTAM lus ; zones :
+  29 fiables, 20 H24, 100 non fiables ; 13 SUP AIP cités par un NOTAM hors
+  déclencheur sur J à J+7 (dont 146/26 : R2797/26 active des ZRT de 20:00 à
+  04:00, hors des horaires du PDF), tous déjà non fiables ; fichier de 59 Ko.
+- Livraison sans pip ni apt (ensurepip absent du VPS) : pypdf 6.19.0 fourni
+  dans vendor/ (roue pure Python décompressée, SHA-256 PyPI vérifié :
+  7e5d6e73…e48d14) ; HTTP par la bibliothèque standard (plus de dépendance à
+  requests) ; lancement par /usr/bin/python3 ; empreintes de tous les
+  fichiers livrés dans SHA256SUMS.
+- Script 1.0.1 : suppression automatique, à chaque passage et après une lecture
+  complète de la liste du SIA, des PDF et analyses des SUP AIP qui ne sont plus
+  en vigueur (fin de validité passée ou absents de la liste ; futurs conservés)
+  et des analyses d'une autre version de l'analyseur. Essai sur copie de l'état
+  local : SUP AIP expirés et absents retirés, fichiers étrangers et SUP AIP en
+  vigueur conservés.
+
+3. NAS (NOUVEAUX, livrés dans ~/nas-a-copier/a-installer-supaip-schedules/)
+- update-supaip-schedules.php : POST, upload_token de notams_config.php,
+  contrôle de structure (schéma, couverture, auto-test réussi), 3 Mo max,
+  écriture atomique de briefing-data/supaip-schedules/supaip-schedules-v1.json,
+  version précédente en .prev.json.
+- get-supaip-schedules.php : GET public (données issues des PDF du SIA),
+  CORS, toujours HTTP 200 avec ok / httpStatus (contrainte DSM).
+- Essais sur serveur PHP local : absent -> ok:false 404 ; mauvais jeton 401 ;
+  schéma invalide 400 ; dépôt 200 et .prev créé ; lecture 200 avec CORS.
+
+4. BFG v5.32
+- Lecture du fichier via get-supaip-schedules.php, en parallèle du relais SUP
+  AIP ; cache 'briefing-fdf-supaip-schedules-v1' (hors préfixe
+  'briefing-fdf-test-' : non purgé par activate) pour le hors ligne.
+- Filtre dans bfgRenderSupAipFranceMap_, après le filtre mer. Recalcul chaque
+  minute ; la carte n'est redessinée que si l'ensemble des zones masquées
+  change, sans recadrage (vue de l'utilisateur conservée).
+- RTBA : créneaux de nuit civile ignorés secteur par secteur
+  (bfgBuildRtbaGroups_) ; secteur sans créneau de jour non affiché ; popup
+  limité aux créneaux de jour ; worker et NAS inchangés.
+- Case « Afficher toutes les zones » (TEST UNIQUEMENT) : désactive le seul
+  filtre des créneaux (filtre mer actif), décochée par défaut, jamais
+  mémorisée. Consigne de retrait ajoutée en 0.B5.
+- Diagnostic BFG : section « CRÉNEAUX SUP AIP » (fichier utilisé, date,
+  versions, couverture, auto-test, contrôle NOTAM, zones masquées / affichées
+  par motif) ; RTBA : créneaux de nuit comptés.
+- Essais Node (fonctions réelles d'index.html) :
+  . nuit civile : écart maximal 2,5 min avec un calcul indépendant ;
+  . ZRT 166 B : créneaux des 24, 28, 29, 30/09 de nuit (masquée), 22 et 23/09
+    de jour ; 185/26 (SS+30 -> SR-30) de nuit ;
+  . RTBA enregistré (240b, 14:16Z) : 24 créneaux, 16 de nuit ignorés (18:14Z
+    et R45 N2 à N5, partie de jour 0 à 19 min) ; 8 secteurs affichés avec
+    leur seul créneau de jour ; à 18:30Z plus aucun secteur ;
+  . carte du 25/09 (174 zones du périmètre) : 12 masquées à 07:00 et 13:00,
+    14 à 18:00 ; samedi 26/09 : 13 ; lundi 28/09 : 15 ; période 25/09 ->
+    02/10 : 8 ; au-delà de J+7, case cochée ou fichier de plus de 36 h : 0.
+- Service worker : aucune règle modifiée (la nouvelle URL NAS suit la règle
+  générique des ressources externes, réseau seul) ; version seule.
+
+VERSIONS
+- APP_VERSION_NUMBER 5.32, BFG_SW_VERSION 5.32, CACHE_NAME
+  'briefing-fdf-test-v5.32-supaip-schedules-r1', description du manifest.
+  Constantes figées à 5.07 NON modifiées (cf. 0.B1).
+
+5. DÉPLOIEMENT (26/09/2026, guidé depuis PowerShell, une commande à la fois)
+- VPS : 1.0.0 contrôlée (empreintes, auto-test 22/22, essai à blanc), puis
+  1.0.1 installée par-dessus en gardant state/ (sauvegarde du code 1.0.0 :
+  /home/ubuntu/bfg-supaip-schedules-1.0.0-sauvegarde.tar.gz). Aucun pip,
+  aucun apt ; worker SDVFR non touché.
+- NAS : get-supaip-schedules.php et update-supaip-schedules.php déposés dans
+  web/briefing-api/ ; lecture avant dépôt : ok:false, absent, 404 (attendu).
+- Premier passage réel (manuel, 26/09 07:12Z) : auto-test 22/22 ; 113 SUP
+  AIP ; nettoyage de LF_26_198 (expiré le 25/09) ; 724 NOTAM, 14 SUP AIP cités
+  hors déclencheur ; 29 zones fiables, 20 H24, 99 non fiables ; dépôt NAS
+  HTTP 200 (58 847 octets). Relu depuis le NAS : fichier du 26/09 07:14Z,
+  couverture 26/09 -> 03/10, auto-test réussi, contrôle NOTAM OK.
+- Unités systemd installées (systemd-analyze verify : code 0) ; minuteur
+  activé : prochains passages 26/09 10:00 et 27/09 06:45 (heure de Paris).
+- Règle retenue pour la suite : toute commande longue sur le VPS est lancée
+  avec nohup et un fichier journal, lu par une seconde commande.
+- NPF-Q400 : notams-sdvfr-shared.php 24c (114 terrains, lots 50 + 50 + 14)
+  vérifiée compatible avec le cache NAS v5.29 (diff limité aux tables de
+  terrains ; scénario « tâche de 06:30 + 10 collègues » rejoué : tout réussi),
+  puis installée et validée par l'utilisateur.
+
+STATUTS v5.32
+- Script VPS 1.0.1 et fichiers NAS : DÉPLOYÉS ; premier dépôt réussi ;
+  passage automatique de 10:00 : À VÉRIFIER.
+- Filtre des créneaux SUP AIP : À MESURER sur iPad après le premier dépôt.
+- Nuit civile RTBA : À MESURER un soir d'activité RTBA.
+- Case « Afficher toutes les zones » : À MESURER ; À RETIRER à la promotion.
+- Gain constaté faible (29 zones fiables ; 8 à 9 % de la carte masqués en
+  semaine) : À REVOIR après quelques jours d'usage.
+
+TEST v5.31 — 2026-09-25
+Base : TEST v5.30
+===============================================================================
+
+RTBA TOUJOURS AFFICHÉ, CORRECTIF DE 23:00, « FORCER MAJ » LIMITÉ À LA TEST,
+ZONES SUP AIP EN MER MASQUÉES.
+Aucune modification du NAS ni du worker.
+
+1. RTBA TOUJOURS AFFICHÉ
+- Case « RTBA » supprimée de la carte AZBA / SUP AIP (HTML, style et écouteur).
+  Aucun état mémorisé n'existait pour cette case.
+- La couche RTBA est ajoutée à la carte dès son initialisation ; l'avertissement
+  « ⓘ Seules les activations des 4 prochaines heures… » est toujours affiché
+  (il reste masqué tant que la couche n'est pas initialisée, c'est-à-dire si la
+  carte n'a pas pu se charger).
+- Légende, popups, clignotement, actualisation : inchangés.
+
+2. DÉFAUT ENTRE 23:00 ET MINUIT (relevé lors de la promotion v2026.28)
+- Cause : buildPortableSessionObject_ avec mergeReceivedState false excluait la
+  couche reçue de byId, mais PAS des champs hérités checkedIds, highlights,
+  checkedSignatures et highlightSignatures, lus dans le DOM sans filtre. Les deux
+  chemins de restauration relisent ces champs en plus de byId (compatibilité
+  avec les partages antérieurs à la v5.19). Après l'expiration de la couche
+  reçue à 23:00 et avant minuit, une relance pouvait donc restaurer des cases
+  reçues et les enregistrer comme personnelles.
+- Correction à l'écriture : en sauvegarde locale, un champ marqué
+  data-bfg-origin-checked / -highlight = 'received' n'entre plus dans les
+  champs hérités (même règle que captureCurrentNotamStateForPersistence_).
+  Le partage (mergeReceivedState true) est inchangé. Chemins de restauration
+  non modifiés (compatibilité des anciens partages conservée).
+- Essai Node (fonction extraite de v5.30 et de v5.31 ; A personnel, B reçu,
+  C case personnelle + surlignage reçu, D case reçue + surlignage personnel) :
+  v5.30 sauvegarde locale -> cases A B C D, surlignages A B C D (défaut) ;
+  v5.31 sauvegarde locale -> cases A C, surlignages A D ; partage v5.31 ->
+  A B C D partout, identique à la v5.30.
+- Limite : une sauvegarde locale écrite AVANT la mise à jour peut encore
+  contenir des champs reçus jusqu'à la prochaine sauvegarde du jour.
+
+3. « FORCER MAJ » LIMITÉ À LA TEST (aligné sur la pérenne v2026.28)
+- Seul le service worker dont le scope finit par /Briefing_fdf_TEST/ est mis à
+  jour puis désinscrit ; seuls les caches 'briefing-fdf-test-*' sont vidés.
+- Avant : TOUS les services workers de l'origine (TEST, pérenne, NPF-Q400,
+  NPF-Q400-TEST) désinscrits et TOUS les caches vidés, y compris ceux de la
+  pérenne, de NPF-Q400 et les caches de données partagés
+  (briefing-fdf-sdvfr-notams-offline-v1, bfg-npf-shared-notams-v1,
+  briefing-fdf-supaip-map-v1…).
+- Essai Node : v5.30 -> 4 SW désinscrits, 6 caches supprimés ; v5.31 -> SW de
+  la TEST seul, cache applicatif de la TEST seul.
+
+4. PROMOTION v2026.28 (25/09/2026) ET SUIVI
+- Promotion effectuée : pérenne v2026.28 (commit a9421ef, dépôt Briefing-fdf),
+  construite sur la TEST v5.30 par fusion à trois voies ; tag de sauvegarde
+  avant-promotion-v2026.28 sur 9bc82bf ; tests iPad de la pérenne : VALIDÉS.
+- Défaut de 23:00 : corrigé en v5.31, À REPORTER dans la prochaine promotion.
+- Pour la prochaine promotion : filtre des zones SUP AIP en mer (cf. 6,
+  licence ODbL à conserver) ; suppression de la case RTBA ; « Forcer MAJ »
+  déjà aligné sur la pérenne (filtre propre à chaque version : scope
+  /Briefing_fdf_TEST/ et 'briefing-fdf-test-*' en TEST, 'briefing-fdf-v…' en
+  pérenne — écart NORMAL, à conserver, cf. B4).
+- Rappel, toujours NON IMPLÉMENTÉ : anticipation RTBA évolutive
+  max(240 min, minutes restant jusqu'à 23:00 heure de Paris), à tester un jour
+  d'activité RTBA au-delà de 4 h.
+
+5. ÉTUDES « ZONES RÉELLEMENT ACTIVES » (25/09/2026, lecture seule)
+Objectif étudié : n'afficher sur la carte que les zones SUP AIP et RTBA
+réellement actives dans la journée (active maintenant / à venir / masquée), et
+voir le RTBA sur toute la journée. Aucune modification du code, du NAS ni du
+VPS ; aucun identifiant utilisé, aucun compte créé.
+
+5.1 Étude des PDF SUP AIP (horaires lus dans les PDF)
+- 75 SUP AIP métropole téléchargés, 249 zones analysées par un prototype
+  d'extraction des « DATES ET HEURES D'ACTIVITÉ ».
+- Résultat : 89 zones à créneaux fiables (36 %), 11 à période seule, 149 NON
+  FIABLES ; gain réel par rapport à l'affichage actuel : environ 24 % des zones.
+- Limite de fond : les PDF donnent le plus souvent des créneaux « activables »,
+  pas l'activation effective. Exemple SUP AIP 194/26 : les horaires du 25/09
+  (1045-1400, 1030-1230, 0900-1000) sont ceux du calendrier publié, pas une
+  confirmation d'activité.
+- Les données SUP AIP de SDVFR ne donnent que la période globale de validité
+  (vérifié sur LF_26_194).
+
+5.2 Étude des sources d'activation réelle (hors SDVFR)
+- NOTAM SOFIA-Briefing (SIA) : requête FIR anonyme possible (CGU : « accessible
+  à tous, librement et gratuitement » ; données sous Licence Ouverte Etalab 2.0,
+  source et date à citer). Point d'accès de l'application web, NON documenté.
+  Essai du 25/09 à 11:34Z, FIR LFFF LFBB LFEE LFMM LFRR : 594 NOTAM, JSON
+  structuré (ligne Q décodée, A, B/C en ISO, D, E, F, G). Des NOTAM d'activation
+  existent : QRRCA (zones R, 12), QRDCA (zones D, 3), QRTCA (ZRT, 23), p. ex.
+  « LF-R368 A B C1 C2 ACTIVES », « LFCBA-16B ACTIVATED », « AIP SUP 146/26,
+  AREAS ACTIVATED : ZRT … ». Identification en texte libre (numéro LF-R, ou
+  numéro du SUP AIP + nom de la ZRT) ; aucun identifiant ERNIP (LFR1…).
+  SUP AIP 194/26 : seul le NOTAM déclencheur R2587/26 (période globale), aucun
+  NOTAM d'activation des groupes. RTBA : aucun NOTAM. Le serveur ramène le début
+  de période à l'heure courante (pas de relecture de la matinée).
+- Carte AZBA du SIA (page « Cartes AZBA ») : créneaux d'activité par secteur
+  RTBA sur toute la plage publiée — la bonne source pour le RTBA à la journée.
+  Son API exige un jeton dérivé d'un secret intégré à l'application : NON
+  appelée. Information qualifiée de « prévisionnelle » par le SIA.
+- EUROCONTROL : le portail public NOP contient un module EAUP (allocations RSA,
+  export CSV), mais via un protocole interne non documenté (GWT-RPC) ; présence
+  des zones françaises NON vérifiée. NM B2B : certificat et contrat, exclu.
+- FAA NOTAM Search : HTTP 403 (anti-robot), non contourné ; API FAA sur
+  inscription. EAD : sur compte, non essayée.
+- NATS (source NOTAM de BFG) : présence des sections FIR NON vérifiée.
+
+5.3 Décisions (25/09/2026)
+- Chantier « SUP AIP réellement actives » : EN PAUSE. Aucune source ne donne
+  l'activité réelle de toutes les zones (PDF : 24 % des zones seulement, et
+  créneaux « activables » ; NOTAM SOFIA : activations partielles, rien pour le
+  194/26 ni le RTBA).
+- Règle confirmée : une zone n'est masquée QUE si une source dit clairement
+  qu'elle est inactive. L'absence de NOTAM ne suffit pas.
+- RTBA : tester d'abord l'anticipation évolutive max(240 min, minutes jusqu'à
+  23:00 heure de Paris) un jour d'activité RTBA en semaine. Seulement si SDVFR
+  refuse au-delà de 4 h : envisager une demande d'accès officielle à l'AZBA
+  auprès du SIA (contact indiqué : bureau NOTAM international,
+  nof.ops@aviation-civile.gouv.fr).
+
+6. FILTRE DES ZONES SUP AIP EN MER (carte AZBA / SUP AIP)
+Règle : une zone SUP AIP dont la part de surface au-dessus de la terre est
+STRICTEMENT INFÉRIEURE À 4,5 % n'est pas affichée (usage Dash 8, pas d'écopage :
+aucune bande côtière conservée). « Terre » = toute terre émergée (métropole,
+Corse, îles, pays voisins). Le RTBA n'est PAS concerné (volumes basse altitude
+au-dessus des terres). Aucun texte ni message ajouté à l'écran ; seul le compte
+existant « N zone(s) SUP AIP affichée(s) » diminue.
+- Seuil : 5 % envisagé, porté à 4,5 % par marge de prudence : ZRT DEP
+  CHERBOURG (LF_26_076, ~4,97 %) et ZRT EMS UAV (LF_25_065, ~4,90 %) sont dans
+  l'imprécision du trait de côte et restent AFFICHÉES.
+- Prudence : zone AFFICHÉE si la part de terre est incalculable (données de
+  côte illisibles, géométrie invalide, point hors de l'emprise des données,
+  surface nulle, résultat incohérent, erreur).
+- Données de côte : polygones de terre OpenStreetMap, jeu « simplified land
+  polygons » (osmdata.openstreetmap.de), téléchargé le 25/09/2026.
+  LICENCE : © OpenStreetMap contributors, ODbL 1.0 ; le jeu dérivé intégré à
+  BFG est lui aussi sous ODbL 1.0 (mention dans le commentaire du code).
+  L'attribution « © OpenStreetMap contributors » est déjà affichée par le fond
+  de carte OSM de la même carte. Traitement : découpe lon -10..13,5 / lat
+  39,5..53, simplification à 100 m, coordonnées au 1/10 000 de degré ; 285
+  anneaux, ~24 800 points ; intégré à index.html en base64 (varint zigzag),
+  89 364 caractères (~87 Ko, ~63 Ko compressé). Aucun fichier ni cache
+  supplémentaire : fonctionne hors ligne avec index.html.
+- Natural Earth 10 m (domaine public) écarté : trop grossier (1 à 2 km) ;
+  4 zones mal classées, dont ZRT 1 LE CROISIC (2,6 % au lieu de ~21 % de
+  terre, elle aurait été masquée à tort).
+- Calcul : balayage par 200 lignes horizontales par zone, pondérées par
+  cos(lat) ; longueur exacte commune zone / terre sur chaque ligne (règle
+  pair-impair, trous et MultiPolygon gérés). Écart maximal avec un calcul
+  géométrique exact sur le même jeu : 0,22 point. Précision du jeu OSM
+  simplifié estimée à 100-200 m (non mesurée). Résultat mémorisé par
+  géométrie (les identifiants SDVFR changent à chaque réponse).
+- Coût mesuré (Node, PC) : ~150 ms au premier rendu pour 242 zones (index de
+  côte compris), ~16 ms aux rendus suivants ; sur iPad, estimé 0,3 à 0,6 s,
+  une fois par payload.
+- Comptages, payload du 25/09/2026 14:14Z, date du jour, métropole + Corse,
+  périmètre = plancher STRICTEMENT inférieur au FL115 :
+  . sans filtre mer : 242 zones, 75 SUP AIP ;
+  . avec filtre mer : 174 zones, 72 SUP AIP (68 zones masquées ; SUP AIP
+    entièrement masqués : LF_25_207, LF_26_077, LF_26_198) ;
+  . exclues par la règle FL115 : 7 zones (4 SUP AIP), toutes au FL115 exact
+    (LF_26_194 BRIVAIR, LIMOGEAIR, FLOURAIR ; LF_26_053 BEUVRON DELAY ;
+    LF_26_047 WING SUIT 2 ; LF_26_042 OLONNE A et B). Plancher en HEI/ASFC :
+    conservé dans le périmètre (règle v5.19).
+  . zones masquées les plus proches du seuil : ZRT GUERANDE LF-R17 G1/G2
+    (LF_26_077, 3,40 %), ZRT/ZDT LFDB31 (LF_25_207, 2,6 %), LF-D 18 A3
+    (LF_26_077, 2,1 %), ZRT/ZDT DEP PORT EN BESSIN (LF_26_076, 1,8 %).
+- Étude PDF (5.1) recalculée sur les 174 zones restant affichées (71 SUP AIP
+  appariés) : créneaux fiables 85 (49 %), H24 8 (5 %), période seule 3 (2 %),
+  non fiables 78 (45 %). Gain réel (zones masquables hors de leurs créneaux) :
+  55 zones (32 %). Mais seul le SUP AIP 194/26 donne des horaires d'activité
+  affirmés (4 zones du périmètre : ZRT 166 A1, A2, B, CASTELJALOUX) ; les
+  autres SUP AIP fiables donnent des créneaux « activables » (souvent par NOTAM
+  avec préavis, ou « activité réelle connue auprès de… ») ; LF_26_052 (ZIT) est
+  H24. Le chantier reste EN PAUSE (cf. 5.3).
+- Essais Node sur les fonctions réelles d'index.html : rendu 242 -> 174 zones ;
+  prudence vérifiée (hors emprise, anneau < 3 points, NaN, surface nulle, type
+  inconnu, géométrie absente, données de côte tronquées ou vides -> zone
+  affichée) ; terre pleine 100 %, pleine mer 0 %, MultiPolygon et trou corrects.
+
+VERSIONS
+- APP_VERSION_NUMBER 5.31, BFG_SW_VERSION 5.31, CACHE_NAME
+  'briefing-fdf-test-v5.31-23h-fix-r1', description du manifest et libellé
+  APP_VERSION complétés (« filtre mer ») sans changement de numéro (v5.31 non
+  poussée). sw.js :
+  version seule. Constantes figées à 5.07 NON modifiées (cf. 0.B1).
+
+STATUTS v5.31
+- RTBA toujours affiché : À MESURER sur iPad.
+- Correctif de 23:00 : À MESURER (partage reçu, relance entre 23:00 et minuit).
+- « Forcer MAJ » limité à la TEST : À MESURER (la pérenne et NPF-Q400 restent
+  utilisables hors ligne après un « Forcer MAJ » de la TEST).
+- Zones SUP AIP « réellement actives » : À REVOIR (chantier EN PAUSE, cf. 5.3).
+- Anticipation RTBA évolutive : NON IMPLÉMENTÉ, À MESURER d'abord un jour
+  d'activité RTBA en semaine (cf. 5.3).
+- Accès AZBA officiel (SIA) : À DÉCIDER, seulement si SDVFR refuse au-delà de
+  4 h.
+- Filtre des zones SUP AIP en mer : À MESURER sur iPad (temps du premier rendu,
+  zones côtières masquées / conservées, fonctionnement hors ligne).
+
 VERSION PÉRENNE v2026.28 — 2026-09-25
 Base : TEST v5.30 (Briefing_fdf_TEST, commit 5413372)
 ===============================================================================
