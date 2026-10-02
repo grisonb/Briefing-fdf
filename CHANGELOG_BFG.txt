@@ -1,3 +1,110 @@
+VERSION PÉRENNE v2026.30 — 2026-10-02
+Base : pérenne v2026.29 (fae78c5) + TEST v5.37 à v5.42 (Briefing_fdf_TEST, f837644)
+===============================================================================
+
+PROMOTION — UN COMMIT PAR VERSION TEST
+- Sauvegarde : tag Git avant-promotion-v2026.30 sur fae78c5 (v2026.29).
+- Méthode : pour chaque version, fusion à trois voies d'index.html entre la version
+  TEST précédente et la suivante, appliquée à la pérenne. Seul conflit à chaque fois :
+  la ligne de version (version pérenne gardée). Pour v5.39, v5.40 et v5.42, la
+  modification obtenue a été comparée à celle de la TEST : identique (hors ligne de
+  version et adaptations ci-dessous). Pas de copie intégrale de la TEST.
+- Commits : 1/7 v5.37, 2/7 v5.38, 3/7 v5.39, 4/7 v5.40, 5/7 v5.41, 6/7 v5.42,
+  7/7 version v2026.30 et ce journal. Chacun peut être annulé seul (git revert).
+
+REPRIS
+- v5.37 : lien « PDF officiel SIA » des SUP AIP pris dans le fichier des créneaux
+  (pdfUrl, script VPS 1.2.0), sinon lien habituel (bfgSupAipScheduledPdfUrl_).
+  Corrige les SUP AIP AIRAC en 404 (LF_26_037, LF_25_207).
+- v5.38 : cartes des risques. Boutons Météo-France vers
+  https://pro.meteofrance.com/proxy/index/affiche/id/298186 et …/305344 (l'ancienne
+  adresse www.meteo.fr/extranets est fermée). Bandeau de validité lu dans le PDF
+  (vert foncé, vert pastel, rouge « CARTE PÉRIMÉE », orange « Validité non lue »).
+- v5.39 : FdS et GAAR du jour seulement, date de l'iPad ; plus de repli sur le
+  dernier fichier du NAS ; recherche Gmail automatique si la FdS du jour manque ;
+  FdS / GAAR de la veille retirées au réveil un nouveau jour et à minuit
+  (application au premier plan) ; diagramme GAAR du jour jamais retiré ; bandeau
+  horaire 00h00-06h00 ; FdS et GAAR importées à la main valables le jour de
+  l'import seulement (écran et restauration locale).
+- v5.40 : NOTAM SOFIA (SIA) à la place des NOTAM SDVFR : fichier du NAS lu à
+  l'ouverture et à la connexion ; « Actualiser NOTAM » et « Actualiser » lancent une
+  recherche complète sur SOFIA après une fenêtre de confirmation ; alerte rouge si les
+  NOTAM SOFIA sont absents, pas du jour ou plus anciens que la recherche prévue
+  (06:30, 10:00) ; NATS désactivé et bloc « Importation NOTAM » caché (code conservé).
+  La météo reste SDVFR. Le libellé « SOFIA » est affiché (décision du 30/09/2026).
+- v5.41 : 7 filtres NOTAM (ESCALE, HORAIRES EXPLOITANT, PAF, PANNEAU, PISTE NON
+  REVETUE, POINTS DE VERIFICATION INS, SPPA), cochés par défaut.
+- v5.42 : alerte de cycle VAC « ⚠️ Cartes VAC : le cycle du … n'est pas encore publié
+  par la source. Les cartes du cycle … restent affichées et peuvent ne plus être à
+  jour. Mise à jour automatique dès publication. » (plus de renvoi vers NPF-Q400) ;
+  revérification à chaque connexion et ouverture tant que la source est en retard ;
+  fermeture du bandeau mémorisée pour la journée (bfgVacAiracAlertDismissedV1,
+  effacée par « Effacer »).
+
+ADAPTATIONS PÉRENNES
+- v5.40 : les messages du serveur SOFIA affichés (« Recherche des NOTAM sur SOFIA
+  impossible : … », « NOTAM SOFIA : lecture impossible (…) ») passent par
+  bfgPublicErrorText_ : remplacés par « erreur de récupération » s'ils contiennent
+  « SDVFR ».
+- v5.40 : lignes « NOTAM SOFIA (fichier NAS) » et « Alerte NOTAM SOFIA » du
+  diagnostic TEST non reprises.
+- Conservés : titres et manifest pérennes, service worker et cache briefing-fdf-v…,
+  purge limitée à 'briefing-fdf-v', panneaux NPF-Q400 et Diagnostic cachés,
+  TDF_FORCE_DISPLAY_OVERRIDE = false, bfgPublicErrorText_ et textes sans SDVFR,
+  « Effacer » symétrique, « Forcer MAJ » limité à /Briefing-fdf/, showAll = false,
+  ordre des boutons NOTAM, « Charger Pdf SUP AIP ».
+- Non repris (TEST seulement) : comparaison NOTAM SOFIA / SDVFR, « Afficher toutes
+  les zones », « Forcer MAJ » de la TEST, sections de diagnostic TEST.
+
+IDENTITÉ v2026.30
+- APP_VERSION 2026.30 ; manifest.json?v=2026.30 ; source=bfg-v2026.30 (GAAR et
+  demande cartes des risques) ; description du manifest.
+- Service worker : version 2026.30, cache briefing-fdf-v2026-30-sofia-fds-vac-v542-r1.
+  Routage inchangé ; les adresses NAS SOFIA passent par le réseau.
+
+DÉPENDANCES SERVEUR (aucune modification dans cette promotion)
+- NAS : 6 fichiers *sofia-notams*.php et programme VPS bfg-sofia-notams (installés
+  le 30/09/2026, communs avec la TEST) ; fichier lu le 02/10 : 27 terrains, 162 NOTAM.
+- VPS : bfg-supaip-schedules 1.2.0 (pdfUrl) : fichier du 02/10, 105 pdfUrl sur 105.
+
+ESSAIS (02/10/2026 — Chrome 154 Windows sans interface piloté par CDP ; NAS réel pour
+les lectures publiques ; simulés : connexion Briefing, données protégées, Gmail,
+publication NPF-Q400, recherche SOFIA à la demande, demandes météo SDVFR, VAC) :
+43 essais navigateur + 12 essais Node sur les fonctions réelles : tous conformes.
+- A : aucun texte visible avec « SDVFR » (page connectée, après « Actualiser » avec un
+  message serveur contenant SDVFR, message SOFIA contenant SDVFR filtré) ; index.html :
+  seules restent des expressions de recherche et des commentaires ; sw.js : aucune.
+- B : aucun texte visible ne renvoie vers NPF-Q400 pour les VAC.
+- C : LF_26_037 -> lien lf_sup_a_2026_037_fr.pdf = pdfUrl.
+- D : boutons vers pro.meteofrance.com ; bandeaux sur les PDF réels du 02/10 :
+  National « Valable le vendredi 02/10 — produite la veille (01/10 après-midi) »,
+  Zone Sud « CARTE PÉRIMÉE — valable le 01/10 ».
+- E : statut NAS de la veille -> aucune FdS, recherche Gmail ; FdS du jour réelle
+  retirée au changement de jour ; à minuit au premier plan : FdS retirée et bandeau
+  affiché ; bandeau visible à 3h00, absent à 7h00 ; imports manuels de la veille non
+  restaurés, du jour restaurés.
+- F : 162 NOTAM SOFIA réels affichés, « Dernier téléchargement NOTAM SOFIA » ;
+  fenêtre de confirmation (Annuler ne lance rien) ; alertes « absents » et « pas du
+  jour » ; NATS caché et jamais appelé.
+- G : 7 filtres cochés ; PISTE NON REVETUE masque « … NON REVÊTUE », pas « PISTE
+  REVETUE » ; ESCALE / PAF ne masquent pas ESCALES / PAFX.
+- H : nouveau texte ; jour non mémorisé tant que la source est en retard ; manifest
+  relu à la connexion suivante.
+- I : activate supprime l'ancienne coque pérenne, garde les caches TEST et NPF-Q400 ;
+  « Effacer » ne touche ni la coque TEST (contenu compris) ni NPF-Q400 ; « Forcer
+  MAJ » garde caches et service workers TEST et NPF-Q400.
+- Non-régression : démarrage connecté et « Actualiser » sans erreur JavaScript,
+  carte SUP AIP (182 zones, créneaux utilisables), RTBA « mis à jour », Tour de France
+  masqué, « Effacer » (connexion et association NPF-Q400 conservées).
+- Non essayé : vraie connexion avec le code Briefing ; données Briefing protégées
+  réelles ; vraie recherche SOFIA à la demande ; météo SDVFR réelle ; téléchargement
+  et ouverture hors ligne des VAC ; comportement réel sur iPad.
+
+RETOUR ARRIÈRE
+- Une seule version : git revert <commit de la version>, puis push.
+- Tout : git revert des 7 commits, ou git checkout avant-promotion-v2026.30 --
+  index.html sw.js manifest.json CHANGELOG_BFG.txt, puis commit et push.
+
 VERSION PÉRENNE v2026.29 — 2026-09-28
 Base : pérenne v2026.28 + carte AZBA / SUP AIP / RTBA de la TEST v5.36
        (Briefing_fdf_TEST, commit fdb6bd0) + correctif NOTAM de 23:00 (TEST v5.31)

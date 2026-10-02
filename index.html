@@ -13,7 +13,7 @@
     </script>
     <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
     <title>Briefing Fdf</title>
-    <link rel="manifest" href="./manifest.json?v=2026.29">
+    <link rel="manifest" href="./manifest.json?v=2026.30">
     <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png?v=4.24">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="Briefing">
@@ -3096,7 +3096,7 @@
     <footer>Données : Météo-France, SIA, Windy.com. Page non commerciale, à usage personnel.</footer>
     
     <script>
-        const APP_VERSION_NUMBER = "2026.29";
+        const APP_VERSION_NUMBER = "2026.30";
         const APP_VERSION = APP_VERSION_NUMBER;
 
         // v2026.28 — version pérenne : aucun texte affiché ne mentionne SDVFR.
@@ -8914,7 +8914,7 @@ const tdfStages = [
         async function requestGaarImportViaNas_() {
             const query = new URLSearchParams();
             query.set('t', String(Date.now()));
-            query.set('source', 'bfg-v2026.29');
+            query.set('source', 'bfg-v2026.30');
 
             const url = `${GAAR_IMPORT_REQUEST_API_URL}?${query.toString()}`;
             const response = await fetchWithTimeout_(url, { cache: 'no-store' }, 65000);
@@ -9443,7 +9443,7 @@ const tdfStages = [
         }
 
         async function requestRiskMapGeneration_() {
-            const response = await fetch(`${BFG_RISK_MAP_REQUEST_URL}?source=bfg-v2026.29&v=${Date.now()}`, {
+            const response = await fetch(`${BFG_RISK_MAP_REQUEST_URL}?source=bfg-v2026.30&v=${Date.now()}`, {
                 cache: 'no-store',
                 headers: {
                     'Accept': 'application/json'

@@ -1,7 +1,7 @@
 {
   "name": "Briefing FDF",
   "short_name": "Briefing",
-  "description": "Briefing FDF v2026.29 — carte AZBA / SUP AIP et RTBA de la TEST v5.36 : fenêtres, zones en mer, créneaux, coucher du soleil",
+  "description": "Briefing FDF v2026.30 — TEST v5.37 à v5.42 : NOTAM SOFIA, FdS et GAAR du jour, cartes des risques, filtres NOTAM, alerte VAC",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
