@@ -1,7 +1,7 @@
 {
   "name": "Briefing FDF",
   "short_name": "Briefing",
-  "description": "Briefing FDF v2026.30 — TEST v5.37 à v5.42 : NOTAM SOFIA, FdS et GAAR du jour, cartes des risques, filtres NOTAM, alerte VAC",
+  "description": "Briefing FDF v2026.31 — TEST v5.44 à v5.48 : recherche NOTAM SOFIA à la première connexion, avancement en %, sans confirmation, fraîcheur des NOTAM",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

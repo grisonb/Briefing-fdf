@@ -1,5 +1,5 @@
-const BFG_SW_VERSION = '2026.30';
-const CACHE_NAME = 'briefing-fdf-v2026-30-sofia-fds-vac-v542-r1';
+const BFG_SW_VERSION = '2026.31';
+const CACHE_NAME = 'briefing-fdf-v2026-31-sofia-premiere-connexion-v548-r1';
 
 const LOCAL_ASSETS = [
   './manifest.json',

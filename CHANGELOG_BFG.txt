@@ -1,3 +1,91 @@
+VERSION PÉRENNE v2026.31 — 2026-10-13
+Base : pérenne v2026.30 (262d71c) + TEST v5.44, v5.45, v5.46, v5.47, v5.48
+       (Briefing_fdf_TEST, d4ca3dd)
+===============================================================================
+
+PROMOTION — UN COMMIT PAR VERSION TEST (ordre décidé : v5.46, v5.44, v5.45,
+v5.47, v5.48, puis version)
+- Sauvegarde : tag Git avant-promotion-v2026.31 sur 262d71c (v2026.30).
+- v5.46 reportée à la main (suppression des fenêtres de confirmation, sur le texte
+  réel de la pérenne). v5.44, v5.45, v5.47, v5.48 : fusion à trois voies d'index.html
+  entre la version TEST précédente et la suivante ; conflits uniquement sur la ligne
+  de version, le titre de l'onglet et les fenêtres déjà retirées (version pérenne
+  gardée) ; une ligne de la v5.47 (markBfgSofiaSearchFailed_ dans l'échec de la
+  première connexion) remise à la main. Pour chaque version, la modification obtenue a
+  été comparée à celle de la TEST : identique, hors écarts pérennes ci-dessous.
+- Non reprises : v5.43 (remplacée par la v5.46) et v5.49 (comparaison NOTAM, TEST
+  seulement).
+
+REPRIS
+- v5.46 : « Actualiser NOTAM » et « Actualiser » sans fenêtre de confirmation
+  (fenêtre, fonction bfgConfirmInApp_ et CSS retirés). Double lancement toujours
+  bloqué (bouton grisé, recherche en cours rejointe, bfgGlobalRefreshRunning_).
+- v5.44 complète : à la connexion Accès Briefing et à l'ouverture avec session, si
+  le NAS n'a pas de fichier NOTAM SOFIA du jour (heure de Paris), BFG demande la
+  recherche commune BFG / NPF-Q400 (mode first-connection) ou rejoint celle en cours ;
+  le fichier précédent reste affiché pendant la recherche. Fichier du jour présent :
+  aucune recherche. Météo SDVFR chargée en parallèle des NOTAM.
+- v5.45 : avancement de la recherche en pourcentage (« Recherche SOFIA : N % »,
+  demandes terminées, sans recul, 100 % à la fin). Titre de l'onglet pérenne inchangé.
+- v5.47 : recherche bien visible (texte plus gros, gras, bleu foncé, indicateur qui
+  tourne) ; échec bien visible (rouge foncé, gras) jusqu'au message suivant.
+- v5.48 : pourcentage aussi dans la ligne d'état (« … — N % ») ; fond vert pâle
+  (NOTAM du jour) ou rouge pâle (NOTAM d'un jour précédent) sur « Dernier
+  téléchargement NOTAM SOFIA » et « NOTAM SOFIA … recherche de HH:MM », recalculé
+  chaque minute et au retour au premier plan.
+
+ADAPTATIONS PÉRENNES
+- Nouveau message de la v5.44 « NOTAM SOFIA : recherche du jour impossible (…) » :
+  le détail passe par bfgPublicErrorText_ (« erreur de récupération » s'il contient
+  « SDVFR »). Le message d'échec de la v5.47 est le message déjà filtré.
+- Conservés : titres, apple-mobile-web-app-title, h1, nom du manifest, APP_VERSION =
+  numéro seul, purge limitée à 'briefing-fdf-v', panneaux NPF-Q400 et Diagnostic
+  masqués, TDF_FORCE_DISPLAY_OVERRIDE = false, source=bfg-v2026.31, textes sans
+  SDVFR, « Effacer » symétrique, « Forcer MAJ » limité à /Briefing-fdf/,
+  showAll = false. Pas de bouton de comparaison ni de case « Afficher toutes les
+  zones ».
+- Non touchés : ordre des règles de sw.js, caches de données et migration, constantes
+  figées à 5.07, persistance NOTAM, valeurs du surligneur Apple Pencil.
+
+IDENTITÉ v2026.31
+- APP_VERSION 2026.31 ; manifest.json?v=2026.31 ; source=bfg-v2026.31 ; description
+  du manifest ; service worker 2026.31, cache
+  briefing-fdf-v2026-31-sofia-premiere-connexion-v548-r1.
+
+DÉPENDANCES SERVEUR (aucune modification)
+- NAS « recherche commune » (paquet du 06/10, mode first-connection) et VPS
+  bfg-sofia-notams 1.2.0 : en service. Vérifié en lecture le 13/10 :
+  get-sofia-notams-all.php répond (114 terrains, fichier de 08:00Z).
+
+ESSAIS (13/10/2026 — Chrome 154 sans interface piloté par CDP ; NAS ENTIÈREMENT
+SIMULÉ : réponses publiques relevées une fois en lecture puis rejouées ; aucune
+recherche SOFIA réelle, aucun appel au NAS pendant les essais)
+- a. Première connexion du jour sans NOTAM du jour : demande {"mode":
+  "first-connection"}, 0 % -> 50 % -> 100 %, météo demandée au même moment, 180
+  NOTAM affichés, fond vert ; aucune erreur JavaScript. OK
+- b. Première connexion avec les NOTAM du jour : aucune recherche. OK
+- c. Recherche en échec (message serveur contenant SDVFR) : « NOTAM SOFIA : recherche
+  du jour impossible (erreur de récupération)… » en rouge foncé gras ; aucun SDVFR
+  visible ; NOTAM précédents conservés ; « Actualiser NOTAM » réussit ensuite. OK
+- d. NOTAM de la veille : fond rouge pâle. OK
+- e. Aucune fenêtre ; « Actualiser NOTAM » : 1 demande pour 3 appuis ; « Actualiser » :
+  1 recherche pour 2 appuis, actualisation terminée. OK
+- Non-régression, v2026.30 et v2026.31 : OK / OK sur les 13 lignes (démarrage sans
+  erreur JS, version, connexion, FdS du jour / GAAR absente non affichée, FdS de la
+  veille jamais affichée, 7 filtres NOTAM, carte SUP AIP et RTBA, lien PDF officiel
+  et PDF SUP AIP chargé à la main, ouverture d'une carte VAC, aucun SDVFR visible,
+  Actualiser complet, hors ligne après un premier chargement, caches TEST et
+  NPF-Q400 non effacés).
+- Non vérifié : vraie connexion avec le code Briefing ; vraie recherche SOFIA
+  commune (première connexion réelle, recherche rejointe avec NPF-Q400) ; météo
+  SDVFR réelle ; recherche Gmail réelle de la FdS ; lisibilité des couleurs au soleil
+  et comportement au doigt sur iPad ; passage de minuit réel pour la couleur.
+
+RETOUR ARRIÈRE
+- Une seule version : git revert <commit de la version>, puis push.
+- Tout : git revert des 6 commits, ou git checkout avant-promotion-v2026.31 --
+  index.html sw.js manifest.json CHANGELOG_BFG.txt, puis commit et push.
+
 VERSION PÉRENNE v2026.30 — 2026-10-02
 Base : pérenne v2026.29 (fae78c5) + TEST v5.37 à v5.42 (Briefing_fdf_TEST, f837644)
 ===============================================================================
